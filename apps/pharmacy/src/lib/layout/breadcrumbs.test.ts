@@ -209,6 +209,24 @@ test('real entity ids still produce detail breadcrumbs for each domain', () => {
 
 //===================================================================
 
+test('request overview and Product data have distinct breadcrumbs', () => {
+  const root = `/pharmacy/product-requests/${ENTITY_ID}`;
+  const name = 'Long product name';
+  const overview = getPharmacyBreadcrumbsByPathname(root, name);
+
+  assert.deepEqual(
+    getPharmacyBreadcrumbsByPathname(`${root}/details`, name),
+    overview
+  );
+
+  assert.deepEqual(
+    getPharmacyBreadcrumbsByPathname(`${root}/product-data`, name),
+    [...overview, { label: 'Product data' }]
+  );
+});
+
+//===================================================================
+
 test('unknown routes and unsupported request edit paths never invent detail breadcrumbs', () => {
   const cases = [
     ['/pharmacy/orders/not-an-id', 'Orders'],

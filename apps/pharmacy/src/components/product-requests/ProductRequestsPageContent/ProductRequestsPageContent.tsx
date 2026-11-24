@@ -47,7 +47,6 @@ import { ProductRequestStatistics } from '@/components/statistics/ProductRequest
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 import { OwnerProductRequestSearch } from '@/components/product-requests/OwnerProductRequestSearch';
-import { OwnerRequestedProductSearch } from '@/components/product-requests/OwnerRequestedProductSearch';
 
 import css from './ProductRequestsPageContent.module.css';
 
@@ -68,7 +67,6 @@ function getProductRequestsQueryParams(
 
     dateTo: isCalendarDateString(filters.date.to) ? filters.date.to : undefined,
     requestId: filters.requestId || undefined,
-    productId: filters.productId || undefined,
 
     category:
       filters.category === 'all' ||
@@ -210,11 +208,6 @@ function ProductRequestsPageContent({
     [filters]
   );
 
-  const relatedProductFilters = useMemo(
-    () => getProductRequestsQueryParams({ ...filters, productId: '' }, 20, 1),
-    [filters]
-  );
-
   useEffect(() => {
     const controller = new AbortController();
 
@@ -270,13 +263,12 @@ function ProductRequestsPageContent({
 
     if (pathname === nextPath) return;
 
-    router.replace(nextPath, { scroll: false });
+    router.push(nextPath, { scroll: false });
   }, [currentPage, filters, pathname, router, rowsPerPage]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.date.from || filters.date.to),
     Boolean(filters.requestId),
-    Boolean(filters.productId),
     filters.category !== 'all',
     filters.status !== 'all'
   );
@@ -327,9 +319,9 @@ function ProductRequestsPageContent({
         <div className={css.requestStatistics}>
           {isRequestStatisticsLoading ? (
             <StatsLoadingSkeleton
-              count={5}
-              columns={5}
-              tabletColumns={3}
+              count={4}
+              columns={4}
+              tabletColumns={2}
               label="Loading product request statistics"
             />
           ) : isRequestStatisticsUnavailable ? (
@@ -359,32 +351,8 @@ function ProductRequestsPageContent({
           <OwnerProductRequestSearch
             value={filters.requestId}
             relatedFilters={relatedRequestFilters}
-            onChange={(requestId, linkedProductId) =>
-              handleFiltersChange({
-                ...filters,
-                requestId,
-
-                // Like Orders -> Client: selecting a specific request also
-                // selects its matching global product when it has one.
-                productId: requestId
-                  ? (linkedProductId ?? '')
-                  : filters.productId,
-              })
-            }
-          />
-          <OwnerRequestedProductSearch
-            value={filters.productId}
-            relatedFilters={relatedProductFilters}
-            onChange={(productId) =>
-              handleFiltersChange({
-                ...filters,
-                productId,
-
-                // Switching the product invalidates the previously selected
-                // request; its options will now be scoped to the new product.
-                requestId:
-                  productId !== filters.productId ? '' : filters.requestId,
-              })
+            onChange={(requestId) =>
+              handleFiltersChange({ ...filters, requestId })
             }
           />
           <div className={css.searchAction}>

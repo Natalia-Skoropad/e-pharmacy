@@ -35,8 +35,6 @@ export const DEFAULT_PRODUCT_REQUESTS_PAGINATION: ProductRequestsPagination = {
 export function isProductRequestsFilterSegment(segment: string): boolean {
   return (
     segment.startsWith('request-id-') ||
-    segment.startsWith('product-id-') ||
-    segment.startsWith('request-product-id-') ||
     segment.startsWith('category-') ||
     segment.startsWith('status-') ||
     segment.startsWith('date-from-') ||
@@ -97,7 +95,6 @@ export function parseProductRequestsSegments(
   const filters: {
     date: { from: string; to: string };
     requestId: string;
-    productId: string;
     category: ProductRequestsFilterState['category'];
     status: ProductRequestsFilterState['status'];
   } = {
@@ -117,25 +114,6 @@ export function parseProductRequestsSegments(
       );
 
       if (/^[a-f0-9]{24}$/i.test(id)) filters.requestId = id.toLowerCase();
-
-      continue;
-    }
-
-    if (segment.startsWith('product-id-')) {
-      const id = segment.slice('product-id-'.length);
-
-      if (/^[a-f0-9]{24}$/i.test(id)) filters.productId = id.toLowerCase();
-
-      continue;
-    }
-
-    if (segment.startsWith('request-product-id-')) {
-      const id = segment.slice('request-product-id-'.length);
-
-      // Legacy links selected an unlinked request as if it were a global
-      // product. Preserve the request selection and canonicalize the URL.
-      if (/^[a-f0-9]{24}$/i.test(id) && !filters.requestId)
-        filters.requestId = id.toLowerCase();
 
       continue;
     }
@@ -195,10 +173,6 @@ export function buildProductRequestsPath(
   const segments: string[] = [];
 
   if (filters.requestId) segments.push(`request-id-${filters.requestId}`);
-
-  if (filters.productId && !filters.productId.startsWith('request-')) {
-    segments.push(`product-id-${filters.productId}`);
-  }
 
   if (filters.category === CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER) {
     segments.push('category-mode-custom');

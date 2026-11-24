@@ -10,6 +10,7 @@ type ProductRequestDetailsPageContentProps = Readonly<{
 
   initialTab?:
     | 'details'
+    | 'product-data'
     | 'characteristics'
     | 'full-description'
     | 'note-for-admin'

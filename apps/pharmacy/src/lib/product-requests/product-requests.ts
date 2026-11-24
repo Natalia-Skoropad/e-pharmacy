@@ -31,6 +31,7 @@ import {
 
 import { isProductCategory } from '@e-pharmacy/validation/products';
 import { isProductRequestStatus } from '@e-pharmacy/validation/product-requests';
+
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
@@ -85,7 +86,6 @@ export type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
 export type ProductRequestsFilterState = Readonly<{
   date: { from: string; to: string };
   requestId: string;
-  productId: string;
   category: ProductRequestCategoryFilter;
   status: ProductRequestStatusFilter;
 }>;
@@ -207,7 +207,6 @@ export function normalizeProductRequestStatisticsResponse(
 export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
   date: { from: '', to: '' },
   requestId: '',
-  productId: '',
   category: 'all',
   status: 'all',
 };

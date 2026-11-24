@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { Settings } from 'lucide-react';
 
 import {
   DataTable,
@@ -8,7 +7,6 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
 
-import { CategoryIcon } from '@e-pharmacy/ui/forms';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -24,7 +22,8 @@ import {
 } from '@/lib/routes';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
-import { resolveOwnerCatalogCategory } from '@/lib/products/owner-catalog-category';
+
+import { ProductRequestCategory } from '../ProductRequestCategory';
 
 import css from './ProductRequestsTable.module.css';
 
@@ -43,41 +42,6 @@ function getProductHref(request: ProductRequestRowViewModel) {
   return request.productId
     ? getPharmacyAllProductPath(request.productId)
     : null;
-}
-
-//===================================================================
-
-function renderCategory(
-  request: ProductRequestRowViewModel,
-  categoryDirectory: readonly ProductCategoryReference[]
-) {
-  const original = request.category;
-
-  const resolved = original
-    ? resolveOwnerCatalogCategory(original, categoryDirectory)
-    : undefined;
-
-  // The submitted category mode, not the existence of an approved product,
-  // decides which icon is shown. Unlinked catalog requests still have a
-  // genuine Admin-managed category and should display its real icon.
-  const isCustomCategory = request.categoryMode === 'custom';
-
-  const name = isCustomCategory
-    ? (request.customCategory ?? 'Other / custom category')
-    : (resolved?.name ?? '—');
-
-  return (
-    <span className={css.categoryCell}>
-      <span className={css.categoryIconWrap}>
-        {isCustomCategory ? (
-          <Settings size={16} aria-hidden="true" />
-        ) : (
-          <CategoryIcon name={resolved?.icon} size={16} />
-        )}
-      </span>
-      <span className={css.categoryText}>{name}</span>
-    </span>
-  );
 }
 
 //===================================================================
@@ -137,17 +101,21 @@ function ProductRequestsTable({
       },
       {
         key: 'productName',
+        width: '25%',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
 
         render: (request) => {
           const href = getProductHref(request);
 
           return href ? (
-            <TextActionButton href={href}>
+            <TextActionButton className={css.breakableLink} href={href}>
               {request.productName}
             </TextActionButton>
           ) : (
-            <TextActionButton className={css.disabledAction} disabled>
+            <TextActionButton
+              className={`${css.disabledAction} ${css.breakableLink}`}
+              disabled
+            >
               {request.productName}
             </TextActionButton>
           );
@@ -156,7 +124,13 @@ function ProductRequestsTable({
       {
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
-        render: (request) => renderCategory(request, categoryDirectory),
+
+        render: (request) => (
+          <ProductRequestCategory
+            request={request}
+            categoryDirectory={categoryDirectory}
+          />
+        ),
       },
       {
         key: 'status',
@@ -186,6 +160,7 @@ function ProductRequestsTable({
 
   return (
     <DataTable
+      className={css.requestTable}
       columns={columns}
       items={requests}
       getItemKey={(request) => String(request.id)}

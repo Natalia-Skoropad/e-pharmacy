@@ -464,6 +464,7 @@ export async function submitProductRequestService(
         !request.name?.trim() && 'name',
         !request.article?.trim() && 'article',
         !request.productImage?.dataUrl && 'productImage',
+        !request.additionalFiles?.length && 'additionalFiles',
         !request.brand?.trim() && 'brand',
         !request.series?.trim() && 'series',
         !request.manufacturer?.trim() && 'manufacturer',

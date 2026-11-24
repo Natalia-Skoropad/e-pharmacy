@@ -234,6 +234,11 @@ export function validateProductRequestForm(
   }
 
   if (mode === 'moderation') {
+    if (!context.additionalFiles?.length) {
+      errors.additionalFiles =
+        'Attach at least one supporting document for moderation.';
+    }
+
     if (!hasProductImage) {
       errors.productImage =
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.productImage;

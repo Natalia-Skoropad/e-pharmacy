@@ -480,7 +480,7 @@ export function getPharmacyBreadcrumbsByPathname(
 
     if (requestId && isValidObjectId(requestId)) {
       const tabTitles: Record<string, string> = {
-        details: 'Details',
+        'product-data': 'Product data',
         characteristics: 'Characteristics',
         'about-product': 'About product',
         'note-for-admin': 'Note for Admin',
@@ -500,7 +500,14 @@ export function getPharmacyBreadcrumbsByPathname(
         ];
       }
 
-      return getProductRequestDetailsBreadcrumbs(requestId, currentDetailLabel);
+      if (!tab || tab === 'details') {
+        return getProductRequestDetailsBreadcrumbs(
+          requestId,
+          currentDetailLabel
+        );
+      }
+
+      return getProductRequestsBreadcrumbs();
     }
 
     return getProductRequestsBreadcrumbs();

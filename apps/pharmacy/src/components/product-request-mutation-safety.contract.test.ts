@@ -25,8 +25,16 @@ test('product request mutations wait for every file reader and share one mutatio
   assert.match(source, /mutationLockRef\.current = false/);
   assert.match(source, /additionalFilesReadControllerRef\.current/);
 
+  const panels = await readFile(
+    resolve(
+      process.cwd(),
+      'src/components/product-requests/NewProductRequestPageContent/ProductRequestEditorPanels.tsx'
+    ),
+    'utf8'
+  );
+
   assert.match(
-    source,
+    panels,
     /disabled=\{!canEdit \|\| isMutating \|\| isFileProcessing\}/
   );
 
@@ -70,7 +78,15 @@ test('article checking separates conflict from transport failure without renderi
     /articleCheckStatus === 'conflict' \|\| articleCheckStatus === 'error'/
   );
 
-  assert.match(source, /error=\{errors\.article\}/);
+  const panels = await readFile(
+    resolve(
+      process.cwd(),
+      'src/components/product-requests/NewProductRequestPageContent/ProductRequestEditorPanels.tsx'
+    ),
+    'utf8'
+  );
+
+  assert.match(panels, /error=\{errors\.article\}/);
   assert.doesNotMatch(source, /Article is available/);
   assert.doesNotMatch(source, /articleCheckStatus === 'unavailable'/);
 });
@@ -87,6 +103,7 @@ test('scoped product and request actions never surface raw Error.message', async
 
   for (const path of paths) {
     const source = await readFile(resolve(process.cwd(), path), 'utf8');
+
     assert.doesNotMatch(source, /error instanceof Error && error\.message/);
     assert.doesNotMatch(source, /isApiError\(error\) && error\.message/);
   }

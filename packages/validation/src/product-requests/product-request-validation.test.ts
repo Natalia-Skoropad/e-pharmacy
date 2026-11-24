@@ -55,6 +55,19 @@ const validImage = {
   dataUrl: 'data:image/webp;base64,AA==',
 } as const;
 
+const validModerationContext = {
+  productImage: validImage,
+
+  additionalFiles: [
+    {
+      name: 'instructions.pdf',
+      type: 'application/pdf',
+      size: 1,
+      dataUrl: 'data:application/pdf;base64,AA==',
+    },
+  ],
+} as const;
+
 //=============================================================================
 
 function createDraftValues(
@@ -164,6 +177,31 @@ test('validation rejects non-English product text without changing it', () => {
 
 //=============================================================================
 
+test('name-only draft payload omits empty optional category ID', () => {
+  const payload = normalizeProductRequestForm(
+    { ...PRODUCT_REQUEST_INITIAL_VALUES, name: 'Name only request' },
+    'new'
+  );
+
+  assert.equal(payload.status, 'new');
+  assert.equal(payload.name, 'Name only request');
+  assert.equal(payload.article, '');
+  assert.equal(payload.categoryMode, 'catalog');
+  assert.equal(payload.categoryId, undefined);
+  assert.equal(payload.additionalFiles, undefined);
+
+  // Empty categoryId previously failed the server's optional MongoDB ID schema.
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(
+      JSON.parse(JSON.stringify(payload)),
+      'categoryId'
+    ),
+    false
+  );
+});
+
+//=============================================================================
+
 test('catalog category mode requires a category id without hardcoded membership checks', () => {
   const missingCategory = validateProductRequestForm(
     createDraftValues({ categoryId: '   ' }),
@@ -232,14 +270,39 @@ test('custom category is required only in custom category mode', () => {
 
 //=============================================================================
 
-test('moderation validation requires the moderation essentials and product image', () => {
+test('moderation validation requires essentials, photo and supporting documents', () => {
   assert.equal(isProductRequestSubmissionValid(createDraftValues()), false);
 
   assert.equal(
     isProductRequestSubmissionValid(createSubmissionValues(), {
-      productImage: validImage,
+      ...validModerationContext,
     }),
     true
+  );
+});
+
+//=============================================================================
+
+test('a new draft can omit documents but moderation cannot', () => {
+  const valid = createSubmissionValues();
+
+  assert.equal(
+    validateProductRequestForm(valid, 'draft', { additionalFiles: [] })
+      .additionalFiles,
+    undefined
+  );
+
+  assert.ok(
+    validateProductRequestForm(valid, 'moderation', {
+      productImage: validImage,
+      additionalFiles: [],
+    }).additionalFiles
+  );
+
+  assert.equal(
+    validateProductRequestForm(valid, 'moderation', validModerationContext)
+      .additionalFiles,
+    undefined
   );
 });
 
@@ -253,13 +316,13 @@ test('optional characteristics may be omitted for moderation', () => {
   });
 
   const errors = validateProductRequestForm(values, 'moderation', {
-    productImage: validImage,
+    ...validModerationContext,
   });
 
   assert.deepEqual(errors, {});
 
   assert.equal(
-    isProductRequestSubmissionValid(values, { productImage: validImage }),
+    isProductRequestSubmissionValid(values, validModerationContext),
     true
   );
 });
@@ -277,7 +340,7 @@ test('brand, series and manufacturer are required for moderation, not drafts', (
 
     assert.ok(
       validateProductRequestForm(values, 'moderation', {
-        productImage: validImage,
+        ...validModerationContext,
       })[field],
       `${field} moderation`
     );
@@ -290,7 +353,7 @@ test('brand, series and manufacturer are required for moderation, not drafts', (
       validateProductRequestForm(
         { ...complete, activeIngredientCount: value },
         'moderation',
-        { productImage: validImage }
+        validModerationContext
       ).activeIngredientCount,
       undefined
     );
@@ -405,7 +468,7 @@ test('optional ingredient count enforces Latin-only text and 200 character limit
 
     assert.equal(
       validateProductRequestForm(values, 'moderation', {
-        productImage: validImage,
+        ...validModerationContext,
       })[field],
       undefined
     );
@@ -434,7 +497,7 @@ test('About product requires 100 characters when populated, but draft can be bla
     validateProductRequestForm(
       { ...valid, fullDescription: short },
       'moderation',
-      { productImage: validImage }
+      validModerationContext
     ).fullDescription,
     PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescriptionMin
   );
@@ -443,7 +506,7 @@ test('About product requires 100 characters when populated, but draft can be bla
     validateProductRequestForm(
       { ...valid, fullDescription: exact },
       'moderation',
-      { productImage: validImage }
+      validModerationContext
     ).fullDescription,
     undefined
   );
@@ -487,7 +550,7 @@ test('full description validation accepts rich-text markdown controls', () => {
   });
 
   assert.equal(
-    isProductRequestSubmissionValid(values, { productImage: validImage }),
+    isProductRequestSubmissionValid(values, validModerationContext),
     true
   );
 });
@@ -605,7 +668,7 @@ test('normalization trims values, uppercases article and removes empty optional 
       pharmacyComment: '   ',
     }),
     'new',
-    { productImage: validImage }
+    validModerationContext
   );
 
   assert.equal(payload.article, 'MED-001');

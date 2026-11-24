@@ -54,7 +54,9 @@ export function normalizeProductRequestForm(
     categoryMode: values.categoryMode,
 
     categoryId:
-      values.categoryMode === 'catalog' ? values.categoryId.trim() : undefined,
+      values.categoryMode === 'catalog'
+        ? values.categoryId.trim() || undefined
+        : undefined,
 
     customCategory:
       values.categoryMode === 'custom'

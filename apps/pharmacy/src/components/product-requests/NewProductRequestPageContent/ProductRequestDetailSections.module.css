@@ -1,0 +1,145 @@
+.detailPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.historyHeader > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.historyHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.historyHeader > div {
+  display: grid;
+  gap: 6px;
+}
+
+.historyList {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.historyList li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 14px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.historyList > li > svg {
+  margin-top: 2px;
+  color: var(--color-accent);
+}
+
+.historyContent {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.historyTopRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.historyMeta {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.historyContent strong {
+  color: var(--color-text-primary);
+}
+
+.historyContent time {
+  font-size: var(--fz-12);
+  color: var(--color-text-muted);
+}
+
+.historyInferred {
+  font-size: var(--fz-12);
+  color: var(--color-text-muted);
+}
+
+.historyContent p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: var(--lh-base);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.historyRejectionReason {
+  padding: 8px 10px;
+  margin-top: 4px !important;
+  font-size: var(--fz-13);
+  color: var(--color-text-secondary) !important;
+  background-color: var(--color-error-soft);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+}
+
+.historyRejectionReason b {
+  color: var(--color-error);
+}
+
+.historyDanger {
+  background-color: var(--color-error-soft) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-error) 30%,
+    transparent
+  ) !important;
+}
+
+.historyWarning {
+  background-color: var(--color-warning-light) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-warning) 42%,
+    transparent
+  ) !important;
+}
+
+.historyInfo {
+  background-color: var(--color-info-soft) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-info) 30%,
+    transparent
+  ) !important;
+}
+
+@media only screen and (min-width: 768px) {
+  .historyHeader {
+    flex-wrap: nowrap;
+  }
+}

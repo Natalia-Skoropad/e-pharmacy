@@ -75,13 +75,22 @@ test('product detail composition does not expose implementation names as accessi
 
 test('article validation uses shared field semantics without a redundant success announcement', async () => {
   const source = await read(
-    'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    'src/components/product-requests/NewProductRequestPageContent/ProductRequestEditorPanels.tsx'
   );
 
   assert.match(source, /error=\{errors\.article\}/);
   assert.match(source, /articleCheckStatus === 'checking'/);
   assert.match(source, /Checking article availability…/);
   assert.doesNotMatch(source, /Article is available/);
-  assert.match(source, /<Tabs[\s\S]+?ariaLabel="Product request sections"/);
+
+  const editor = await read(
+    'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+  );
+
+  assert.match(
+    editor,
+    /<Tabs[\s\S]+?ariaLabel="Product request editor sections"/
+  );
+
   assert.doesNotMatch(source, /onKeyDown=.*Arrow(?:Left|Right)/);
 });

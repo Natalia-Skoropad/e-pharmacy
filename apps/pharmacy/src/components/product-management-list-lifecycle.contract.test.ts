@@ -81,7 +81,7 @@ test('text search is debounced before request query construction', async () => {
   assert.match(ownProducts, /getProductsQueryParams\(\s*requestFilters,/);
 
   assert.match(productRequests, /<OwnerProductRequestSearch/);
-  assert.match(productRequests, /<OwnerRequestedProductSearch/);
+  assert.doesNotMatch(productRequests, /<OwnerRequestedProductSearch/);
   assert.match(productRequests, /getProductRequestsQueryParams\(filters,/);
   assert.doesNotMatch(productRequests, /requestNumber: debouncedRequestNumber/);
 
