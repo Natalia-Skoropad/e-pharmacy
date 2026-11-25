@@ -106,12 +106,47 @@ export type ProductRequestAuditStatus = Readonly<{
   cancellation: 'admin' | 'owner' | null;
 }>;
 
+//===============================================================
+
+export type ProductRequestAuditCategory = Readonly<{
+  custom: boolean;
+  icon?: string;
+  currentCatalogIcon?: boolean;
+}>;
+
+//===============================================================
+
+function categoryPresentation(
+  snapshot: AdminAuditSnapshot,
+  field: string
+): ProductRequestAuditCategory {
+  const custom =
+    field === 'customCategory' || snapshot.categoryMode === 'custom';
+
+  return {
+    custom,
+
+    ...(!custom &&
+    typeof snapshot.categoryIcon === 'string' &&
+    snapshot.categoryIcon
+      ? {
+          icon: snapshot.categoryIcon,
+          currentCatalogIcon: snapshot.categoryIconSource === 'current_catalog',
+        }
+      : {}),
+  };
+}
+
+//===============================================================
+
 export type ProductRequestAuditRow = Readonly<{
   field: string;
   label: string;
   developerField: string;
   before: AdminAuditValue;
   after: AdminAuditValue;
+  beforeCategory?: ProductRequestAuditCategory;
+  afterCategory?: ProductRequestAuditCategory;
   beforeStatus?: ProductRequestAuditStatus;
   afterStatus?: ProductRequestAuditStatus;
 }>;
@@ -280,6 +315,13 @@ export function getProductRequestAuditRows(
           developerField: field.sources[0],
           before,
           after,
+
+          ...(['category', 'customCategory'].includes(field.key)
+            ? {
+                beforeCategory: categoryPresentation(details.before, field.key),
+                afterCategory: categoryPresentation(details.after, field.key),
+              }
+            : {}),
 
           ...(field.key === 'status'
             ? {

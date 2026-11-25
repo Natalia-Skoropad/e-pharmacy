@@ -19,7 +19,8 @@ export async function resolveProductRequestAuditCategoryNames(
 ): Promise<void> {
   const sides = [before, after].filter(
     (snapshot) =>
-      !Object.prototype.hasOwnProperty.call(snapshot, 'categoryName') &&
+      (!Object.prototype.hasOwnProperty.call(snapshot, 'categoryName') ||
+        !Object.prototype.hasOwnProperty.call(snapshot, 'categoryIcon')) &&
       snapshot.categoryMode !== 'custom' &&
       typeof snapshot.categoryId === 'string' &&
       Types.ObjectId.isValid(snapshot.categoryId)
@@ -32,21 +33,30 @@ export async function resolveProductRequestAuditCategoryNames(
   ];
 
   const categories = await ProductCategory.find({ _id: { $in: ids } })
-    .select('_id name')
+    .select('_id name icon')
     .session(options.session ?? null)
-    .lean<{ _id: Types.ObjectId; name: string }[]>();
+    .lean<{ _id: Types.ObjectId; name: string; icon?: string }[]>();
 
-  const names = new Map(
-    categories.map((category) => [String(category._id), category.name])
+  const references = new Map(
+    categories.map((category) => [String(category._id), category])
   );
 
   for (const snapshot of sides) {
-    const name = names.get(String(snapshot.categoryId));
+    const category = references.get(String(snapshot.categoryId));
 
-    snapshot.categoryName = name
-      ? options.legacyRead
-        ? `${name} (current catalog name)`
-        : name
-      : null;
+    if (!Object.prototype.hasOwnProperty.call(snapshot, 'categoryName')) {
+      snapshot.categoryName = category?.name
+        ? options.legacyRead
+          ? `${category.name} (current catalog name)`
+          : category.name
+        : null;
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(snapshot, 'categoryIcon')) {
+      snapshot.categoryIcon = category?.icon ?? null;
+
+      if (category?.icon && options.legacyRead)
+        snapshot.categoryIconSource = 'current_catalog';
+    }
   }
 }

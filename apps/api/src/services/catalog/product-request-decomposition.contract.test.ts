@@ -207,7 +207,7 @@ test('recorded status actors are captured on writes and exposed in authorized de
   assert.equal(
     [
       ...management.matchAll(
-        /actorNameSnapshot: await getProductRequestHistoryActorName\(userId, session\)/g
+        /actorNameSnapshot: await getProductRequestHistoryActorName\(\s*userId,\s*session\s*\)/g
       ),
     ].length,
     3
@@ -215,7 +215,7 @@ test('recorded status actors are captured on writes and exposed in authorized de
 
   assert.match(
     moderation,
-    /actorNameSnapshot: await getProductRequestHistoryActorName\(adminUserId, session\)/
+    /actorNameSnapshot: await getProductRequestHistoryActorName\(\s*adminUserId,\s*session\s*\)/
   );
 
   assert.match(
@@ -245,10 +245,19 @@ test('recorded status actors are captured on writes and exposed in authorized de
   assert.equal(
     [...management.matchAll(/request: await serializeProductRequestDetail/g)]
       .length,
-    4
+    2
   );
 
   assert.match(moderation, /request: await serializeProductRequestDetail/);
+
+  assert.equal(
+    [
+      ...management.matchAll(
+        /return getProductRequestByIdService\(userId, String\(updatedId\)\)/g
+      ),
+    ].length,
+    2
+  );
 
   assert.match(
     historyActor,

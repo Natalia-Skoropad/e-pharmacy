@@ -1,6 +1,10 @@
 import 'client-only';
 
-import { ApiError, appendQueryParams } from '@e-pharmacy/api-client/transport';
+import {
+  ApiError,
+  appendQueryParams,
+  isApiError,
+} from '@e-pharmacy/api-client/transport';
 
 import {
   parseApiResponseData,
@@ -16,6 +20,7 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 import { dispatchProductRequestCounterRefresh } from '@/lib/product-requests/product-request-counter-refresh';
 
 import {
+  confirmsProductRequestTransition,
   normalizeProductRequest,
   normalizeProductRequestDetails,
   normalizeProductRequestStatisticsResponse,
@@ -294,16 +299,44 @@ export async function uploadPharmacyProductRequestDocument(payload: {
 //===================================================================
 
 // Owner lifecycle transitions are separate from ordinary Save changes.
-export async function submitPharmacyProductRequest(
-  requestId: string
+async function mutatePharmacyProductRequestStatus(
+  previous: ProductRequestDetailsViewModel,
+  transition: 'submit' | 'cancel'
 ): Promise<ProductRequestDetailsViewModel> {
-  const path = PHARMACY_API_ROUTES.productRequests.submit(requestId);
+  const path = PHARMACY_API_ROUTES.productRequests[transition](previous.id);
 
-  const result = parseApiResponseData(
-    await localApiRequest(path, { method: 'POST' }),
-    parseProductRequestDetails,
-    { url: path, method: 'POST' }
-  );
+  let result: ProductRequestDetailsViewModel;
+
+  try {
+    result = parseApiResponseData(
+      await localApiRequest(path, { method: 'POST' }),
+      parseProductRequestDetails,
+      { url: path, method: 'POST' }
+    );
+  } catch (error: unknown) {
+    const mayHaveCommitted =
+      !isApiError(error) ||
+      error.transportCode === 'INVALID_RESPONSE' ||
+      error.transportCode === 'NETWORK_ERROR' ||
+      error.transportCode === 'TIMEOUT' ||
+      error.httpStatus === 409 ||
+      (error.httpStatus !== undefined && error.httpStatus >= 500);
+
+    if (!mayHaveCommitted) throw error;
+
+    // Do not retry the POST. Verify the persisted transition via GET first.
+    const fresh = await getPharmacyProductRequest(previous.id).catch(
+      () => null
+    );
+
+    if (
+      !fresh ||
+      !confirmsProductRequestTransition(previous, fresh, transition)
+    )
+      throw error;
+
+    result = fresh;
+  }
 
   dispatchProductRequestCounterRefresh();
 
@@ -312,18 +345,16 @@ export async function submitPharmacyProductRequest(
 
 //===================================================================
 
-export async function cancelPharmacyProductRequest(
-  requestId: string
-): Promise<ProductRequestDetailsViewModel> {
-  const path = PHARMACY_API_ROUTES.productRequests.cancel(requestId);
+export function submitPharmacyProductRequest(
+  previous: ProductRequestDetailsViewModel
+) {
+  return mutatePharmacyProductRequestStatus(previous, 'submit');
+}
 
-  const result = parseApiResponseData(
-    await localApiRequest(path, { method: 'POST' }),
-    parseProductRequestDetails,
-    { url: path, method: 'POST' }
-  );
+//===================================================================
 
-  dispatchProductRequestCounterRefresh();
-
-  return result;
+export function cancelPharmacyProductRequest(
+  previous: ProductRequestDetailsViewModel
+) {
+  return mutatePharmacyProductRequestStatus(previous, 'cancel');
 }

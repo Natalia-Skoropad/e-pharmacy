@@ -276,10 +276,13 @@ test('product request category audit captures names in the transaction and marks
 
   assert.match(
     history,
-    /resolveProductRequestAuditCategoryNames\(details.before, details.after, \{ legacyRead: true \}\)/
+    /resolveProductRequestAuditCategoryNames\(\s*details\.before,\s*details\.after,\s*\{ legacyRead: true \}\s*\)/
   );
 
   assert.match(category, /hasOwnProperty.call\(snapshot, 'categoryName'\)/);
   assert.match(category, /current catalog name/);
+  assert.match(category, /\.select\('_id name icon'\)/);
+  assert.match(category, /hasOwnProperty.call\(snapshot, 'categoryIcon'\)/);
+  assert.match(category, /snapshot.categoryIconSource = 'current_catalog'/);
   assert.match(category, /\.session\(options.session \?\? null\)/);
 });

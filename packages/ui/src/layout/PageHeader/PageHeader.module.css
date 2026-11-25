@@ -57,3 +57,35 @@
     min-width: 0;
   }
 }
+
+/* Opt-in layout for long entity titles with a status action. Both product
+   request cabinets use the same desktop/tablet/mobile behavior. */
+.header.responsiveActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  min-width: 0;
+  overflow: visible;
+}
+
+.responsiveActions > .actions {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .header.responsiveActions:has(> .actions) {
+    grid-template-columns: minmax(0, 1fr) fit-content(55%);
+  }
+
+  .responsiveActions > .titleWrap {
+    min-width: 0;
+  }
+
+  .responsiveActions > .actions {
+    width: 100%;
+    max-width: 100%;
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+}

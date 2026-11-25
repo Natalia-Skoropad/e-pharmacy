@@ -23,17 +23,45 @@ export function AdminProductRequestCategory({
     custom ? request.customCategory : request.category?.name
   )?.trim();
 
+  return (
+    <ProductRequestCategoryLabel
+      name={name}
+      icon={request.category ? (request.category.icon ?? 'pill') : undefined}
+      custom={custom}
+    />
+  );
+}
+
+//===================================================================
+
+// Reuse the exact chip in audit cells without inventing a catalog reference.
+export function ProductRequestCategoryLabel({
+  name,
+  icon,
+  custom = false,
+  currentCatalogIcon = false,
+}: Readonly<{
+  name?: string;
+  icon?: string;
+  custom?: boolean;
+  currentCatalogIcon?: boolean;
+}>) {
   if (!name) return <span>—</span>;
 
   return (
     <span className={css.categoryCell}>
-      <span className={css.categoryIconWrap}>
-        {custom ? (
-          <Settings size={16} aria-hidden="true" />
-        ) : (
-          <CategoryIcon name={request.category?.icon} size={16} />
-        )}
-      </span>
+      {custom || icon ? (
+        <span
+          className={css.categoryIconWrap}
+          title={currentCatalogIcon ? 'Icon from current catalog' : undefined}
+        >
+          {custom ? (
+            <Settings size={16} aria-hidden="true" />
+          ) : (
+            <CategoryIcon name={icon} size={16} />
+          )}
+        </span>
+      ) : null}
       <span className={css.categoryText}>{name}</span>
     </span>
   );

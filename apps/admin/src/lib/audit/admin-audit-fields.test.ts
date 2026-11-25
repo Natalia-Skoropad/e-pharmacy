@@ -213,6 +213,8 @@ test('product request edits group only affected fields and use saved category na
       categoryMode: 'catalog',
       categoryId: 'id-a',
       categoryName: 'Vitamins',
+      categoryIcon: 'apple',
+      categoryIconSource: 'current_catalog',
       name: 'Old',
       series: 'Old series',
     },
@@ -244,6 +246,15 @@ test('product request edits group only affected fields and use saved category na
   );
 
   assert.equal(rows[2].after, 'New category');
+
+  assert.deepEqual(rows[1].beforeCategory, {
+    custom: false,
+    icon: 'apple',
+    currentCatalogIcon: true,
+  });
+
+  assert.deepEqual(rows[1].afterCategory, { custom: true });
+  assert.deepEqual(rows[2].afterCategory, { custom: true });
 
   assert.equal(
     getProductRequestAuditRows(

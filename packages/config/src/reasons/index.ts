@@ -68,6 +68,56 @@ export const ADMIN_PHARMACY_BLOCK_REASONS: readonly ReasonOption[] = [
 
 //===================================================================
 
+export const OWNER_PRODUCT_REQUEST_CANCEL_REASONS: readonly ReasonOption[] = [
+  { code: 'no_longer_needed', label: 'The product is no longer needed' },
+  {
+    code: 'duplicate_request',
+    label: 'The product request was created by mistake or duplicated',
+  },
+  {
+    code: 'documents_unavailable',
+    label: 'Required supporting documents are unavailable',
+  },
+  {
+    code: 'cannot_correct',
+    label: 'Unable to provide the requested corrections',
+  },
+  {
+    code: 'product_unavailable',
+    label: 'The product or supplier is no longer available',
+  },
+  { code: 'other', label: 'Other reason' },
+];
+
+//===================================================================
+
+export const ADMIN_PRODUCT_REQUEST_REJECTION_REASONS: readonly ReasonOption[] =
+  [
+    {
+      code: 'invalid_documents',
+      label: 'Supporting documents are missing or invalid',
+    },
+    {
+      code: 'incorrect_product_data',
+      label: 'Product information does not match the packaging or documents',
+    },
+    {
+      code: 'duplicate_product',
+      label: 'Product already exists in the catalog',
+    },
+    {
+      code: 'regulatory_requirements',
+      label: 'Product does not meet legal or regulatory requirements',
+    },
+    {
+      code: 'unsafe_product',
+      label: 'Product does not meet marketplace safety or quality requirements',
+    },
+    { code: 'other', label: 'Other reason' },
+  ];
+
+//===================================================================
+
 export const ADMIN_OWNER_BLOCK_REASONS: readonly ReasonOption[] = [
   {
     code: 'identity_verification',

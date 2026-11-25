@@ -954,6 +954,7 @@ function NewProductRequestPageContent({
   const handleConfirmModeration = async () => {
     if (
       !requestId ||
+      !request ||
       !canSubmitSaved ||
       !isModerationReady ||
       mutationLockRef.current
@@ -964,7 +965,7 @@ function NewProductRequestPageContent({
     setSavingStatus('moderation');
 
     try {
-      const result = await submitPharmacyProductRequest(requestId);
+      const result = await submitPharmacyProductRequest(request);
 
       setRequest(result);
       setIsModerationConfirmOpen(false);
@@ -985,13 +986,13 @@ function NewProductRequestPageContent({
   };
 
   const handleCancelRequest = async () => {
-    if (!requestId || mutationLockRef.current) return;
+    if (!requestId || !request || mutationLockRef.current) return;
 
     mutationLockRef.current = true;
     setIsDeleting(true);
 
     try {
-      const result = await cancelPharmacyProductRequest(requestId);
+      const result = await cancelPharmacyProductRequest(request);
 
       setRequest(result);
       setIsCancelConfirmOpen(false);
@@ -1304,7 +1305,7 @@ function NewProductRequestPageContent({
     <main className={css.page} aria-labelledby="product-request-page-title">
       <section className={css.contentCard}>
         <PageHeader
-          className={css.requestPageHeader}
+          actionsLayout="responsive"
           title={
             <span className={css.titleWithTooltip}>
               {titlePrefix ? `${titlePrefix} ` : null}

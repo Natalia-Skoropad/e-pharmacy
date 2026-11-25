@@ -5,6 +5,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import type {
   ProductRequestArticleAvailabilityQuery,
   ProductRequestFormInput,
+  ProductRequestCancellationInput,
   ProductRequestParams,
   ProductRequestsQuery,
 } from '../../schemas/catalog/product-request.schema';
@@ -159,13 +160,14 @@ export async function submitProductRequest(
 
 export async function cancelProductRequest(
   req: Request,
-  res: ValidatedResponse<unknown, ProductRequestParams>
+  res: ValidatedResponse<ProductRequestCancellationInput, ProductRequestParams>
 ): Promise<void> {
   const { requestId } = res.locals.validated.params;
 
   const data = await cancelProductRequestService(
     req.user?.id ?? '',
     requestId,
+    res.locals.validated.body.reason,
     res.locals.requestId
   );
 

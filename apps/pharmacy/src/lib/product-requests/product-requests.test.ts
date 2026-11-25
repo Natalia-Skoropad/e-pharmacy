@@ -4,6 +4,7 @@ import test from 'node:test';
 import { ApiError } from '@e-pharmacy/api-client/transport';
 
 import {
+  confirmsProductRequestTransition,
   normalizeProductRequest,
   normalizeProductRequestDetails,
   normalizeProductRequestStatisticsResponse,
@@ -223,5 +224,109 @@ test('product request detail preserves recorded actor names but never assigns in
     parse([{ ...entry, actorName: ' ', actorNameSource: 'current_owner' }])
       ?.actorNameSource,
     undefined
+  );
+});
+
+//===============================================================
+
+test('a lost mutation response is confirmed only by a new matching saved history event', () => {
+  const initial = normalizeProductRequestDetails({
+    ...validRequest(),
+    status: 'new',
+    history: [],
+  });
+
+  const submitted = normalizeProductRequestDetails({
+    ...validRequest(),
+    history: [{ ...validRequest().history[0]!, title: 'Sent for moderation' }],
+  });
+
+  assert.ok(initial && submitted);
+
+  assert.equal(
+    confirmsProductRequestTransition(initial, submitted, 'submit'),
+    true
+  );
+
+  assert.equal(
+    confirmsProductRequestTransition(submitted, submitted, 'submit'),
+    false
+  );
+
+  assert.equal(
+    confirmsProductRequestTransition(
+      initial,
+      { ...submitted, history: [] },
+      'submit'
+    ),
+    false
+  );
+
+  assert.equal(
+    confirmsProductRequestTransition(
+      initial,
+      {
+        ...submitted,
+        history: [{ ...submitted.history[0]!, isInferred: true }],
+      },
+      'submit'
+    ),
+    false
+  );
+
+  const corrections = {
+    ...submitted,
+    reviewState: 'changes_requested' as const,
+  };
+
+  assert.equal(
+    confirmsProductRequestTransition(corrections, submitted, 'submit'),
+    false
+  );
+
+  const resent = normalizeProductRequestDetails({
+    ...validRequest(),
+    history: [
+      ...submitted.history,
+      { ...submitted.history[0]!, id: `${REQUEST_ID}-1` },
+    ],
+  });
+
+  assert.ok(resent);
+
+  assert.equal(
+    confirmsProductRequestTransition(corrections, resent, 'submit'),
+    true
+  );
+
+  const cancelled = normalizeProductRequestDetails({
+    ...validRequest(),
+    status: 'rejected',
+    cancelledBy: 'owner',
+
+    history: [
+      {
+        ...submitted.history[0]!,
+        id: `${REQUEST_ID}-2`,
+        status: 'rejected',
+        title: 'Cancelled by owner',
+      },
+    ],
+  });
+
+  assert.ok(cancelled);
+
+  assert.equal(
+    confirmsProductRequestTransition(corrections, cancelled, 'cancel'),
+    true
+  );
+
+  assert.equal(
+    confirmsProductRequestTransition(
+      corrections,
+      { ...cancelled, cancelledBy: 'admin' },
+      'cancel'
+    ),
+    false
   );
 });

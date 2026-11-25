@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
+import { ADMIN_PRODUCT_REQUEST_REJECTION_REASONS } from '@e-pharmacy/config/reasons';
+
 import {
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
   CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
@@ -767,7 +769,7 @@ test('request category overview and table use the same chip and approved palette
   assert.match(table, /<AdminProductRequestCategory request=\{request\}/);
   assert.match(category, /if \(!name\) return <span>—<\/span>/);
   assert.match(category, /css\.categoryIconWrap/);
-  assert.match(category, /<CategoryIcon name=\{request\.category\?\.icon\}/);
+  assert.match(category, /<CategoryIcon name=\{icon\}/);
 
   for (const name of ['categoryCell', 'categoryText', 'categoryIconWrap']) {
     const pattern = new RegExp(`\\.${name} \\{[^}]+\\}`);
@@ -794,4 +796,110 @@ test('status activity prefers the recorded actor name rather than an invented ow
   assert.doesNotMatch(source, /ownerDetail\.name/);
   assert.match(source, /actorNameSource === 'current_owner'/);
   assert.match(source, /current account name/);
+});
+
+//===============================================================
+
+test('request moderation uses the approved responsive header and reason modal presentation', async () => {
+  const read = (path: string) =>
+    readFile(new URL(path, import.meta.url), 'utf8');
+
+  const [detail, modal, category, sharedModal, header] = await Promise.all([
+    read('../../components/product-requests/AdminProductRequests.tsx'),
+
+    read(
+      '../../components/product-requests/AdminProductRequestModerationModal.tsx'
+    ),
+
+    read('../../components/activity/ProductRequestAuditChanges.tsx'),
+    read('../../../../../packages/ui/src/overlays/ReasonModal/ReasonModal.tsx'),
+
+    read(
+      '../../../../../packages/ui/src/layout/PageHeader/PageHeader.module.css'
+    ),
+  ]);
+
+  assert.match(detail, /actionsLayout="responsive"/);
+
+  assert.match(
+    header,
+    /grid-template-columns: minmax\(0, 1fr\) fit-content\(55%\)/
+  );
+
+  assert.match(modal, /<ReasonModal/);
+  assert.doesNotMatch(modal, /<textarea|<ConfirmationModal/);
+  assert.match(modal, /overviewCss\.activityTransition/);
+  assert.match(modal, /<span aria-hidden="true">→<\/span>/);
+  assert.match(modal, /cancelLabel: 'Cancel'/);
+  assert.match(modal, /tone: 'moderation'/);
+  assert.match(modal, /tone: 'danger'/);
+  assert.match(modal, /tone: 'accent'/);
+  assert.match(modal, /label="Cancelled by Admin"/);
+  assert.match(modal, /ADMIN_PRODUCT_REQUEST_REJECTION_REASONS/);
+
+  assert.equal(
+    ADMIN_PRODUCT_REQUEST_REJECTION_REASONS.filter(
+      (option) => option.code !== 'other'
+    ).length,
+    5
+  );
+
+  assert.equal(ADMIN_PRODUCT_REQUEST_REJECTION_REASONS.at(-1)?.code, 'other');
+
+  assert.equal(
+    new Set(
+      ADMIN_PRODUCT_REQUEST_REJECTION_REASONS.map((option) => option.code)
+    ).size,
+    6
+  );
+
+  assert.match(modal, /confirmDisabled=\{needsCategory && !categoryId\}/);
+  assert.match(sharedModal, /<CommentInput/);
+  assert.match(sharedModal, /\{cancelLabel\}[\s\S]*?\{confirmLabel\}/);
+  assert.match(category, /<ProductRequestCategoryLabel name=\{value\}/);
+});
+
+//===============================================================
+
+test('request status header keeps mobile width and uses the existing moderation help rows', async () => {
+  const read = (path: string) =>
+    readFile(new URL(path, import.meta.url), 'utf8');
+
+  const [detail, styles, overview, overviewStyles] = await Promise.all([
+    read('../../components/product-requests/AdminProductRequests.tsx'),
+    read('../../components/product-requests/AdminProductRequests.module.css'),
+    read('../../components/product-requests/AdminProductRequestOverview.tsx'),
+
+    read(
+      '../../components/product-requests/AdminProductRequestOverview.module.css'
+    ),
+  ]);
+
+  assert.match(detail, /<Button[\s\S]*?fullWidth[\s\S]*?Manage request status/);
+  assert.match(styles, /\.card \.statusMenu > button\s*\{[^}]*width: 100%/);
+
+  assert.match(
+    detail,
+    /choices\.map\([\s\S]*?menuCss\.menuActionRow[\s\S]*?<InfoTooltip[\s\S]*?preferTopLayer/
+  );
+
+  assert.match(
+    detail,
+    /Only the pharmacy owner can resubmit after corrections/
+  );
+
+  assert.doesNotMatch(
+    detail,
+    /Awaiting the owner’s corrections and resubmission|Administrator feedback/
+  );
+
+  assert.match(
+    overview,
+    /css\.statusMetadataItem[\s\S]*?<dt>Status<\/dt>[\s\S]*?label="Needs changes"/
+  );
+
+  assert.match(
+    overviewStyles,
+    /\.statusMetadataItem \.statusLine\s*\{[^}]*gap: 4px/
+  );
 });

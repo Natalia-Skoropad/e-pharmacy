@@ -37,6 +37,7 @@ export type ReasonModalProps = Readonly<{
   cancelLabel: string;
   requestError?: ReactNode;
   isLoading?: boolean;
+  confirmDisabled?: boolean;
   tone?: ReasonModalTone;
   onCancel: () => void;
   onConfirm: () => void;
@@ -87,6 +88,7 @@ function ReasonModal({
   error = '',
   requestError,
   isLoading = false,
+  confirmDisabled = false,
   tone = 'danger',
   onValueChange,
   onCancel,
@@ -227,7 +229,7 @@ function ReasonModal({
               )
             }
             isLoading={isLoading}
-            disabled={Boolean(error) || isLoading}
+            disabled={confirmDisabled || Boolean(error) || isLoading}
             onClick={onConfirm}
           >
             {confirmLabel}

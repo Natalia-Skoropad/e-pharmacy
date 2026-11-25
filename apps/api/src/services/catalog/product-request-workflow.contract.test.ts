@@ -164,3 +164,39 @@ test('supporting documents use owner-scoped binary storage and transactional att
   assert.match(migration, /process\.argv\.includes\('--apply'\)/);
   assert.match(migration, /session\.withTransaction/);
 });
+
+//===================================================================
+
+test('owner cancellation validates and records the selected reason in the request, history and audit', async () => {
+  const read = (relative: string) =>
+    readFile(resolve(process.cwd(), relative), 'utf8');
+
+  const [route, controller, service] = await Promise.all([
+    read('src/routes/catalog/product-request.routes.ts'),
+    read('src/controllers/catalog/product-request.controller.ts'),
+    read('src/services/catalog/product-request-management.service.ts'),
+  ]);
+
+  assert.match(
+    route,
+    /'\/:requestId\/cancel'[\s\S]*?authorizeRoles\(USER_ROLES\.PHARMACY\)[\s\S]*?body: productRequestCancellationSchema/
+  );
+
+  assert.match(
+    controller,
+    /cancelProductRequestService\([\s\S]*?res\.locals\.validated\.body\.reason/
+  );
+
+  const cancel = service.slice(
+    service.indexOf('export async function cancelProductRequestService')
+  );
+
+  assert.match(cancel, /request\.reviewState !== 'changes_requested'/);
+  assert.match(cancel, /request\.rejectionReason = cancellationReason/);
+  assert.match(cancel, /description: cancellationReason/);
+
+  assert.match(
+    cancel,
+    /auditProductRequestMutation\([\s\S]*?reason: cancellationReason/
+  );
+});

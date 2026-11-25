@@ -31,6 +31,7 @@ import {
 } from './product-request-history-actor';
 
 import { getProductRequestOwnerScope } from './product-request-access';
+import { getProductRequestByIdService } from './product-request-read.service';
 import { assertArticleAvailable } from './product-request-articles';
 import { getStatusHistoryCopy } from './product-request-projection';
 
@@ -589,16 +590,9 @@ export async function submitProductRequestService(
   if (!updatedId)
     throw new Error('Product request submit transaction did not commit.');
 
-  const updatedRequest = await ProductRequest.findById(updatedId);
-
-  if (!updatedRequest)
-    throw new Error('Product request submit result not found.');
-
-  return {
-    request: await serializeProductRequestDetail(
-      updatedRequest.toObject() as unknown as ProductRequestDocument
-    ),
-  };
+  // Return the same complete, owner-scoped DTO as the detail endpoint.
+  // A successful transition must not omit its catalog category or counts.
+  return getProductRequestByIdService(userId, String(updatedId));
 }
 
 //===============================================================
@@ -606,8 +600,17 @@ export async function submitProductRequestService(
 export async function cancelProductRequestService(
   userId: string,
   requestId: string,
+  reason: string,
   auditRequestId?: string
 ) {
+  const cancellationReason = reason.trim();
+
+  if (!cancellationReason || cancellationReason.length > 1000)
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'A valid cancellation reason is required.'
+    );
+
   const scope = await getProductRequestOwnerScope(userId);
 
   if (!Types.ObjectId.isValid(requestId))
@@ -647,7 +650,7 @@ export async function cancelProductRequestService(
       request.status = 'rejected';
       request.reviewState = undefined;
       request.cancelledBy = 'owner';
-      request.rejectionReason = 'Cancelled by owner';
+      request.rejectionReason = cancellationReason;
 
       request.history = [
         ...(request.history ?? []),
@@ -655,10 +658,7 @@ export async function cancelProductRequestService(
         {
           status: 'rejected',
           title: 'Cancelled by owner',
-
-          description:
-            'The owner cancelled the request after Admin requested corrections.',
-
+          description: cancellationReason,
           createdAt: new Date(),
 
           actorNameSnapshot: await getProductRequestHistoryActorName(
@@ -679,6 +679,7 @@ export async function cancelProductRequestService(
         after: productRequestAuditSnapshot(request),
         session,
         requestId: auditRequestId,
+        reason: cancellationReason,
       });
 
       updatedId = request._id;
@@ -690,14 +691,7 @@ export async function cancelProductRequestService(
   if (!updatedId)
     throw new Error('Product request cancel transaction did not commit.');
 
-  const updatedRequest = await ProductRequest.findById(updatedId);
-
-  if (!updatedRequest)
-    throw new Error('Product request cancel result not found.');
-
-  return {
-    request: await serializeProductRequestDetail(
-      updatedRequest.toObject() as unknown as ProductRequestDocument
-    ),
-  };
+  // Return the same complete, owner-scoped DTO as the detail endpoint.
+  // A successful transition must not omit its catalog category or counts.
+  return getProductRequestByIdService(userId, String(updatedId));
 }

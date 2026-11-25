@@ -80,7 +80,7 @@ export function AdminProductRequestOverview({
             {notice}
           </p>
           <dl className={css.metadata}>
-            <div className={css.metadataItem}>
+            <div className={`${css.metadataItem} ${css.statusMetadataItem}`}>
               <dt>Status</dt>
               <dd className={css.statusLine}>
                 <StatusBadge

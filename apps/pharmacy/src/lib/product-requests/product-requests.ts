@@ -520,3 +520,44 @@ export function normalizeProductRequestsResponse(
     earliestCreatedAt: parseEarliestCreatedAt(payload),
   };
 }
+
+//===================================================================
+
+// A mutation response may be lost after the server commits. Only treat a
+// fresh authorized read as confirmation if it contains a new matching event.
+export function confirmsProductRequestTransition(
+  previous: ProductRequestDetailsViewModel,
+  fresh: ProductRequestDetailsViewModel,
+  transition: 'submit' | 'cancel'
+): boolean {
+  if (previous.id !== fresh.id) return false;
+
+  const previousEligible =
+    transition === 'submit'
+      ? previous.status === 'new' ||
+        (previous.status === 'on_moderation' &&
+          previous.reviewState === 'changes_requested')
+      : previous.status === 'on_moderation' &&
+        previous.reviewState === 'changes_requested';
+
+  if (!previousEligible) return false;
+
+  const previousIds = new Set(previous.history.map((entry) => entry.id));
+  const status = transition === 'submit' ? 'on_moderation' : 'rejected';
+
+  const title =
+    transition === 'submit' ? 'Sent for moderation' : 'Cancelled by owner';
+
+  return (
+    fresh.status === status &&
+    !fresh.reviewState &&
+    (transition !== 'cancel' || fresh.cancelledBy === 'owner') &&
+    fresh.history.some(
+      (entry) =>
+        !entry.isInferred &&
+        !previousIds.has(entry.id) &&
+        entry.status === status &&
+        entry.title === title
+    )
+  );
+}

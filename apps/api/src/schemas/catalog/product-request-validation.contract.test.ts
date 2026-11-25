@@ -9,6 +9,7 @@ import {
   productRequestsQuerySchema,
   productRequestFormSchema,
   productRequestModerationSchema,
+  productRequestCancellationSchema,
 } from './product-request.schema';
 
 //===============================================================
@@ -542,6 +543,42 @@ test('admin registry supports combined owner, request, date, category and status
     adminProductRequestsQuerySchema.safeParse({
       ...query,
       categoryMode: 'custom',
+    }).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('owner cancellation requires a non-empty reason of at most 1000 characters', () => {
+  assert.deepEqual(
+    productRequestCancellationSchema.parse({ reason: '  No longer needed  ' }),
+    { reason: 'No longer needed' }
+  );
+
+  assert.equal(productRequestCancellationSchema.safeParse({}).success, false);
+
+  assert.equal(
+    productRequestCancellationSchema.safeParse({ reason: '   ' }).success,
+    false
+  );
+
+  assert.equal(
+    productRequestCancellationSchema.safeParse({ reason: 'x'.repeat(1000) })
+      .success,
+    true
+  );
+
+  assert.equal(
+    productRequestCancellationSchema.safeParse({ reason: 'x'.repeat(1001) })
+      .success,
+    false
+  );
+
+  assert.equal(
+    productRequestCancellationSchema.safeParse({
+      reason: 'valid',
+      status: 'approved',
     }).success,
     false
   );

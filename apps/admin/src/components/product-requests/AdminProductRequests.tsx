@@ -17,24 +17,20 @@ import {
   StickyNote,
   CheckCircle,
   CircleX,
-  X,
-  ArrowRight,
+  Info,
 } from 'lucide-react';
 
 import { Button } from '@e-pharmacy/ui/primitives';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
+import { useToast } from '@e-pharmacy/ui/feedback';
 
 import {
   ProfileResourceState,
   ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
 
-import { useToast } from '@e-pharmacy/ui/feedback';
-
-import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { parseApiResponseData } from '@e-pharmacy/api-client/response';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
@@ -67,6 +63,11 @@ import { PharmacyCommentsTab } from '@/components/pharmacies/PharmacyDetailsPage
 import { AdminProductRequestOverview } from './AdminProductRequestOverview';
 import { AdminProductRequestPanels } from './AdminProductRequestPanels';
 import menuCss from '../pharmacies/PharmacyDetailsPageContent/PharmacyModerationActions.module.css';
+
+import {
+  AdminProductRequestModerationModal,
+  type ModerationAction,
+} from './AdminProductRequestModerationModal';
 
 import css from './AdminProductRequests.module.css';
 
@@ -113,28 +114,27 @@ const tabs: TabItem<RequestTab>[] = REQUEST_TABS.map((value) => {
 
 //===================================================================
 
-type ModerationAction = 'approved' | 'rejected' | 'changes_requested';
-
-//===================================================================
-
 const choices = [
   {
     action: 'approved',
     label: 'Approve request',
     Icon: CheckCircle,
     style: menuCss.approveAction,
+    help: 'Approve the reviewed request and create or link a catalog product.',
   },
   {
     action: 'changes_requested',
     label: 'Request corrections',
     Icon: ClipboardList,
     style: menuCss.correctionsAction,
+    help: 'Return the request to the owner for corrections and resubmission.',
   },
   {
     action: 'rejected',
     label: 'Reject request',
     Icon: CircleX,
     style: menuCss.dangerAction,
+    help: 'Reject the request with a reason visible to the owner.',
   },
 ] as const;
 
@@ -253,7 +253,7 @@ export function AdminProductRequestDetails({
     const outside = (event: PointerEvent) => {
       if (
         event.target instanceof Element &&
-        !event.target.closest('[data-request-status-menu]')
+        !event.target.closest('[data-request-status-menu], [role="tooltip"]')
       )
         setMenuOpen(false);
     };
@@ -324,6 +324,7 @@ export function AdminProductRequestDetails({
     <main className={css.page} aria-labelledby="request-title">
       <section className={css.card}>
         <PageHeader
+          actionsLayout="responsive"
           titleId="request-title"
           title={
             <span className={css.title}>
@@ -333,46 +334,74 @@ export function AdminProductRequestDetails({
           icon={<FilePlus2 size={23} />}
           actions={
             canModerate && request?.status === 'on_moderation' ? (
-              <div className={menuCss.menuWrapper} data-request-status-menu>
+              <div
+                className={`${menuCss.menuWrapper} ${css.statusMenu}`}
+                data-request-status-menu
+              >
                 <Button
                   type="button"
                   size="sm"
+                  fullWidth
                   variant="secondary"
                   iconLeft={<ClipboardCheck size={17} />}
-                  iconRight={<ChevronDown size={16} />}
                   aria-expanded={menuOpen}
                   onClick={() => setMenuOpen((v) => !v)}
                 >
-                  Manage request status
+                  Manage request status{' '}
+                  <ChevronDown size={16} aria-hidden="true" />
                 </Button>
 
                 {menuOpen ? (
-                  <div className={menuCss.menu}>
+                  <div className={`${menuCss.menu} ${css.statusMenuOptions}`}>
                     {choices.map(
-                      ({ action: choice, label, Icon: ActionIcon, style }) => (
-                        <button
-                          key={choice}
-                          type="button"
-                          className={style}
-                          disabled={!canDecide || busy}
-                          onClick={() => {
-                            setMenuOpen(false);
-                            setReason('');
-                            setCategoryId('');
-                            setCategoriesError(false);
-                            setAction(choice);
-                          }}
-                        >
-                          <ActionIcon size={17} />
-                          {label}
-                        </button>
+                      ({
+                        action: choice,
+                        label,
+                        Icon: ActionIcon,
+                        style,
+                        help,
+                      }) => (
+                        <div key={choice} className={menuCss.menuActionRow}>
+                          <button
+                            type="button"
+                            className={style}
+                            disabled={!canDecide || busy}
+                            onClick={() => {
+                              setMenuOpen(false);
+                              setReason('');
+                              setCategoryId('');
+                              setCategoriesError(false);
+                              setAction(choice);
+                            }}
+                          >
+                            <ActionIcon size={17} aria-hidden="true" />
+                            {label}
+                          </button>
+                          <InfoTooltip
+                            label={
+                              canDecide
+                                ? `About ${label}`
+                                : `Why ${label} is unavailable`
+                            }
+                            title={label}
+                            icon={<Info size={17} aria-hidden="true" />}
+                            escapeOverflow
+                            preferTopLayer
+                            items={[
+                              {
+                                title: canDecide
+                                  ? 'Moderation action'
+                                  : 'Action unavailable',
+                                description:
+                                  request.reviewState === 'changes_requested'
+                                    ? 'Only the pharmacy owner can resubmit after corrections.'
+                                    : help,
+                              },
+                            ]}
+                          />
+                        </div>
                       )
                     )}
-                    {request.reviewState ? (
-                      <small className={menuCss.savedDraftHint}>
-                        Awaiting the owner’s corrections and resubmission.
-                      </small>
-                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -435,12 +464,6 @@ export function AdminProductRequestDetails({
               />
             ) : request ? (
               <>
-                {request.rejectionReason ? (
-                  <div className={css.feedback}>
-                    <strong>Administrator feedback</strong>
-                    <p>{request.rejectionReason}</p>
-                  </div>
-                ) : null}
                 {activeTab === 'details' ? (
                   <AdminProductRequestOverview
                     request={request}
@@ -457,90 +480,17 @@ export function AdminProductRequestDetails({
           </section>
         )}
       </section>
-      {action && canDecide ? (
-        <ConfirmationModal
-          title={
-            action === 'approved'
-              ? 'Approve this product request?'
-              : action === 'rejected'
-                ? 'Reject this product request?'
-                : 'Request corrections?'
-          }
-          eyebrow="Product request status"
-          confirmLabel={
-            action === 'approved'
-              ? 'Approve request'
-              : action === 'rejected'
-                ? 'Reject request'
-                : 'Request corrections'
-          }
-          cancelLabel="Keep reviewing"
-          confirmIconLeft={<CheckCircle size={17} />}
-          cancelIconLeft={<X size={17} />}
-          isLoading={busy}
-          destructive={action === 'rejected'}
-          confirmButtonClassName={
-            action === 'changes_requested' ? css.warningConfirm : undefined
-          }
-          closeOnBackdrop={!busy}
-          closeOnEscape={!busy}
-          description={
-            <div className={css.modalBody}>
-              <div className={menuCss.statusTransition}>
-                <StatusBadge
-                  {...PRODUCT_REQUEST_STATUS_PRESENTATION.on_moderation}
-                />
-                <ArrowRight size={17} />
-                <StatusBadge
-                  {...PRODUCT_REQUEST_STATUS_PRESENTATION[
-                    action === 'changes_requested' ? 'on_moderation' : action
-                  ]}
-                />
-                {action === 'changes_requested' ? (
-                  <StatusBadge label="Needs changes" tone="neutral" />
-                ) : null}
-              </div>
-              <p>
-                {action === 'approved'
-                  ? 'Approval creates or links a global product. This cannot be undone.'
-                  : action === 'rejected'
-                    ? 'The request becomes Rejected / Cancelled by Admin.'
-                    : 'The owner can correct the request and resubmit it. Moderation remains locked until then.'}
-              </p>
-              {action !== 'approved' ? (
-                <label className={css.reason}>
-                  Reason for Admin feedback *
-                  <textarea
-                    required
-                    maxLength={1000}
-                    value={reason}
-                    disabled={busy}
-                    onChange={(event) => setReason(event.target.value)}
-                  />
-                </label>
-              ) : request?.category?.id ? null : (
-                <label className={css.reason}>
-                  Catalog category *
-                  <select
-                    required
-                    value={categoryId}
-                    disabled={busy}
-                    onChange={(event) => setCategoryId(event.target.value)}
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  {categoriesError ? (
-                    <span>Could not load categories. Close and retry.</span>
-                  ) : null}
-                </label>
-              )}
-            </div>
-          }
+      {action && canDecide && request ? (
+        <AdminProductRequestModerationModal
+          action={action}
+          request={request}
+          reason={reason}
+          categoryId={categoryId}
+          categories={categories}
+          categoriesError={categoriesError}
+          busy={busy}
+          onReasonChange={setReason}
+          onCategoryChange={setCategoryId}
           onConfirm={() => void decide()}
           onCancel={() => {
             if (!busy) {

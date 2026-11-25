@@ -31,6 +31,7 @@ import { validate } from '../../middlewares/http/validate.middleware';
 import {
   productRequestArticleAvailabilityQuerySchema,
   productRequestFormSchema,
+  productRequestCancellationSchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
 } from '../../schemas/catalog/product-request.schema';
@@ -137,6 +138,11 @@ productRequestRoutes.post(
 productRequestRoutes.post(
   '/:requestId/cancel',
   authorizeRoles(USER_ROLES.PHARMACY),
-  validate({ params: productRequestParamsSchema }),
+
+  validate({
+    params: productRequestParamsSchema,
+    body: productRequestCancellationSchema,
+  }),
+
   ctrlWrapper(cancelProductRequest)
 );

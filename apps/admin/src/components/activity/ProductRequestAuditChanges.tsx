@@ -14,10 +14,12 @@ import {
 import {
   getProductRequestAuditRows,
   type ProductRequestAuditRow,
+  type ProductRequestAuditCategory,
   type ProductRequestAuditStatus,
 } from '@/lib/audit/product-request-audit-presentation';
 
 import { RenderAuditValue } from './AuditChangeValue';
+import { ProductRequestCategoryLabel } from '../product-requests/AdminProductRequestCategory';
 
 import css from './ActivityHistory.module.css';
 
@@ -27,11 +29,17 @@ function Value({
   value,
   field,
   status,
+  category,
 }: Readonly<{
   value: AdminAuditValue;
   field: string;
   status?: ProductRequestAuditStatus;
+  category?: ProductRequestAuditCategory;
 }>) {
+  if (category && typeof value === 'string' && value.trim()) {
+    return <ProductRequestCategoryLabel name={value} {...category} />;
+  }
+
   if (status) {
     const presentation = getAdminAuditStatusPresentation(status.value);
 
@@ -96,7 +104,12 @@ const COLUMNS: readonly DataTableColumn<ProductRequestAuditRow>[] = [
     title: 'Before',
     width: '25%',
     render: (row) => (
-      <Value field={row.field} value={row.before} status={row.beforeStatus} />
+      <Value
+        field={row.field}
+        value={row.before}
+        status={row.beforeStatus}
+        category={row.beforeCategory}
+      />
     ),
   },
   {
@@ -104,7 +117,12 @@ const COLUMNS: readonly DataTableColumn<ProductRequestAuditRow>[] = [
     title: 'After',
     width: '25%',
     render: (row) => (
-      <Value field={row.field} value={row.after} status={row.afterStatus} />
+      <Value
+        field={row.field}
+        value={row.after}
+        status={row.afterStatus}
+        category={row.afterCategory}
+      />
     ),
   },
 ];

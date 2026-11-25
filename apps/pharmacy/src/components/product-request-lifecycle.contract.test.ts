@@ -546,12 +546,14 @@ test('existing request save actions belong to editable tabs and long names do no
   );
 
   const headerStyles = await read(
-    'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.module.css'
+    '../../packages/ui/src/layout/PageHeader/PageHeader.module.css'
   );
+
+  assert.match(editor, /actionsLayout="responsive"/);
 
   assert.match(
     headerStyles,
-    /\.contentCard > \.requestPageHeader\s*\{[^}]*display: grid/
+    /\.header\.responsiveActions\s*\{[^}]*display: grid/
   );
 
   assert.match(

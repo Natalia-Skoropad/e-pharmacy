@@ -8,6 +8,7 @@ import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-in
 import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { User } from '../../models/accounts/user.model';
 import { Product } from '../../models/catalog/product.model';
 import { ProductCategory } from '../../models/catalog/productCategory.model';
@@ -32,6 +33,8 @@ import type { HttpError } from '../../types/http/errors';
 import {
   createProductRequestService,
   updateProductRequestService,
+  submitProductRequestService,
+  cancelProductRequestService,
 } from './product-request-management.service';
 
 import {
@@ -413,11 +416,12 @@ test(
           });
 
           const category = await ProductCategory.findById(medicineCategoryId)
-            .select('name')
+            .select('name icon')
             .lean();
 
           assert.ok(category);
           assert.equal(creationDetails.after.categoryName, category.name);
+          assert.equal(creationDetails.after.categoryIcon, category.icon);
 
           assert.equal(
             creationDetails.after.categoryId,
@@ -470,6 +474,166 @@ test(
           );
 
           assert.equal(after.total, 4);
+        }
+      );
+
+      await context.test(
+        'owner submission and cancellation return the complete authorized detail contract',
+        async () => {
+          const request = await ProductRequest.create({
+            ownerId: ownerA,
+            name: 'Complete moderation request',
+            article: `REQ-SUBMIT-${suffix.slice(-10)}`,
+            status: 'new',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
+            brand: 'Workflow Brand',
+            series: 'Workflow Series',
+            manufacturer: 'Workflow Manufacturer',
+
+            fullDescription:
+              'Complete product description for moderation. '.repeat(4),
+
+            productImage: {
+              name: 'image.png',
+              type: 'image/png',
+              size: 1,
+              dataUrl: 'data:image/png;base64,AA==',
+            },
+
+            additionalFiles: [
+              {
+                name: 'certificate.pdf',
+                type: 'application/pdf',
+                size: 1,
+                dataUrl: 'data:application/pdf;base64,AA==',
+              },
+            ],
+
+            history: [
+              {
+                status: 'new',
+                title: 'Request created',
+                description: 'The pharmacy owner saved a new request.',
+                createdAt: new Date(),
+              },
+            ],
+          });
+
+          requestIds.push(request._id as Types.ObjectId);
+
+          const id = String(request._id);
+
+          await PharmacyNote.create({
+            ownerId: ownerA,
+            entityType: 'product_request',
+            entityId: request._id,
+            text: 'Private owner note',
+            createdBy: ownerA,
+          });
+
+          const submitted = await submitProductRequestService(
+            ownerA.toString(),
+            id,
+            randomUUID()
+          );
+
+          assert.equal(submitted.request.status, 'on_moderation');
+
+          assert.equal(
+            submitted.request.category?.id,
+            String(medicineCategoryId)
+          );
+
+          assert.ok(submitted.request.category?.name);
+          assert.equal(submitted.request.commentsTotal, 1);
+
+          assert.equal(
+            submitted.request.history?.at(-1)?.title,
+            'Sent for moderation'
+          );
+
+          assert.ok(submitted.request.history?.at(-1)?.actorName);
+
+          assert.deepEqual(
+            submitted,
+            await getProductRequestByIdService(ownerA.toString(), id)
+          );
+
+          await moderateProductRequestByAdminService(
+            id,
+            {
+              status: 'on_moderation',
+              reviewState: 'changes_requested',
+              reason: 'Provide additional information',
+            },
+            adminUserId.toString(),
+            randomUUID()
+          );
+
+          const resent = await submitProductRequestService(
+            ownerA.toString(),
+            id,
+            randomUUID()
+          );
+
+          assert.equal(resent.request.category?.id, String(medicineCategoryId));
+          assert.equal(resent.request.reviewState, undefined);
+
+          await moderateProductRequestByAdminService(
+            id,
+            {
+              status: 'on_moderation',
+              reviewState: 'changes_requested',
+              reason: 'Provide additional documents',
+            },
+            adminUserId.toString(),
+            randomUUID()
+          );
+
+          const cancellationAuditId = randomUUID();
+
+          const cancelled = await cancelProductRequestService(
+            ownerA.toString(),
+            id,
+            'Required supporting documents are unavailable',
+            cancellationAuditId
+          );
+
+          assert.equal(cancelled.request.status, 'rejected');
+          assert.equal(cancelled.request.cancelledBy, 'owner');
+
+          assert.equal(
+            cancelled.request.rejectionReason,
+            'Required supporting documents are unavailable'
+          );
+
+          assert.equal(
+            cancelled.request.history?.at(-1)?.description,
+            'Required supporting documents are unavailable'
+          );
+
+          assert.equal(
+            cancelled.request.category?.id,
+            String(medicineCategoryId)
+          );
+
+          assert.equal(cancelled.request.commentsTotal, 1);
+
+          assert.deepEqual(
+            cancelled,
+            await getProductRequestByIdService(ownerA.toString(), id)
+          );
+
+          const audit = await AdminAuditLog.findOne({
+            requestId: cancellationAuditId,
+            entityId: id,
+          }).lean();
+
+          assert.equal(
+            audit?.reason,
+            'Required supporting documents are unavailable'
+          );
         }
       );
 
@@ -1017,6 +1181,12 @@ test(
     } finally {
       await Promise.all([
         ProductRequest.deleteMany({ _id: { $in: requestIds } }),
+
+        PharmacyNote.deleteMany({
+          entityType: 'product_request',
+          entityId: { $in: requestIds },
+        }),
+
         Product.deleteMany({ _id: { $in: productIds } }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
         User.deleteMany({ _id: { $in: [ownerA, ownerB, adminUserId] } }),

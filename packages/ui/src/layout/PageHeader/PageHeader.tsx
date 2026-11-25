@@ -11,6 +11,7 @@ type PageHeaderProps = Readonly<{
   icon?: ReactNode;
   actions?: ReactNode;
   className?: string;
+  actionsLayout?: 'responsive';
 }>;
 
 //===================================================================
@@ -21,9 +22,16 @@ function PageHeader({
   icon,
   actions,
   className,
+  actionsLayout,
 }: PageHeaderProps) {
   return (
-    <div className={clsx(css.header, className)}>
+    <div
+      className={clsx(
+        css.header,
+        actionsLayout === 'responsive' && css.responsiveActions,
+        className
+      )}
+    >
       <div className={css.titleWrap}>
         {icon ? <span className={css.titleIconWrap}>{icon}</span> : null}
 

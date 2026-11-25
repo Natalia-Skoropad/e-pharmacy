@@ -426,6 +426,18 @@ export const productRequestParamsSchema = z.object({
 
 //===============================================================
 
+export const productRequestCancellationSchema = z
+  .object({
+    reason: z.string().trim().min(1, 'Reason is required.').max(1000),
+  })
+  .strict();
+
+export type ProductRequestCancellationInput = z.infer<
+  typeof productRequestCancellationSchema
+>;
+
+//===============================================================
+
 export const productRequestModerationSchema = z
   .object({
     status: z.enum(['on_moderation', 'approved', 'rejected']),
