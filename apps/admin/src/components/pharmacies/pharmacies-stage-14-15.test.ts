@@ -47,7 +47,7 @@ test('14.15: only the selected tab mounts its own lazy private resource', async 
     /getAdminPharmacyDocuments\(pharmacyId, \{ signal: controller\.signal \}\)/
   );
 
-  assert.match(notes, /getAdminPharmacyComments\(pharmacyId, \{ signal \}\)/);
+  assert.match(notes, /listComments\(pharmacyId, \{ signal \}\)/);
   assert.match(docs, /controller\.abort\(\)/);
   assert.match(notes, /controller\.abort\(\)/);
 });
@@ -119,7 +119,13 @@ test('14.15: pharmacy comments reuse shared UI and are scoped, audited, idempote
   assert.match(notes, /COMMENT_MAX_LENGTH = 1000/);
   assert.match(notes, /existing\?\.text === text/);
   assert.match(notes, /clientRequestId: createRequestId\(\)/);
-  assert.match(notes, /deleteAdminPharmacyComment\(pharmacyId, comment\.id/);
+
+  assert.match(
+    notes,
+    /deleteComment = api\?\.remove \?\? deleteAdminPharmacyComment/
+  );
+
+  assert.match(notes, /deleteComment\(pharmacyId, comment\.id/);
   assert.match(notes, /await reloadComments\(controller\.signal\)/);
   assert.match(schema, /max\(PHARMACY_OWNER_ADMIN_COMMENT_MAX_LENGTH\)/);
 

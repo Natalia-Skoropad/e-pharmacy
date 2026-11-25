@@ -185,7 +185,7 @@ test('14.17: only the active resource tab loads; future tabs remain informationa
 
   assert.match(
     comments,
-    /getAdminPharmacyComments\(pharmacyId, \{ signal: controller\.signal \}\)/
+    /listComments\(pharmacyId, \{ signal: controller\.signal \}\)/
   );
 
   assert.match(activity, /scopePharmacyId=\{pharmacyId\}/);

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { AdminAuthorizationProvider } from '@/providers/AdminAuthorizationProvider';
 import { AdminPharmacyOwnerNavigationBadgeProvider } from '@/providers/AdminPharmacyOwnerNavigationBadgeProvider';
 import { AdminPharmacyNavigationBadgeProvider } from '@/providers/AdminPharmacyNavigationBadgeProvider';
+import { AdminProductRequestNavigationBadgeProvider } from '@/providers/AdminProductRequestNavigationBadgeProvider';
 
 import { AdminProtectedRoute } from '@/components/auth/AdminProtectedRoute';
 import { AdminShell } from '@/components/layout/AdminShell/AdminShell';
@@ -21,7 +22,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <AdminAuthorizationProvider>
         <AdminPharmacyOwnerNavigationBadgeProvider>
           <AdminPharmacyNavigationBadgeProvider>
-            <AdminShell>{children}</AdminShell>
+            <AdminProductRequestNavigationBadgeProvider>
+              <AdminShell>{children}</AdminShell>
+            </AdminProductRequestNavigationBadgeProvider>
           </AdminPharmacyNavigationBadgeProvider>
         </AdminPharmacyOwnerNavigationBadgeProvider>
       </AdminAuthorizationProvider>

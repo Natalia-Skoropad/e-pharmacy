@@ -47,10 +47,33 @@ function createRequestId(): string {
 
 //===================================================================
 
+type ResourceComment = Pick<
+  AdminPharmacyComment,
+  'id' | 'text' | 'createdAt' | 'author'
+>;
+
+//===================================================================
+
+type ResourceCommentsApi = {
+  list: (
+    ...args: Parameters<typeof getAdminPharmacyComments>
+  ) => Promise<{ comments: readonly ResourceComment[] }>;
+
+  create: (
+    ...args: Parameters<typeof createAdminPharmacyComment>
+  ) => Promise<{ comment: ResourceComment }>;
+
+  remove: typeof deleteAdminPharmacyComment;
+};
+
+//===================================================================
+
 type PharmacyCommentsTabProps = Readonly<{
   pharmacyId: string;
   canManage: boolean;
   onCountChange?: (count: number) => void;
+  resource?: 'pharmacy' | 'product request';
+  api?: ResourceCommentsApi;
 }>;
 
 //===================================================================
@@ -60,9 +83,14 @@ export function PharmacyCommentsTab({
   pharmacyId,
   canManage,
   onCountChange,
+  resource = 'pharmacy',
+  api,
 }: PharmacyCommentsTabProps) {
   const toast = useToast();
-  const [comments, setComments] = useState<readonly AdminPharmacyComment[]>([]);
+  const listComments = api?.list ?? getAdminPharmacyComments;
+  const createComment = api?.create ?? createAdminPharmacyComment;
+  const deleteComment = api?.remove ?? deleteAdminPharmacyComment;
+  const [comments, setComments] = useState<readonly ResourceComment[]>([]);
   const [loadedId, setLoadedId] = useState<string | null>(null);
   const [status, setStatus] = useState<ResourceStatus>('loading');
   const [loadError, setLoadError] = useState('');
@@ -71,7 +99,7 @@ export function PharmacyCommentsTab({
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [commentToDelete, setCommentToDelete] =
-    useState<AdminPharmacyComment | null>(null);
+    useState<ResourceComment | null>(null);
 
   const [reloadVersion, setReloadVersion] = useState(0);
   const createControllerRef = useRef<AbortController | null>(null);
@@ -88,7 +116,7 @@ export function PharmacyCommentsTab({
   }, [comments.length, effectiveStatus, onCountChange]);
 
   const applyComments = useCallback(
-    (next: readonly AdminPharmacyComment[]) => {
+    (next: readonly ResourceComment[]) => {
       setComments(next);
       setLoadedId(pharmacyId);
       setLoadError('');
@@ -99,18 +127,18 @@ export function PharmacyCommentsTab({
 
   const reloadComments = useCallback(
     async (signal?: AbortSignal) => {
-      const response = await getAdminPharmacyComments(pharmacyId, { signal });
+      const response = await listComments(pharmacyId, { signal });
 
       if (!signal?.aborted) applyComments(response.comments);
     },
 
-    [applyComments, pharmacyId]
+    [applyComments, pharmacyId, listComments]
   );
 
   useEffect(() => {
     const controller = new AbortController();
 
-    void getAdminPharmacyComments(pharmacyId, { signal: controller.signal })
+    void listComments(pharmacyId, { signal: controller.signal })
       .then((response) => {
         if (controller.signal.aborted) return;
 
@@ -124,12 +152,12 @@ export function PharmacyCommentsTab({
         setStatus('error');
 
         setLoadError(
-          'Could not load internal pharmacy comments. Please retry.'
+          `Could not load internal ${resource} comments. Please retry.`
         );
       });
 
     return () => controller.abort();
-  }, [pharmacyId, applyComments, reloadVersion]);
+  }, [pharmacyId, applyComments, reloadVersion, listComments, resource]);
 
   useEffect(
     () => () => {
@@ -176,7 +204,7 @@ export function PharmacyCommentsTab({
     setIsSaving(true);
 
     try {
-      const created = await createAdminPharmacyComment(pharmacyId, request, {
+      const created = await createComment(pharmacyId, request, {
         signal: controller.signal,
       });
 
@@ -222,7 +250,7 @@ export function PharmacyCommentsTab({
     deleteControllerRef.current = controller;
 
     try {
-      await deleteAdminPharmacyComment(pharmacyId, comment.id, {
+      await deleteComment(pharmacyId, comment.id, {
         signal: controller.signal,
       });
 
@@ -259,7 +287,7 @@ export function PharmacyCommentsTab({
       <ProfileSectionHeader
         title="Comments"
         titleId="pharmacy-admin-comments-title"
-        description="Private working comments about this pharmacy. Pharmacy owners and staff cannot see them."
+        description={`Private working comments about this ${resource}. Pharmacy owners and staff cannot see them.`}
         icon={<MessageSquareText size={22} />}
         action={
           effectiveStatus === 'success' ? (
@@ -277,7 +305,7 @@ export function PharmacyCommentsTab({
         <CommentComposer
           id="pharmacy-admin-comment"
           label="New comment"
-          placeholder="Write an internal comment about this pharmacy..."
+          placeholder={`Write an internal comment about this ${resource}...`}
           value={draft}
           maxLength={COMMENT_MAX_LENGTH}
           disabled={effectiveStatus !== 'success' || Boolean(deletingId)}
@@ -296,7 +324,7 @@ export function PharmacyCommentsTab({
         <ProfileResourceState
           variant="loading"
           title="Loading comments"
-          description="Loading private pharmacy notes."
+          description={`Loading private ${resource} notes.`}
         />
       ) : effectiveStatus === 'error' ? (
         <ProfileResourceState
@@ -312,7 +340,7 @@ export function PharmacyCommentsTab({
           title={null}
           commentTitle="Admin comment"
           emptyTitle="No internal comments yet"
-          emptyText="Admin employee comments about this pharmacy will appear here."
+          emptyText={`Admin employee comments about this ${resource} will appear here.`}
           emptyVariant="resource"
           deletingId={deletingId}
           deleteDisabled={isSaving}

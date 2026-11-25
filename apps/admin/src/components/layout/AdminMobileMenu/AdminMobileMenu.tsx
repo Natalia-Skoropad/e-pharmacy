@@ -14,10 +14,13 @@ import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 
 import type { AdminNavigationItem } from '@/lib/layout/navigation';
 import { ADMIN_ROUTES } from '@/lib/routes';
+import { requestProductRequestNavigationRefresh } from '@/lib/product-requests/product-request-navigation-refresh';
 
 import { useAdminPharmacyOwnerNavigationBadge } from '@/providers/AdminPharmacyOwnerNavigationBadgeProvider';
 import { useAdminPharmacyNavigationBadges } from '@/providers/AdminPharmacyNavigationBadgeProvider';
+import { useAdminProductRequestNavigationBadges } from '@/providers/AdminProductRequestNavigationBadgeProvider';
 
+import { ProductRequestNavigationBadges } from '@/components/layout/ProductRequestNavigationBadges/ProductRequestNavigationBadges';
 import { PharmacyNavigationBadges } from '@/components/layout/PharmacyNavigationBadges/PharmacyNavigationBadges';
 
 import css from './AdminMobileMenu.module.css';
@@ -50,6 +53,11 @@ export function AdminMobileMenu({
   const { user } = useAuth();
   const { newOwnerCount } = useAdminPharmacyOwnerNavigationBadge();
   const pharmacyCounts = useAdminPharmacyNavigationBadges();
+  const productRequestCounts = useAdminProductRequestNavigationBadges();
+
+  useEffect(() => {
+    if (isOpen) requestProductRequestNavigationRefresh();
+  }, [isOpen]);
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
@@ -109,6 +117,9 @@ export function AdminMobileMenu({
 
           const isPharmaciesLink = item.href === ADMIN_ROUTES.PHARMACIES;
 
+          const isProductRequestsLink =
+            item.href === ADMIN_ROUTES.PRODUCT_REQUESTS;
+
           const showNewOwnerBadge =
             isPharmacyOwnersLink && newOwnerCount !== null && newOwnerCount > 0;
 
@@ -120,13 +131,19 @@ export function AdminMobileMenu({
                   ? `${className} ${css.pharmacyOwnersLink}`
                   : isPharmaciesLink
                     ? `${className} ${css.pharmaciesLink}`
-                    : className
+                    : isProductRequestsLink
+                      ? `${className} ${css.productRequestsLink}`
+                      : className
               }
               {...props}
             >
               {children}
               {isPharmaciesLink ? (
                 <PharmacyNavigationBadges counts={pharmacyCounts} />
+              ) : null}
+
+              {isProductRequestsLink ? (
+                <ProductRequestNavigationBadges counts={productRequestCounts} />
               ) : null}
 
               {showNewOwnerBadge ? (

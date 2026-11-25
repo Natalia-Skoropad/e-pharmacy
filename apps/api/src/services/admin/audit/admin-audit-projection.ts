@@ -82,7 +82,8 @@ export function serializeAuditListItem(
 
   const hasStatusChange =
     log.changedFields.includes('status') ||
-    (log.entityType === ADMIN_AUDIT_ENTITY_TYPES.PHARMACY &&
+    ((log.entityType === ADMIN_AUDIT_ENTITY_TYPES.PHARMACY ||
+      log.entityType === ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST) &&
       log.changedFields.includes('reviewState'));
 
   const reviewContext =

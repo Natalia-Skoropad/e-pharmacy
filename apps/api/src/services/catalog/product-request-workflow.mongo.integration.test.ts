@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { randomUUID } from 'node:crypto';
 
 import mongoose, { Types } from 'mongoose';
 
@@ -11,6 +12,20 @@ import { User } from '../../models/accounts/user.model';
 import { Product } from '../../models/catalog/product.model';
 import { ProductCategory } from '../../models/catalog/productCategory.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
+
+import { ProductRequestAdminComment } from '../../models/admin/comments/productRequestAdminComment.model';
+
+import {
+  createProductRequestAdminCommentService,
+  listProductRequestAdminCommentsService,
+  deleteProductRequestAdminCommentService,
+} from '../admin/catalog/product-request-admin-comment.service';
+
+import {
+  listAdminAuditLogsService,
+  getAdminAuditLogService,
+} from '../admin/audit/admin-audit-read.service';
 
 import type { HttpError } from '../../types/http/errors';
 
@@ -19,7 +34,13 @@ import {
   updateProductRequestService,
 } from './product-request-management.service';
 
-import { getProductRequestArticleAvailabilityService } from './product-request-read.service';
+import {
+  getProductRequestArticleAvailabilityService,
+  getAdminProductRequestsService,
+  getAdminProductRequestOwnerOptionsService,
+  getAdminProductRequestStatisticsService,
+} from './product-request-read.service';
+
 import { moderateProductRequestByAdminService } from './product-request-moderation.service';
 
 //===================================================================
@@ -93,6 +114,113 @@ test(
 
     try {
       await context.test(
+        'admin registry scopes and paginates requests and deduplicates legacy owners',
+        async () => {
+          const name = `Registry ${suffix}`;
+
+          const [direct, legacy, other] = await ProductRequest.create([
+            {
+              ownerId: ownerA,
+              name: `${name} direct`,
+              status: 'new',
+              categoryMode: 'catalog',
+              categoryId: medicineCategoryId,
+            },
+            {
+              pharmacyId: pharmacyA,
+              name: `${name} legacy`,
+              status: 'new',
+              categoryMode: 'catalog',
+            },
+            {
+              ownerId: ownerB,
+              name: `${name} other`,
+              status: 'new',
+              categoryMode: 'catalog',
+            },
+          ]);
+
+          requestIds.push(direct._id, legacy._id, other._id);
+
+          const scope = {
+            page: 1,
+            perPage: 20 as const,
+            ownerId: ownerA.toString(),
+            keyword: name,
+          };
+
+          const list = await getAdminProductRequestsService(scope);
+
+          assert.equal(list.total, 2);
+
+          assert.deepEqual(
+            new Set(list.items.map((item) => item.id)),
+            new Set([String(direct._id), String(legacy._id)])
+          );
+
+          assert.ok(
+            list.items.every((item) => item.owner?.id === ownerA.toString())
+          );
+
+          const clamped = await getAdminProductRequestsService({
+            ...scope,
+            page: 999,
+          });
+
+          assert.equal(clamped.page, 1);
+          assert.equal(clamped.totalPages, 1);
+
+          const mismatch = await getAdminProductRequestsService({
+            ...scope,
+            requestId: other._id.toString(),
+          });
+
+          assert.equal(mismatch.total, 0);
+
+          const noCategory = await getAdminProductRequestsService({
+            ...scope,
+            category: `missing-${suffix.toLowerCase()}`,
+          });
+
+          assert.equal(noCategory.total, 0);
+
+          const wrongStatus = await getAdminProductRequestsService({
+            ...scope,
+            status: 'approved',
+          });
+
+          assert.equal(wrongStatus.total, 0);
+
+          const options = await getAdminProductRequestOwnerOptionsService({
+            page: 1,
+            perPage: 20,
+            requestId: legacy._id.toString(),
+          });
+
+          assert.deepEqual(
+            options.items.map((item) => item.id),
+            [ownerA.toString()]
+          );
+
+          const secondPage = await getAdminProductRequestOwnerOptionsService({
+            page: 2,
+            perPage: 20,
+            requestId: legacy._id.toString(),
+          });
+
+          assert.equal(secondPage.items.length, 0);
+
+          const stats = await getAdminProductRequestStatisticsService();
+
+          assert.ok(stats.new >= 3);
+
+          await ProductRequest.deleteMany({
+            _id: { $in: [direct._id, legacy._id, other._id] },
+          });
+        }
+      );
+
+      await context.test(
         'multiple name-only drafts remain valid for one owner',
         async () => {
           const first = await createProductRequestService(ownerA.toString(), {
@@ -115,6 +243,125 @@ test(
           assert.equal(first.request.article, '');
           assert.equal(second.request.article, '');
           assert.notEqual(first.request.id, second.request.id);
+        }
+      );
+
+      await context.test(
+        'Admin private request comments and field audit never cross request scopes',
+        async () => {
+          await User.create({
+            _id: adminUserId,
+            name: 'Workflow Audit Admin',
+            email: `request-audit-${suffix.toLowerCase()}@example.com`,
+            phone: `+380${(BigInt(`0x${adminUserId.toHexString().slice(-12)}`) % 1000000000n).toString().padStart(9, '0')}`,
+            password: 'test-password-hash',
+            role: 'admin',
+            status: 'active',
+          });
+
+          const input = {
+            status: 'new' as const,
+            name: 'Audit original name',
+            article: '',
+            categoryMode: 'catalog' as const,
+          };
+
+          const first = await createProductRequestService(
+            ownerA.toString(),
+            input,
+            randomUUID()
+          );
+
+          const second = await createProductRequestService(
+            ownerB.toString(),
+            input,
+            randomUUID()
+          );
+
+          const id = first.request.id;
+
+          requestIds.push(
+            new Types.ObjectId(id),
+            new Types.ObjectId(second.request.id)
+          );
+
+          await updateProductRequestService(
+            ownerA.toString(),
+            id,
+            { ...input, name: 'Audit edited name' },
+            randomUUID()
+          );
+
+          const comment = await createProductRequestAdminCommentService(
+            id,
+            adminUserId.toString(),
+            { text: 'Admin only note', clientRequestId: randomUUID() },
+            randomUUID()
+          );
+
+          assert.equal(
+            (await listProductRequestAdminCommentsService(id))[0]?.text,
+            'Admin only note'
+          );
+
+          assert.deepEqual(
+            await listProductRequestAdminCommentsService(second.request.id),
+            []
+          );
+
+          const activity = await listAdminAuditLogsService(
+            { page: 1, perPage: 20 },
+            { productRequestId: id }
+          );
+
+          assert.equal(activity.total, 3);
+
+          const edit = activity.items.find(
+            (item) => item.action === 'productRequest.updated'
+          );
+
+          assert.ok(edit);
+
+          const detail = await getAdminAuditLogService(edit.id, {
+            productRequestId: id,
+          });
+
+          assert.equal(detail.before.name, 'Audit original name');
+          assert.equal(detail.after.name, 'Audit edited name');
+
+          await assert.rejects(() =>
+            getAdminAuditLogService(edit.id, {
+              productRequestId: second.request.id,
+            })
+          );
+
+          await assert.rejects(() =>
+            deleteProductRequestAdminCommentService(
+              second.request.id,
+              comment.id,
+              adminUserId.toString(),
+              randomUUID()
+            )
+          );
+
+          await deleteProductRequestAdminCommentService(
+            id,
+            comment.id,
+            adminUserId.toString(),
+            randomUUID()
+          );
+
+          assert.deepEqual(
+            await listProductRequestAdminCommentsService(id),
+            []
+          );
+
+          const after = await listAdminAuditLogsService(
+            { page: 1, perPage: 20 },
+            { productRequestId: id }
+          );
+
+          assert.equal(after.total, 4);
         }
       );
 
@@ -632,7 +879,15 @@ test(
         ProductRequest.deleteMany({ _id: { $in: requestIds } }),
         Product.deleteMany({ _id: { $in: productIds } }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
-        User.deleteMany({ _id: { $in: [ownerA, ownerB] } }),
+        User.deleteMany({ _id: { $in: [ownerA, ownerB, adminUserId] } }),
+
+        AdminAuditLog.deleteMany({
+          actorUserId: { $in: [ownerA, ownerB, adminUserId] },
+        }),
+
+        ProductRequestAdminComment.deleteMany({
+          productRequestId: { $in: requestIds },
+        }),
       ]);
 
       await mongoose.disconnect();

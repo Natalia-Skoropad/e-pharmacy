@@ -17,12 +17,15 @@ import type {
   AdminAuditActorsResponseDto,
 } from '../../../types/admin/audit/admin-audit';
 
-import { buildPharmacyAuditScopeFilter } from './admin-audit-filters';
+import {
+  buildExactAuditScopeFilter,
+  type ExactAuditScope,
+} from './admin-audit-filters';
 
 //===============================================================
 
 export async function listAdminAuditActorsService(
-  exactScope?: Readonly<{ pharmacyId: string }>
+  exactScope?: ExactAuditScope
 ): Promise<AdminAuditActorsResponseDto> {
   // Derive the allowed IDs from the exact pharmacy scope first. Resolve their
   // profiles using the same global audit context as /admin/settings/activity,
@@ -30,7 +33,7 @@ export async function listAdminAuditActorsService(
   const scopedActorIds = exactScope
     ? await AdminAuditLog.distinct(
         'actorUserId',
-        buildPharmacyAuditScopeFilter(exactScope.pharmacyId)
+        buildExactAuditScopeFilter(exactScope)
       )
     : null;
 
@@ -131,6 +134,12 @@ export async function listAdminAuditActorsService(
                     { $gt: [{ $size: '$ownedPharmacies' }, 0] },
                     {
                       $in: [
+                        ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST,
+                        '$auditedEntities',
+                      ],
+                    },
+                    {
+                      $in: [
                         ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
                         '$auditedEntities',
                       ],
@@ -204,6 +213,7 @@ export async function getAuditActorIdsByType(
             $in: [
               ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
               ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER_DOCUMENT,
+              ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST,
             ],
           },
         },

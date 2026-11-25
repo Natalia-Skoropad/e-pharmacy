@@ -21,7 +21,25 @@ export const backendRoutes = {
 
   admin: {
     productRequests: {
+      comments: (id: EntityId) =>
+        `/admin/product-requests/${segment(id)}/comments`,
+
+      comment: (id: EntityId, commentId: EntityId) =>
+        `/admin/product-requests/${segment(id)}/comments/${segment(commentId)}`,
+
+      activity: (id: EntityId) =>
+        `/admin/product-requests/${segment(id)}/activity`,
+
+      activityActors: (id: EntityId) =>
+        `/admin/product-requests/${segment(id)}/activity/actors`,
+
+      activityDetail: (id: EntityId, auditLogId: EntityId) =>
+        `/admin/product-requests/${segment(id)}/activity/${segment(auditLogId)}`,
+
       list: '/admin/product-requests',
+      statistics: '/admin/product-requests/statistics',
+      ownerOptions: '/admin/product-requests/owner-options',
+      categories: '/admin/product-requests/categories',
 
       details: (requestId: EntityId) =>
         `/admin/product-requests/${segment(requestId)}`,

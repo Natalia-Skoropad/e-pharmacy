@@ -198,40 +198,64 @@ const productImageSchema = createProductRequestFileSchema(
 
 //===============================================================
 
+const productRequestsQueryShape = {
+  page: positivePageSchema,
+  perPage: productRequestsPerPageSchema,
+  dateFrom: dateQuerySchema,
+  dateTo: dateQuerySchema,
+  requestId: mongoIdSchema.optional(),
+  productId: mongoIdSchema.optional(),
+  linkedOnly: z.literal('true').optional(),
+  keyword: sharedSearchSchema,
+  requestNumber: sharedSearchSchema,
+  productName: sharedSearchSchema,
+  productArticle: sharedSearchSchema,
+  name: sharedSearchSchema,
+  article: sharedSearchSchema,
+  category: productCategorySlugSchema.optional(),
+  categoryMode: z.enum(PRODUCT_REQUEST_CATEGORY_MODES).optional(),
+  status: z.enum(PRODUCT_REQUEST_STATUSES).optional(),
+};
+
+//===============================================================
+
+const productRequestsQueryObject = z.object(productRequestsQueryShape).strict();
+
+const validDateRange = (query: { dateFrom?: string; dateTo?: string }) =>
+  isDateRangeOrdered(query.dateFrom, query.dateTo);
+
+const validCategory = (query: { category?: string; categoryMode?: string }) =>
+  !(query.category && query.categoryMode === 'custom');
+
+const dateRangeIssue = { path: ['dateTo'], message: DATE_RANGE_MESSAGE };
+
+const categoryIssue = {
+  path: ['category'],
+  message: 'A category slug can be used only for catalog categories.',
+};
+
+//===============================================================
+
 export const productRequestsQuerySchema = z.preprocess(
   normalizePaginationQuery,
-  z
-    .object({
-      page: positivePageSchema,
-      perPage: productRequestsPerPageSchema,
-      dateFrom: dateQuerySchema,
-      dateTo: dateQuerySchema,
-      requestId: mongoIdSchema.optional(),
-      productId: mongoIdSchema.optional(),
-      linkedOnly: z.literal('true').optional(),
-      keyword: sharedSearchSchema,
-      requestNumber: sharedSearchSchema,
-      productName: sharedSearchSchema,
-      productArticle: sharedSearchSchema,
-      name: sharedSearchSchema,
-      article: sharedSearchSchema,
-      category: productCategorySlugSchema.optional(),
-      categoryMode: z.enum(PRODUCT_REQUEST_CATEGORY_MODES).optional(),
-      status: z.enum(PRODUCT_REQUEST_STATUSES).optional(),
-    })
 
-    .strict()
-
-    .refine((query) => isDateRangeOrdered(query.dateFrom, query.dateTo), {
-      path: ['dateTo'],
-      message: DATE_RANGE_MESSAGE,
-    })
-
-    .refine((query) => !(query.category && query.categoryMode === 'custom'), {
-      path: ['category'],
-      message: 'A category slug can be used only for catalog categories.',
-    })
+  productRequestsQueryObject
+    .refine(validDateRange, dateRangeIssue)
+    .refine(validCategory, categoryIssue)
 );
+
+export const adminProductRequestsQuerySchema = z.preprocess(
+  normalizePaginationQuery,
+
+  productRequestsQueryObject
+    .extend({ ownerId: mongoIdSchema.optional() })
+    .refine(validDateRange, dateRangeIssue)
+    .refine(validCategory, categoryIssue)
+);
+
+export type AdminProductRequestsQuery = z.infer<
+  typeof adminProductRequestsQuerySchema
+>;
 
 //===============================================================
 

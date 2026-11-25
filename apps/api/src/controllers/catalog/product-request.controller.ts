@@ -34,7 +34,12 @@ export async function createProductRequest(
   res: ValidatedResponse<ProductRequestFormInput>
 ): Promise<void> {
   const { body } = res.locals.validated;
-  const data = await createProductRequestService(req.user?.id ?? '', body);
+
+  const data = await createProductRequestService(
+    req.user?.id ?? '',
+    body,
+    res.locals.requestId
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
@@ -109,7 +114,8 @@ export async function updateProductRequest(
   const data = await updateProductRequestService(
     req.user?.id ?? '',
     params.requestId,
-    body
+    body,
+    res.locals.requestId
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
@@ -122,7 +128,12 @@ export async function deleteProductRequest(
   res: ValidatedResponse<unknown, ProductRequestParams>
 ): Promise<void> {
   const { requestId } = res.locals.validated.params;
-  const data = await deleteProductRequestService(req.user?.id ?? '', requestId);
+
+  const data = await deleteProductRequestService(
+    req.user?.id ?? '',
+    requestId,
+    res.locals.requestId
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -134,7 +145,12 @@ export async function submitProductRequest(
   res: ValidatedResponse<unknown, ProductRequestParams>
 ): Promise<void> {
   const { requestId } = res.locals.validated.params;
-  const data = await submitProductRequestService(req.user?.id ?? '', requestId);
+
+  const data = await submitProductRequestService(
+    req.user?.id ?? '',
+    requestId,
+    res.locals.requestId
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -146,7 +162,12 @@ export async function cancelProductRequest(
   res: ValidatedResponse<unknown, ProductRequestParams>
 ): Promise<void> {
   const { requestId } = res.locals.validated.params;
-  const data = await cancelProductRequestService(req.user?.id ?? '', requestId);
+
+  const data = await cancelProductRequestService(
+    req.user?.id ?? '',
+    requestId,
+    res.locals.requestId
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

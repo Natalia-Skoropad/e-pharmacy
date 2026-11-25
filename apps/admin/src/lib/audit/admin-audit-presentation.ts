@@ -50,6 +50,11 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacyOwner.comment.created': 'Pharmacy owner comment created',
   'pharmacyOwner.comment.deleted': 'Pharmacy owner comment deleted',
   'productRequest.status.changed': 'Product request status changed',
+  'productRequest.created': 'Product request created',
+  'productRequest.updated': 'Product request data updated',
+  'productRequest.deleted': 'Product request draft deleted',
+  'productRequest.comment.created': 'Product request Admin comment created',
+  'productRequest.comment.deleted': 'Product request Admin comment deleted',
   'admin.platformOwner.granted': 'Platform Owner granted',
   'admin.platformOwner.revoked': 'Platform Owner removed',
   'adminEmployee.profile.updated': 'Admin profile updated',
@@ -87,6 +92,7 @@ type KnownAuditStatus = keyof typeof STATUS_PRESENTATION_BY_VALUE;
 
 const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacy.created',
+  'productRequest.created',
   'pharmacy.registrationDocuments.attached',
   'pharmacyOwner.account.created',
   'pharmacyOwner.registrationDocuments.attached',
@@ -95,6 +101,7 @@ const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacyOwner.document.uploaded',
   'pharmacyOwner.comment.created',
   'pharmacy.comment.created',
+  'productRequest.comment.created',
   'client.comment.created',
   'productCategory.created',
   'position.created',
@@ -102,11 +109,13 @@ const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
 
 const DELETE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacy.deleted',
+  'productRequest.deleted',
   'admin.platformOwner.revoked',
   'adminEmployee.document.deleted',
   'pharmacyOwner.document.deleted',
   'pharmacyOwner.comment.deleted',
   'pharmacy.comment.deleted',
+  'productRequest.comment.deleted',
   'client.comment.deleted',
   'productCategory.deleted',
   'position.deleted',
@@ -121,6 +130,7 @@ const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacy.reactivation.requested',
   'pharmacy.reactivation.rejected',
   'pharmacy.profile.updated',
+  'productRequest.updated',
   'pharmacy.moderation.submitted',
   'adminEmployee.profile.updated',
   'pharmacyOwner.profile.updated',
@@ -141,6 +151,7 @@ const ENTITY_LABELS: Record<AdminAuditEntityType, string> = {
   pharmacyOwnerDocument: 'Pharmacy owner document',
   pharmacyOwnerComment: 'Pharmacy owner comment',
   productRequest: 'Product request',
+  productRequestAdminComment: 'Product request Admin comment',
   adminAccess: 'Admin access',
   adminEmployee: 'Admin employee',
   adminEmployeeDocument: 'Admin document',
@@ -356,13 +367,26 @@ export function getAdminAuditPageLocation(
       };
   }
 
-  if (section === 'productRequests' && item.entityType === 'productRequest') {
-    return {
-      section,
-      entityId: id,
-      label: item.entityLabelSnapshot,
-      href: `${ADMIN_ROUTES.PRODUCT_REQUESTS}/${encodeURIComponent(id)}`,
-    };
+  if (section === 'productRequests') {
+    const requestId =
+      item.entityType === 'productRequest'
+        ? id
+        : item.scopeEntityType === 'productRequest'
+          ? item.scopeEntityId
+          : null;
+
+    if (requestId)
+      return {
+        section,
+        entityId: requestId,
+
+        label:
+          item.entityType === 'productRequest'
+            ? item.entityLabelSnapshot
+            : 'Product request',
+
+        href: `${ADMIN_ROUTES.PRODUCT_REQUESTS}/${encodeURIComponent(requestId)}`,
+      };
   }
 
   if (section === 'employees') {

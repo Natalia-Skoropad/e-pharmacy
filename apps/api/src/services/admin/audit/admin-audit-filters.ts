@@ -95,3 +95,40 @@ export function buildPharmacyAuditScopeFilter(
     ],
   };
 }
+
+//===============================================================
+
+/** Exact request scope, including historical moderation events. */
+export function buildProductRequestAuditScopeFilter(
+  requestId: string
+): Record<string, unknown> {
+  if (!Types.ObjectId.isValid(requestId))
+    throw new TypeError('Product request audit scope id is invalid.');
+
+  const id = requestId.toLowerCase();
+
+  return {
+    $or: [
+      { entityType: ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST, entityId: id },
+      {
+        scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST,
+        scopeEntityId: id,
+        section: ADMIN_AUDIT_SECTIONS.PRODUCT_REQUESTS,
+      },
+    ],
+  };
+}
+
+//===============================================================
+
+export type ExactAuditScope = Readonly<
+  { pharmacyId: string } | { productRequestId: string }
+>;
+
+//===============================================================
+
+export function buildExactAuditScopeFilter(scope: ExactAuditScope) {
+  return 'pharmacyId' in scope
+    ? buildPharmacyAuditScopeFilter(scope.pharmacyId)
+    : buildProductRequestAuditScopeFilter(scope.productRequestId);
+}

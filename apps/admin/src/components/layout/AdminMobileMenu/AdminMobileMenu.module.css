@@ -178,7 +178,8 @@
 }
 
 .pharmaciesLink,
-.pharmacyOwnersLink {
+.pharmacyOwnersLink,
+.productRequestsLink {
   position: relative;
 }
 

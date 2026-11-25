@@ -41,9 +41,7 @@ import { PageHeader } from '@e-pharmacy/ui/layout';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
-
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
@@ -51,6 +49,21 @@ import {
   getAdminAuditLogDetails,
   getAdminAuditLogs,
 } from '@/lib/api/browser/admin-audit.api';
+
+import {
+  getRequestActivity,
+  getRequestActivityActors,
+  getRequestActivityDetails,
+} from '@/lib/api/browser/admin-product-request-resources.api';
+
+import { getAdminPharmacyOwnerDetail } from '@/lib/api/browser/admin-pharmacy-owners.api';
+import { getAdminPharmacyDetail } from '@/lib/api/browser/admin-pharmacy-detail.api';
+
+import {
+  getAdminPharmacyActivity,
+  getAdminPharmacyActivityActors,
+  getAdminPharmacyActivityDetail,
+} from '@/lib/api/browser/admin-pharmacy-detail.api';
 
 import {
   type AdminAuditActor,
@@ -64,23 +77,6 @@ import {
   getAdminAuditChangeTone,
 } from '@/lib/audit/admin-audit-presentation';
 
-import {
-  ActivityFiltersDrawer,
-  DEFAULT_ACTIVITY_HISTORY_FILTERS,
-  type ActivityHistoryFilters,
-} from './ActivityFiltersDrawer';
-
-import { getAdminPharmacyOwnerDetail } from '@/lib/api/browser/admin-pharmacy-owners.api';
-import { getAdminPharmacyDetail } from '@/lib/api/browser/admin-pharmacy-detail.api';
-
-import {
-  getAdminPharmacyActivity,
-  getAdminPharmacyActivityActors,
-  getAdminPharmacyActivityDetail,
-} from '@/lib/api/browser/admin-pharmacy-detail.api';
-
-import { buildAdminPharmacyDetailUrl } from '@/lib/pharmacies/admin-pharmacy-url';
-import { ADMIN_ROUTES } from '@/lib/routes';
 import { getAdminAuditPageLocation } from '@/lib/audit/admin-audit-presentation';
 import { getAdminAuditFieldLabel } from '@/lib/audit/admin-audit-fields';
 
@@ -89,6 +85,15 @@ import {
   DEFAULT_ACTIVITY_URL_STATE,
   type ActivityUrlState,
 } from '@/lib/audit/admin-activity-url';
+
+import { buildAdminPharmacyDetailUrl } from '@/lib/pharmacies/admin-pharmacy-url';
+import { ADMIN_ROUTES } from '@/lib/routes';
+
+import {
+  ActivityFiltersDrawer,
+  DEFAULT_ACTIVITY_HISTORY_FILTERS,
+  type ActivityHistoryFilters,
+} from './ActivityFiltersDrawer';
 
 import { AuditDetailsModal } from './AuditDetailsModal';
 import { AuditDetailsRenderBoundary } from './AuditDetailsRenderBoundary';
@@ -208,10 +213,12 @@ export function ActivityHistory({
   initialState = DEFAULT_ACTIVITY_URL_STATE,
   scopeOwnerId,
   scopePharmacyId,
+  scopeRequestId,
 }: Readonly<{
   initialState?: ActivityUrlState;
   scopeOwnerId?: string;
   scopePharmacyId?: string;
+  scopeRequestId?: string;
 }>) {
   const router = useRouter();
 
@@ -219,13 +226,13 @@ export function ActivityHistory({
     initialState,
     scopeOwnerId,
     scopePharmacyId,
+    scopeRequestId,
   });
 
   const [syncedInitialStateKey, setSyncedInitialStateKey] =
     useState(initialStateKey);
 
   const [filters, setFilters] = useState<ActivityHistoryFilters>(initialState);
-
   const [page, setPage] = useState(initialState.page);
 
   const [perPage, setPerPage] = useState<RowsPerPageValue>(
@@ -285,11 +292,13 @@ export function ActivityHistory({
     const filterSuffix = globalUrl.slice(ADMIN_ROUTES.SETTINGS_ACTIVITY.length);
 
     router.replace(
-      scopePharmacyId
-        ? `${buildAdminPharmacyDetailUrl(scopePharmacyId, 'activity')}${filterSuffix}`
-        : scopeOwnerId
-          ? `/admin/pharmacy-owners/${scopeOwnerId}/activity${filterSuffix}`
-          : globalUrl,
+      scopeRequestId
+        ? `/admin/product-requests/${scopeRequestId}/activity${filterSuffix}`
+        : scopePharmacyId
+          ? `${buildAdminPharmacyDetailUrl(scopePharmacyId, 'activity')}${filterSuffix}`
+          : scopeOwnerId
+            ? `/admin/pharmacy-owners/${scopeOwnerId}/activity${filterSuffix}`
+            : globalUrl,
       { scroll: false }
     );
   };
@@ -298,11 +307,15 @@ export function ActivityHistory({
     const controller = new AbortController();
 
     void (
-      scopePharmacyId
-        ? getAdminPharmacyActivityActors(scopePharmacyId, {
+      scopeRequestId
+        ? getRequestActivityActors(scopeRequestId, {
             signal: controller.signal,
           })
-        : getAdminAuditActors({ signal: controller.signal })
+        : scopePharmacyId
+          ? getAdminPharmacyActivityActors(scopePharmacyId, {
+              signal: controller.signal,
+            })
+          : getAdminAuditActors({ signal: controller.signal })
     )
       .then((response) => {
         if (!controller.signal.aborted) setActors(response.items);
@@ -327,7 +340,7 @@ export function ActivityHistory({
       });
 
     return () => controller.abort();
-  }, [scopePharmacyId]);
+  }, [scopePharmacyId, scopeRequestId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -340,7 +353,9 @@ export function ActivityHistory({
       ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
       ...(filters.action ? { action: filters.action } : {}),
 
-      ...((scopePharmacyId || filters.section === 'pharmacies') &&
+      ...((scopePharmacyId ||
+        scopeRequestId ||
+        filters.section === 'pharmacies') &&
       filters.changeType
         ? { changeType: filters.changeType }
         : {}),
@@ -363,11 +378,15 @@ export function ActivityHistory({
     };
 
     void (
-      scopePharmacyId
-        ? getAdminPharmacyActivity(scopePharmacyId, listParams, {
+      scopeRequestId
+        ? getRequestActivity(scopeRequestId, listParams, {
             signal: controller.signal,
           })
-        : getAdminAuditLogs(listParams, { signal: controller.signal })
+        : scopePharmacyId
+          ? getAdminPharmacyActivity(scopePharmacyId, listParams, {
+              signal: controller.signal,
+            })
+          : getAdminAuditLogs(listParams, { signal: controller.signal })
     )
       .then((response) => {
         if (controller.signal.aborted) return;
@@ -387,7 +406,15 @@ export function ActivityHistory({
       });
 
     return () => controller.abort();
-  }, [filters, page, perPage, reloadVersion, scopeOwnerId, scopePharmacyId]);
+  }, [
+    filters,
+    page,
+    perPage,
+    reloadVersion,
+    scopeOwnerId,
+    scopePharmacyId,
+    scopeRequestId,
+  ]);
 
   useEffect(() => {
     if (!selectedAuditId) return;
@@ -395,13 +422,17 @@ export function ActivityHistory({
     const controller = new AbortController();
 
     void (
-      scopePharmacyId
-        ? getAdminPharmacyActivityDetail(scopePharmacyId, selectedAuditId, {
+      scopeRequestId
+        ? getRequestActivityDetails(scopeRequestId, selectedAuditId, {
             signal: controller.signal,
           })
-        : getAdminAuditLogDetails(selectedAuditId, {
-            signal: controller.signal,
-          })
+        : scopePharmacyId
+          ? getAdminPharmacyActivityDetail(scopePharmacyId, selectedAuditId, {
+              signal: controller.signal,
+            })
+          : getAdminAuditLogDetails(selectedAuditId, {
+              signal: controller.signal,
+            })
     )
       .then((response) => {
         if (!controller.signal.aborted) setDetails(response.auditLog);
@@ -432,13 +463,19 @@ export function ActivityHistory({
       });
 
     return () => controller.abort();
-  }, [detailsReloadVersion, selectedAuditId, scopePharmacyId]);
+  }, [detailsReloadVersion, selectedAuditId, scopePharmacyId, scopeRequestId]);
 
   useEffect(() => {
     const page = details ? getAdminAuditPageLocation(details) : null;
 
     // Pharmacy activity reads only its scoped audit endpoints, never owner profile.
-    if (scopePharmacyId || !page || page.section !== 'pharmacyOwners') return;
+    if (
+      scopePharmacyId ||
+      scopeRequestId ||
+      !page ||
+      page.section !== 'pharmacyOwners'
+    )
+      return;
 
     const controller = new AbortController();
 
@@ -459,7 +496,7 @@ export function ActivityHistory({
       });
 
     return () => controller.abort();
-  }, [details, scopePharmacyId]);
+  }, [details, scopePharmacyId, scopeRequestId]);
 
   useEffect(() => {
     const page = details ? getAdminAuditPageLocation(details) : null;
@@ -788,11 +825,13 @@ export function ActivityHistory({
   };
 
   const resetFilters = () => updateFilters(DEFAULT_ACTIVITY_HISTORY_FILTERS);
-  const Container = scopeOwnerId || scopePharmacyId ? 'section' : 'main';
+
+  const Container =
+    scopeOwnerId || scopePharmacyId || scopeRequestId ? 'section' : 'main';
 
   return (
     <Container className={css.page} aria-label="Activity history">
-      {!scopeOwnerId && !scopePharmacyId ? (
+      {!scopeOwnerId && !scopePharmacyId && !scopeRequestId ? (
         <section
           className={css.card}
           aria-labelledby="activity-history-page-title"
@@ -989,15 +1028,22 @@ export function ActivityHistory({
         <ActivityFiltersDrawer
           filters={filters}
           pharmacyScoped={Boolean(scopePharmacyId)}
+          productRequestScoped={Boolean(scopeRequestId)}
           hasActiveFilters={hasFilters}
           minDate={data?.earliestCreatedAt ?? undefined}
           availableActions={
-            scopeOwnerId || scopePharmacyId || filters.ownerUserId
+            scopeOwnerId ||
+            scopePharmacyId ||
+            scopeRequestId ||
+            filters.ownerUserId
               ? data?.availableActions
               : undefined
           }
           availableSections={
-            scopeOwnerId || scopePharmacyId || filters.ownerUserId
+            scopeOwnerId ||
+            scopePharmacyId ||
+            scopeRequestId ||
+            filters.ownerUserId
               ? data?.availableSections
               : undefined
           }

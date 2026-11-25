@@ -6,17 +6,18 @@ import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/catalog/product-req
 import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 import { ProductRequestDocumentFile } from '../../models/catalog/productRequestDocumentFile.model';
-
-import {
-  resolveProductRequestDocuments,
-  reconcileProductRequestDocuments,
-} from './product-request-document.service';
+import { ProductRequestAdminComment } from '../../models/admin/comments/productRequestAdminComment.model';
 
 import type { ProductRequestFormInput } from '../../schemas/catalog/product-request.schema';
 import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
 import { httpError } from '../../utils/http/httpError';
 import { isDuplicateProductRequestArticleError } from '../../utils/database/mongoError';
+
+import {
+  resolveProductRequestDocuments,
+  reconcileProductRequestDocuments,
+} from './product-request-document.service';
 
 import {
   getProductCategoryReferenceMap,
@@ -31,6 +32,12 @@ import {
   getStatusHistoryCopy,
   serializeProductRequest,
 } from './product-request-projection';
+
+import {
+  ADMIN_AUDIT_ACTIONS,
+  auditProductRequestMutation,
+  productRequestAuditSnapshot,
+} from './product-request-audit';
 
 import type { ProductRequestDocument } from './product-request-projection';
 
@@ -91,7 +98,8 @@ async function getRequestFormUpdate(input: ProductRequestServiceInput) {
 
 export async function createProductRequestService(
   userId: string,
-  input: ProductRequestServiceInput
+  input: ProductRequestServiceInput,
+  auditRequestId?: string
 ) {
   const scope = await getProductRequestOwnerScope(userId);
 
@@ -116,7 +124,7 @@ export async function createProductRequestService(
           session
         );
 
-        await ProductRequest.create(
+        const [created] = await ProductRequest.create(
           [
             {
               _id: requestId,
@@ -130,6 +138,17 @@ export async function createProductRequestService(
           ],
           { session }
         );
+
+        await auditProductRequestMutation({
+          actorUserId: userId,
+          entityId: String(requestId),
+          entityLabel: created.name,
+          action: ADMIN_AUDIT_ACTIONS.PRODUCT_REQUEST_CREATED,
+          before: { exists: false },
+          after: productRequestAuditSnapshot(created),
+          session,
+          requestId: auditRequestId,
+        });
       });
     } finally {
       await session.endSession();
@@ -173,7 +192,8 @@ export async function createProductRequestService(
 export async function updateProductRequestService(
   userId: string,
   requestId: string,
-  input: ProductRequestServiceInput
+  input: ProductRequestServiceInput,
+  auditRequestId?: string
 ) {
   const scope = await getProductRequestOwnerScope(userId);
 
@@ -253,6 +273,8 @@ export async function updateProductRequestService(
           session
         );
 
+        const before = productRequestAuditSnapshot(editableRequest);
+
         editableRequest.set({
           ...formUpdate,
           additionalFiles: files.length ? files : undefined,
@@ -271,6 +293,17 @@ export async function updateProductRequestService(
         ];
 
         await editableRequest.save({ session });
+
+        await auditProductRequestMutation({
+          actorUserId: userId,
+          entityId: String(editableRequest._id),
+          entityLabel: editableRequest.name,
+          action: ADMIN_AUDIT_ACTIONS.PRODUCT_REQUEST_UPDATED,
+          before,
+          after: productRequestAuditSnapshot(editableRequest),
+          session,
+          requestId: auditRequestId,
+        });
 
         await reconcileProductRequestDocuments(
           scope.ownerId,
@@ -330,7 +363,8 @@ export async function updateProductRequestService(
 
 export async function deleteProductRequestService(
   userId: string,
-  requestId: string
+  requestId: string,
+  auditRequestId?: string
 ) {
   const scope = await getProductRequestOwnerScope(userId);
 
@@ -352,9 +386,7 @@ export async function deleteProductRequestService(
       const request = await ProductRequest.findOne({
         _id: requestObjectId,
         ...scope.filter,
-      })
-        .select('_id status')
-        .session(session);
+      }).session(session);
 
       if (!request) {
         throw httpError(
@@ -398,6 +430,21 @@ export async function deleteProductRequestService(
         );
       }
 
+      await auditProductRequestMutation({
+        actorUserId: userId,
+        entityId: String(request._id),
+        entityLabel: request.name,
+        action: ADMIN_AUDIT_ACTIONS.PRODUCT_REQUEST_DELETED,
+        before: productRequestAuditSnapshot(request),
+        after: { exists: false },
+        session,
+        requestId: auditRequestId,
+      });
+
+      await ProductRequestAdminComment.deleteMany({
+        productRequestId: request._id,
+      }).session(session);
+
       await PharmacyNote.deleteMany({
         $or: scope.filter.$or,
         entityType: 'product_request',
@@ -421,7 +468,8 @@ export async function deleteProductRequestService(
 /** Owner-only transition; unlike Save, submitting never updates request fields. */
 export async function submitProductRequestService(
   userId: string,
-  requestId: string
+  requestId: string,
+  auditRequestId?: string
 ) {
   const scope = await getProductRequestOwnerScope(userId);
 
@@ -487,6 +535,8 @@ export async function submitProductRequestService(
 
       await assertArticleAvailable(request.article, requestId);
 
+      const before = productRequestAuditSnapshot(request);
+
       request.status = 'on_moderation';
       request.reviewState = undefined;
 
@@ -501,6 +551,17 @@ export async function submitProductRequestService(
       ];
 
       await request.save({ session });
+
+      await auditProductRequestMutation({
+        actorUserId: userId,
+        entityId: String(request._id),
+        entityLabel: request.name,
+        action: ADMIN_AUDIT_ACTIONS.PRODUCT_REQUEST_STATUS_CHANGED,
+        before,
+        after: productRequestAuditSnapshot(request),
+        session,
+        requestId: auditRequestId,
+      });
 
       updatedId = request._id;
     });
@@ -527,7 +588,8 @@ export async function submitProductRequestService(
 
 export async function cancelProductRequestService(
   userId: string,
-  requestId: string
+  requestId: string,
+  auditRequestId?: string
 ) {
   const scope = await getProductRequestOwnerScope(userId);
 
@@ -563,6 +625,8 @@ export async function cancelProductRequestService(
         );
       }
 
+      const before = productRequestAuditSnapshot(request);
+
       request.status = 'rejected';
       request.reviewState = undefined;
       request.cancelledBy = 'owner';
@@ -583,6 +647,17 @@ export async function cancelProductRequestService(
       ];
 
       await request.save({ session });
+
+      await auditProductRequestMutation({
+        actorUserId: userId,
+        entityId: String(request._id),
+        entityLabel: request.name,
+        action: ADMIN_AUDIT_ACTIONS.PRODUCT_REQUEST_STATUS_CHANGED,
+        before,
+        after: productRequestAuditSnapshot(request),
+        session,
+        requestId: auditRequestId,
+      });
 
       updatedId = request._id;
     });

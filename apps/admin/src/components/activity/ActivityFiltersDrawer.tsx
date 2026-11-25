@@ -217,6 +217,7 @@ type ActivityFiltersDrawerProps = Readonly<{
   availableActions?: readonly AdminAuditAction[];
   availableSections?: readonly AdminAuditSection[];
   pharmacyScoped?: boolean;
+  productRequestScoped?: boolean;
   onChange: (filters: ActivityHistoryFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -231,6 +232,7 @@ export function ActivityFiltersDrawer({
   availableActions,
   availableSections,
   pharmacyScoped = false,
+  productRequestScoped = false,
   onChange,
   onClose,
   onReset,
@@ -313,12 +315,22 @@ export function ActivityFiltersDrawer({
         />
       </div>
 
-      {pharmacyScoped || filters.section === 'pharmacies' ? (
+      {pharmacyScoped ||
+      productRequestScoped ||
+      filters.section === 'pharmacies' ? (
         <SelectField
           id="admin-audit-action-filter"
           label="Change type"
           value={filters.changeType}
-          options={PHARMACY_CHANGE_TYPE_OPTIONS}
+          options={
+            productRequestScoped
+              ? [
+                  { value: '', label: 'All change types' },
+                  { value: 'status', label: 'Product request status changed' },
+                  { value: 'data', label: 'Product request data changed' },
+                ]
+              : PHARMACY_CHANGE_TYPE_OPTIONS
+          }
           isActive={Boolean(filters.changeType)}
           onChange={(changeType) =>
             onChange({ ...filters, changeType, action: '' })
@@ -354,6 +366,7 @@ export function ActivityFiltersDrawer({
           onChange({
             ...filters,
             actorType,
+
             ...(actorType !== 'pharmacyOwner' ? { ownerUserId: '' } : {}),
             ...(actorType !== 'employee' ? { employeeUserId: '' } : {}),
           })

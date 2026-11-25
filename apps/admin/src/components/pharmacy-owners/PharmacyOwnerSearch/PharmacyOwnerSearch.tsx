@@ -179,7 +179,9 @@ export function PharmacyOwnerSearch({
   const selectedOwner =
     selectedOwnerResult?.value === value ? selectedOwnerResult.owner : null;
 
-  const hasCurrentSuggestions = suggestionsResult?.query === debouncedQuery;
+  const hasCurrentSuggestions =
+    suggestionsResult?.query === debouncedQuery &&
+    debouncedQuery === query.trim();
 
   const owners = useMemo(
     () => (hasCurrentSuggestions ? (suggestionsResult?.items ?? []) : []),
@@ -215,10 +217,30 @@ export function PharmacyOwnerSearch({
 
     if (!query.trim()) {
       ownerOptions.unshift({ value: '', label: 'All pharmacy owners' });
+
+      if (
+        hasCurrentSuggestions &&
+        !suggestionsUnavailable &&
+        owners.length === 0
+      ) {
+        ownerOptions.push({
+          value: '__empty__',
+          label: 'No pharmacy owners found',
+          disabled: true,
+        });
+      }
     }
 
     return ownerOptions;
-  }, [owners, query, selectedOwner, selectedOwnerResult?.value, value]);
+  }, [
+    owners,
+    query,
+    selectedOwner,
+    selectedOwnerResult?.value,
+    value,
+    hasCurrentSuggestions,
+    suggestionsUnavailable,
+  ]);
 
   return (
     <SearchableSelect
@@ -258,12 +280,25 @@ export function PharmacyOwnerSearch({
         hasCurrentSuggestions && suggestionsResult?.hasMore
       )}
       isLoadingMore={page > 1 && loadingPage}
-      loadMoreError={loadMoreError ?? undefined}
+      loadMoreError={
+        suggestionsUnavailable
+          ? 'Suggestions are temporarily unavailable.'
+          : (loadMoreError ?? undefined)
+      }
       loadMoreErrorVariant="notice"
       onLoadMore={() => {
         if (loadingPage) return;
+
+        if (suggestionsUnavailable) {
+          setSuggestionsResult(null);
+          setPage(1);
+          setReloadPage((count) => count + 1);
+          return;
+        }
+
         setLoadingPage(true);
         setLoadMoreError(null);
+
         if (loadMoreError) setReloadPage((count) => count + 1);
         else setPage((current) => current + 1);
       }}
@@ -281,9 +316,11 @@ export function PharmacyOwnerSearch({
         }
 
         const owner = owners.find((item) => item.id === nextValue);
+
         if (owner) {
           setSelectedOwnerResult({ value: owner.id, owner });
         }
+
         onChange(nextValue);
       }}
     />

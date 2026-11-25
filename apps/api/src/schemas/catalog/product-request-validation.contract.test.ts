@@ -5,6 +5,8 @@ import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacies/pharmacy-doc
 import { PRODUCT_REQUEST_ATTACHMENT_RULES } from '../../constants/catalog/product-request-validation';
 
 import {
+  adminProductRequestsQuerySchema,
+  productRequestsQuerySchema,
   productRequestFormSchema,
   productRequestModerationSchema,
 } from './product-request.schema';
@@ -494,6 +496,52 @@ test('product request accepts stored attachment references without Base64 but re
     productRequestFormSchema.safeParse({
       ...validDraft,
       additionalFiles: [{ name: file.name, type: file.type, size: file.size }],
+    }).success,
+    false
+  );
+});
+
+//===============================================================
+
+// Admin filtering must not expand the owner-facing request query contract.
+test('admin registry supports combined owner, request, date, category and status filters', () => {
+  const query = {
+    ownerId: '507f1f77bcf86cd799439011',
+    requestId: '507f1f77bcf86cd799439012',
+    dateFrom: '2026-11-01',
+    dateTo: '2026-11-25',
+    category: 'medicine',
+    status: 'on_moderation',
+    page: '2',
+    perPage: '50',
+  };
+
+  const result = adminProductRequestsQuerySchema.parse(query);
+
+  assert.equal(result.ownerId, query.ownerId);
+  assert.equal(result.requestId, query.requestId);
+  assert.equal(result.page, 2);
+  assert.equal(result.perPage, 50);
+  assert.equal(productRequestsQuerySchema.safeParse(query).success, false);
+
+  assert.equal(
+    adminProductRequestsQuerySchema.safeParse({ ...query, ownerId: 'invalid' })
+      .success,
+    false
+  );
+
+  assert.equal(
+    adminProductRequestsQuerySchema.safeParse({
+      ...query,
+      dateTo: '2026-10-31',
+    }).success,
+    false
+  );
+
+  assert.equal(
+    adminProductRequestsQuerySchema.safeParse({
+      ...query,
+      categoryMode: 'custom',
     }).success,
     false
   );

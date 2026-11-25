@@ -53,3 +53,27 @@
   height: 7px;
   border-radius: 50%;
 }
+
+/* Match the Pharmacy cabinet's two product-request counters in Admin. */
+.productRequestBadge {
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 4px;
+}
+
+@media only screen and (min-width: 1440px) {
+  .productRequestBadges {
+    gap: 8px;
+  }
+
+  .productRequestBadge {
+    min-width: 25px;
+    height: 25px;
+    padding-inline: 8px;
+    font-size: var(--fz-14);
+  }
+
+  .productRequestBadge.new {
+    opacity: 0.8;
+  }
+}

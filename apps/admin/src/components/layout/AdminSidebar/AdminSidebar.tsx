@@ -10,7 +10,9 @@ import { ADMIN_ROUTES } from '@/lib/routes';
 
 import { useAdminPharmacyOwnerNavigationBadge } from '@/providers/AdminPharmacyOwnerNavigationBadgeProvider';
 import { useAdminPharmacyNavigationBadges } from '@/providers/AdminPharmacyNavigationBadgeProvider';
+import { useAdminProductRequestNavigationBadges } from '@/providers/AdminProductRequestNavigationBadgeProvider';
 
+import { ProductRequestNavigationBadges } from '@/components/layout/ProductRequestNavigationBadges/ProductRequestNavigationBadges';
 import { PharmacyNavigationBadges } from '@/components/layout/PharmacyNavigationBadges/PharmacyNavigationBadges';
 
 import css from './AdminSidebar.module.css';
@@ -33,6 +35,7 @@ export function AdminSidebar({
   const pathname = usePathname();
   const { newOwnerCount } = useAdminPharmacyOwnerNavigationBadge();
   const pharmacyCounts = useAdminPharmacyNavigationBadges();
+  const productRequestCounts = useAdminProductRequestNavigationBadges();
 
   return (
     <CabinetSidebar
@@ -55,6 +58,10 @@ export function AdminSidebar({
       renderLink={({ item, href, className, children, ...props }) => {
         const isPharmacyOwnersLink = item.href === ADMIN_ROUTES.PHARMACY_OWNERS;
         const isPharmaciesLink = item.href === ADMIN_ROUTES.PHARMACIES;
+
+        const isProductRequestsLink =
+          item.href === ADMIN_ROUTES.PRODUCT_REQUESTS;
+
         const showNewOwnerBadge =
           isPharmacyOwnersLink && newOwnerCount !== null && newOwnerCount > 0;
 
@@ -66,7 +73,9 @@ export function AdminSidebar({
                 ? `${className} ${css.pharmacyOwnersLink}`
                 : isPharmaciesLink
                   ? `${className} ${css.pharmaciesLink}`
-                  : className
+                  : isProductRequestsLink
+                    ? `${className} ${css.productRequestsLink}`
+                    : className
             }
             {...props}
           >
@@ -74,6 +83,13 @@ export function AdminSidebar({
             {isPharmaciesLink ? (
               <PharmacyNavigationBadges
                 counts={pharmacyCounts}
+                collapsed={isCollapsed}
+              />
+            ) : null}
+
+            {isProductRequestsLink ? (
+              <ProductRequestNavigationBadges
+                counts={productRequestCounts}
                 collapsed={isCollapsed}
               />
             ) : null}

@@ -4,6 +4,7 @@ import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin/access/admin-acc
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { serializeAdminAccess } from '../../services/admin/access/admin-access.service';
+import { updatePharmacyOwnerStatusByAdminService } from '../../services/owners/pharmacy-owner-lifecycle.service';
 
 import type {
   AdminPharmacyParams,
@@ -20,7 +21,7 @@ import type {
 import type {
   ProductRequestModerationInput,
   ProductRequestParams,
-  ProductRequestsQuery,
+  AdminProductRequestsQuery,
 } from '../../schemas/catalog/product-request.schema';
 
 import {
@@ -29,13 +30,14 @@ import {
   decidePharmacyModerationByAdminService,
 } from '../../services/admin/pharmacies/admin.service';
 
-import { updatePharmacyOwnerStatusByAdminService } from '../../services/owners/pharmacy-owner-lifecycle.service';
-
 import {
   getAdminProductRequestsService,
+  getAdminProductRequestStatisticsService,
+  getAdminProductRequestOwnerOptionsService,
   getAdminProductRequestByIdService,
 } from '../../services/catalog/product-request-read.service';
 
+import { getPublicProductCategoriesService } from '../../services/catalog/product-category.service';
 import { moderateProductRequestByAdminService } from '../../services/catalog/product-request-moderation.service';
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
@@ -214,7 +216,7 @@ export async function updateProductRequestStatusByAdmin(
 // Read-only until a request is submitted for moderation.
 export async function getAdminProductRequests(
   _req: Request,
-  res: ValidatedResponse<unknown, unknown, ProductRequestsQuery>
+  res: ValidatedResponse<unknown, unknown, AdminProductRequestsQuery>
 ): Promise<void> {
   const data = await getAdminProductRequestsService(res.locals.validated.query);
 
@@ -230,6 +232,41 @@ export async function getAdminProductRequestById(
   const data = await getAdminProductRequestByIdService(
     res.locals.validated.params.requestId
   );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//=================================================================================
+
+export async function getAdminProductRequestStatistics(
+  _req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await getAdminProductRequestStatisticsService();
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//=================================================================================
+
+export async function getAdminProductRequestOwnerOptions(
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, AdminProductRequestsQuery>
+): Promise<void> {
+  const data = await getAdminProductRequestOwnerOptionsService(
+    res.locals.validated.query
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//=================================================================================
+
+export async function getAdminProductRequestCategories(
+  _req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await getPublicProductCategoriesService();
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

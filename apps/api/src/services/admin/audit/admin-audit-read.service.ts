@@ -36,7 +36,8 @@ import {
 
 import {
   applyAuditSectionFilter,
-  buildPharmacyAuditScopeFilter,
+  buildExactAuditScopeFilter,
+  type ExactAuditScope,
   endOfUtcDay,
   startOfUtcDay,
 } from './admin-audit-filters';
@@ -49,7 +50,7 @@ import {
 
 //===============================================================
 
-type AuditListScope = Readonly<{ pharmacyId: string }>;
+type AuditListScope = ExactAuditScope;
 
 //===============================================================
 
@@ -68,6 +69,8 @@ export async function listAdminAuditLogsService(
   if (query.changeType) {
     const statusActions = ADMIN_AUDIT_ACTION_VALUES.filter(
       (action) =>
+        action === 'productRequest.created' ||
+        action === 'productRequest.status.changed' ||
         action === 'pharmacy.created' ||
         action === 'pharmacy.status.changed' ||
         action === 'pharmacy.moderation.submitted' ||
@@ -118,7 +121,7 @@ export async function listAdminAuditLogsService(
   }
 
   const exactPharmacyFilter = exactScope
-    ? buildPharmacyAuditScopeFilter(exactScope.pharmacyId)
+    ? buildExactAuditScopeFilter(exactScope)
     : null;
 
   if (exactPharmacyFilter) {
@@ -199,7 +202,7 @@ export async function getAdminAuditLogService(
 
   const auditLog = await AdminAuditLog.findOne({
     _id: new Types.ObjectId(auditLogId),
-    ...(exactScope ? buildPharmacyAuditScopeFilter(exactScope.pharmacyId) : {}),
+    ...(exactScope ? buildExactAuditScopeFilter(exactScope) : {}),
   }).lean<LeanAuditLog | null>();
 
   if (!auditLog) {
@@ -315,9 +318,10 @@ export async function getAdminAuditLogService(
   // These same-origin, permission-gated URLs return the frozen photo bytes,
   // never the current image of a pharmacy. This also works when a scoped
   // pharmacy activity viewer does not have the global audit.view permission.
-  const photoBase = exactScope
-    ? `/api/admin/pharmacies/${exactScope.pharmacyId}/activity/${auditLogId}/photos`
-    : `/api/admin/audit/${auditLogId}/photos`;
+  const photoBase =
+    exactScope && 'pharmacyId' in exactScope
+      ? `/api/admin/pharmacies/${exactScope.pharmacyId}/activity/${auditLogId}/photos`
+      : `/api/admin/audit/${auditLogId}/photos`;
 
   const photoUrl = (side: 'before' | 'after') => `${photoBase}/${side}`;
 

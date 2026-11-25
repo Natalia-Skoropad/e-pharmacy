@@ -256,6 +256,9 @@ export async function moderateProductRequestByAdminService(
       }
 
       const previousStatus = request.status;
+      const previousReviewState = request.reviewState ?? null;
+      const previousCancelledBy = request.cancelledBy ?? null;
+      const previousReason = request.rejectionReason ?? null;
 
       const previousProductId = request.productId
         ? String(request.productId)
@@ -365,6 +368,9 @@ export async function moderateProductRequestByAdminService(
 
           before: {
             status: previousStatus,
+            reviewState: previousReviewState,
+            cancelledBy: previousCancelledBy,
+            rejectionReason: previousReason,
 
             ...(productChanged ? { productId: previousProductId } : {}),
             ...(categoryChanged ? { categoryId: previousCategoryId } : {}),
@@ -373,14 +379,28 @@ export async function moderateProductRequestByAdminService(
           after: {
             status: request.status,
             reviewState: request.reviewState ?? null,
+            cancelledBy: request.cancelledBy ?? null,
+            rejectionReason: request.rejectionReason ?? null,
 
             ...(productChanged ? { productId: nextProductId } : {}),
             ...(categoryChanged ? { categoryId: nextCategoryId } : {}),
           },
 
           changedFields: [
-            'status',
-            ...(request.reviewState ? ['reviewState'] : []),
+            ...(previousStatus !== request.status ? ['status'] : []),
+
+            ...(previousReviewState !== (request.reviewState ?? null)
+              ? ['reviewState']
+              : []),
+
+            ...(previousCancelledBy !== (request.cancelledBy ?? null)
+              ? ['cancelledBy']
+              : []),
+
+            ...(previousReason !== (request.rejectionReason ?? null)
+              ? ['rejectionReason']
+              : []),
+
             ...(productChanged ? ['productId'] : []),
             ...(categoryChanged ? ['categoryId'] : []),
           ],

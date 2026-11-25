@@ -16,7 +16,7 @@ test('14.18.37 pharmacy actor selection reuses global actor profiles for exact-s
 
   assert.match(
     service,
-    /AdminAuditLog\.distinct\(\s*'actorUserId',\s*buildPharmacyAuditScopeFilter\(exactScope\.pharmacyId\)/
+    /AdminAuditLog\.distinct\(\s*'actorUserId',\s*buildExactAuditScopeFilter\(exactScope\)/
   );
 
   assert.match(service, /actorUserId:\s*\{\s*\$in:\s*scopedActorIds/);

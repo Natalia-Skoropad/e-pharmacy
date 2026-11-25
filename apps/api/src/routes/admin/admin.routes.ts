@@ -1,10 +1,13 @@
 import { Router } from 'express';
 
-import { downloadProductRequestDocumentByAdmin } from '../../controllers/catalog/product-request-document.controller';
-import { productRequestDocumentParamsSchema } from '../../schemas/catalog/product-request-document.schema';
-
-import { USER_ROLES } from '../../constants/auth/auth';
-import { ADMIN_PERMISSIONS } from '../../constants/admin/access/admin-permissions';
+import {
+  listRequestAdminComments,
+  createRequestAdminComment,
+  deleteRequestAdminComment,
+  listRequestActivity,
+  listRequestActivityActors,
+  getRequestActivityDetails,
+} from '../../controllers/admin/admin-product-request-resources.controller';
 
 import {
   listPharmaciesByAdmin,
@@ -61,6 +64,9 @@ import {
   requestPharmacyCorrectionsByAdmin,
   updateProductRequestStatusByAdmin,
   getAdminProductRequests,
+  getAdminProductRequestStatistics,
+  getAdminProductRequestOwnerOptions,
+  getAdminProductRequestCategories,
   getAdminProductRequestById,
 } from '../../controllers/admin/admin.controller';
 
@@ -95,7 +101,10 @@ import {
   getAdminAuditLogs,
 } from '../../controllers/admin/admin-audit.controller';
 
-import { authenticate } from '../../middlewares/auth/auth.middleware';
+import { downloadProductRequestDocumentByAdmin } from '../../controllers/catalog/product-request-document.controller';
+
+import { USER_ROLES } from '../../constants/auth/auth';
+import { ADMIN_PERMISSIONS } from '../../constants/admin/access/admin-permissions';
 
 import {
   requireAdminPermission,
@@ -104,6 +113,7 @@ import {
 
 import { authorizeRoles } from '../../middlewares/auth/role.middleware';
 import { validate } from '../../middlewares/http/validate.middleware';
+import { authenticate } from '../../middlewares/auth/auth.middleware';
 
 import {
   adminPharmacyDocumentParamsSchema,
@@ -134,6 +144,7 @@ import {
 
 import { updateMyAdminEmployeeProfileSchema } from '../../schemas/admin/employees/admin-employee-profile.schema';
 import { adminPharmacyOwnerDocumentParamsSchema } from '../../schemas/owners/pharmacy-owner-document.schema';
+import { productRequestDocumentParamsSchema } from '../../schemas/catalog/product-request-document.schema';
 
 import {
   createPharmacyAdminCommentSchema,
@@ -172,10 +183,11 @@ import {
 import {
   productRequestModerationSchema,
   productRequestParamsSchema,
-  productRequestsQuerySchema,
+  adminProductRequestsQuerySchema,
 } from '../../schemas/catalog/product-request.schema';
 
 import { orderSalesStatisticsQuerySchema } from '../../schemas/orders/order.schema';
+
 import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //=================================================================================
@@ -758,8 +770,33 @@ adminRoutes.post(
 adminRoutes.get(
   '/product-requests',
   requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
-  validate({ query: productRequestsQuerySchema }),
+  validate({ query: adminProductRequestsQuerySchema }),
   ctrlWrapper(getAdminProductRequests)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/statistics',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  ctrlWrapper(getAdminProductRequestStatistics)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/owner-options',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  validate({ query: adminProductRequestsQuerySchema }),
+  ctrlWrapper(getAdminProductRequestOwnerOptions)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/categories',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  ctrlWrapper(getAdminProductRequestCategories)
 );
 
 //=================================================================================
@@ -792,4 +829,78 @@ adminRoutes.patch(
   }),
 
   ctrlWrapper(updateProductRequestStatusByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/:requestId/comments',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  validate({ params: productRequestParamsSchema }),
+  ctrlWrapper(listRequestAdminComments)
+);
+
+//=================================================================================
+
+adminRoutes.post(
+  '/product-requests/:requestId/comments',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.edit),
+
+  validate({
+    params: productRequestParamsSchema,
+    body: createPharmacyAdminCommentSchema,
+  }),
+
+  ctrlWrapper(createRequestAdminComment)
+);
+
+//=================================================================================
+
+adminRoutes.delete(
+  '/product-requests/:requestId/comments/:commentId',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.edit),
+
+  validate({
+    params: productRequestParamsSchema.extend({
+      commentId: pharmacyAdminCommentParamsSchema.shape.commentId,
+    }),
+  }),
+
+  ctrlWrapper(deleteRequestAdminComment)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/:requestId/activity',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+
+  validate({
+    params: productRequestParamsSchema,
+    query: adminAuditListQuerySchema,
+  }),
+
+  ctrlWrapper(listRequestActivity)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/:requestId/activity/actors',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  validate({ params: productRequestParamsSchema }),
+  ctrlWrapper(listRequestActivityActors)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/:requestId/activity/:auditLogId',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+
+  validate({
+    params: productRequestParamsSchema.extend(adminAuditLogParamsSchema.shape),
+  }),
+
+  ctrlWrapper(getRequestActivityDetails)
 );

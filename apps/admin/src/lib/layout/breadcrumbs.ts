@@ -5,6 +5,12 @@ import { resolveAdminPharmaciesRoute } from '@/lib/pharmacies/admin-pharmacy-url
 import { resolveAdminPharmacyOwnersRoute } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 import { ADMIN_ROUTES } from '@/lib/routes';
 
+import {
+  isRequestTab,
+  REQUEST_TAB_LABELS,
+  requestTabPath,
+} from '@/lib/product-requests/admin-product-request-detail';
+
 //===================================================================
 
 type BreadcrumbRoute = Readonly<{
@@ -178,6 +184,29 @@ export function getAdminBreadcrumbsByPathname(
     }
 
     return [{ label: 'Pharmacies' }];
+  }
+
+  if (isPathWithinRoute(pathname, ADMIN_ROUTES.PRODUCT_REQUESTS)) {
+    const [id, tab] = pathname
+      .slice(ADMIN_ROUTES.PRODUCT_REQUESTS.length)
+      .split('/')
+      .filter(Boolean);
+
+    if (id && isValidObjectId(id))
+      return [
+        { label: 'Product requests', href: ADMIN_ROUTES.PRODUCT_REQUESTS },
+        {
+          label: currentDetailLabel ?? 'Product request',
+
+          ...(tab && isRequestTab(tab)
+            ? { href: requestTabPath(id, 'details') }
+            : {}),
+        },
+
+        ...(tab && isRequestTab(tab) && tab !== 'details'
+          ? [{ label: REQUEST_TAB_LABELS[tab] }]
+          : []),
+      ];
   }
 
   const route = BREADCRUMB_ROUTES.find((candidate) =>

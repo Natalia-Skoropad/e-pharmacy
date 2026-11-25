@@ -4,7 +4,25 @@ import { localAuthApiRoutes } from '@e-pharmacy/next-api/contracts';
 
 export const adminApiRoutes = {
   productRequests: {
+    comments: (id: string) =>
+      `/api/admin/product-requests/${encodeURIComponent(id)}/comments`,
+
+    comment: (id: string, commentId: string) =>
+      `/api/admin/product-requests/${encodeURIComponent(id)}/comments/${encodeURIComponent(commentId)}`,
+
+    activity: (id: string) =>
+      `/api/admin/product-requests/${encodeURIComponent(id)}/activity`,
+
+    activityActors: (id: string) =>
+      `/api/admin/product-requests/${encodeURIComponent(id)}/activity/actors`,
+
+    activityDetail: (id: string, auditLogId: string) =>
+      `/api/admin/product-requests/${encodeURIComponent(id)}/activity/${encodeURIComponent(auditLogId)}`,
+
     list: '/api/admin/product-requests',
+    statistics: '/api/admin/product-requests/statistics',
+    ownerOptions: '/api/admin/product-requests/owner-options',
+    categories: '/api/admin/product-requests/categories',
 
     details: (id: string) =>
       `/api/admin/product-requests/${encodeURIComponent(id)}`,
