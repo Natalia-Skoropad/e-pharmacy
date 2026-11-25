@@ -885,6 +885,8 @@ test('overview renders the saved status activity and pending requests label resu
   assert.match(activity, /Product request status activity/);
   assert.match(activity, /exact transition and event time unavailable/);
   assert.match(activity, /name not recorded/);
+  assert.match(activity, /activity.entry.actorName/);
+  assert.match(activity, /current account name/);
   assert.match(activity, /activity.entry.description/);
   assert.match(overview, /getProductRequestCancellationLabel\(request\)/);
 
@@ -951,4 +953,34 @@ test('overview and status activity use the saved cancellation source only for re
       null
     );
   }
+});
+
+//===================================================================
+
+test('product request comments show zero while their own resource is loading', async () => {
+  const [sections, comments] = await Promise.all([
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/ProductRequestDetailSections.tsx'
+    ),
+
+    read('src/components/comments/EntityComments/EntityComments.tsx'),
+  ]);
+
+  assert.match(sections, /presentation="profile"\s+showCountWhileLoading/);
+  assert.match(comments, /showCountWhileLoading = false/);
+
+  assert.match(
+    comments,
+    /showCountWhileLoading && comments\.status === 'loading'/
+  );
+
+  assert.match(
+    comments,
+    /shown=\{hasLoadedComments \? comments\.data\.items\.length : 0\}/
+  );
+
+  assert.match(
+    comments,
+    /total=\{hasLoadedComments \? comments\.data\.total : 0\}/
+  );
 });

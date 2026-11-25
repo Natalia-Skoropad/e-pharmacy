@@ -17,6 +17,7 @@ const CANONICAL = [
   'admin-audit-filters.ts',
   'admin-audit-actors.service.ts',
   'admin-audit-read.service.ts',
+  'admin-audit-product-request-category.ts',
 ] as const;
 
 //===================================================================
@@ -259,4 +260,26 @@ test('S14.18.94 audit writer handles legacy actors without name, without trustin
   );
 
   assert.doesNotMatch(write, /normalizeAuditString\(\s*actor\.name,/);
+});
+
+//===============================================================
+
+test('product request category audit captures names in the transaction and marks legacy lookup', () => {
+  const write = read('admin-audit-write.service.ts');
+  const history = read('admin-audit-read.service.ts');
+  const category = read('admin-audit-product-request-category.ts');
+
+  assert.match(
+    write,
+    /resolveProductRequestAuditCategoryNames\(before, after, \{ session \}\)/
+  );
+
+  assert.match(
+    history,
+    /resolveProductRequestAuditCategoryNames\(details.before, details.after, \{ legacyRead: true \}\)/
+  );
+
+  assert.match(category, /hasOwnProperty.call\(snapshot, 'categoryName'\)/);
+  assert.match(category, /current catalog name/);
+  assert.match(category, /\.session\(options.session \?\? null\)/);
 });

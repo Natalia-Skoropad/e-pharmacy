@@ -44,6 +44,7 @@ export type EntityCommentsProps = Readonly<{
   emptyTitle?: string;
   emptyText?: string;
   presentation?: 'default' | 'profile';
+  showCountWhileLoading?: boolean;
   initialTotal?: number;
   initialData?: PharmacyNotesResponse;
   isEditable?: boolean;
@@ -75,6 +76,7 @@ function EntityCommentsContent({
   emptyTitle,
   emptyText = 'No manager comments yet. The comment drawer is waiting patiently.',
   presentation = 'default',
+  showCountWhileLoading = false,
   initialTotal,
   initialData,
   isEditable = true,
@@ -97,6 +99,12 @@ function EntityCommentsContent({
     remove,
     onTotalChange,
   });
+
+  const hasLoadedComments = comments.status === 'success';
+
+  const showCommentCount =
+    hasLoadedComments ||
+    (showCountWhileLoading && comments.status === 'loading');
 
   const handleCreate = async () => {
     const result = await comments.submitDraft();
@@ -137,10 +145,10 @@ function EntityCommentsContent({
           description={description}
           icon={<MessageSquareText size={22} />}
           action={
-            comments.status === 'success' ? (
+            showCommentCount ? (
               <CountLabel
-                shown={comments.data.items.length}
-                total={comments.data.total}
+                shown={hasLoadedComments ? comments.data.items.length : 0}
+                total={hasLoadedComments ? comments.data.total : 0}
                 label="comments"
                 fullWidthOnMobile
               />
@@ -150,11 +158,11 @@ function EntityCommentsContent({
       ) : (
         <div className={css.head}>
           <h2 id={titleId}>{title}</h2>
-          {comments.status === 'success' ? (
+          {showCommentCount ? (
             <CountLabel
               className={css.countLabel}
-              shown={comments.data.items.length}
-              total={comments.data.total}
+              shown={hasLoadedComments ? comments.data.items.length : 0}
+              total={hasLoadedComments ? comments.data.total : 0}
               label="comments"
             />
           ) : null}

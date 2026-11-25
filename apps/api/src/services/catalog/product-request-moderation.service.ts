@@ -18,6 +18,12 @@ import type { ProductRequestStatus } from '../../types/catalog/product-request';
 
 import { httpError } from '../../utils/http/httpError';
 import { isDuplicateProductArticleError } from '../../utils/database/mongoError';
+
+import {
+  getProductRequestHistoryActorName,
+  serializeProductRequestDetail,
+} from './product-request-history-actor';
+
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 import {
@@ -26,10 +32,7 @@ import {
   requireProductCategoryById,
 } from './product-category.service';
 
-import {
-  getStatusHistoryCopy,
-  serializeProductRequest,
-} from './product-request-projection';
+import { getStatusHistoryCopy } from './product-request-projection';
 
 import type {
   ProductRequestDocument,
@@ -341,6 +344,11 @@ export async function moderateProductRequestByAdminService(
           status: input.status,
           ...historyCopy,
           createdAt: new Date(),
+
+          actorNameSnapshot: await getProductRequestHistoryActorName(
+            adminUserId,
+            session
+          ),
         },
       ];
 
@@ -426,7 +434,7 @@ export async function moderateProductRequestByAdminService(
       : new Map<string, ProductCategoryReferenceDto>();
 
     return {
-      request: serializeProductRequest(
+      request: await serializeProductRequestDetail(
         moderatedRequest,
         0,
 

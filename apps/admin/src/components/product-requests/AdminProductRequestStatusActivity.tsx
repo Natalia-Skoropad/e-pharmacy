@@ -81,9 +81,13 @@ export function ProductRequestStatusActivity({
               ) : (
                 <>
                   <span>
-                    {activity.actorRole
-                      ? `${activity.actorRole} (name not recorded)`
-                      : 'Actor not recorded'}
+                    {activity.entry.actorNameSource === 'current_owner' &&
+                    activity.entry.actorName
+                      ? `${activity.entry.actorName} (current account name)`
+                      : activity.entry.actorName ||
+                        (activity.actorRole
+                          ? `${activity.actorRole} (name not recorded)`
+                          : 'Actor not recorded')}
                   </span>
                   <time dateTime={activity.entry.createdAt}>
                     {new Date(activity.entry.createdAt).toLocaleString('en-GB')}

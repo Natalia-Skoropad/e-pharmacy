@@ -79,6 +79,7 @@ import {
 
 import { getAdminAuditPageLocation } from '@/lib/audit/admin-audit-presentation';
 import { getAdminAuditFieldLabel } from '@/lib/audit/admin-audit-fields';
+import { getProductRequestAuditFieldLabels } from '@/lib/audit/product-request-audit-presentation';
 
 import {
   buildAdminActivityUrl,
@@ -273,6 +274,11 @@ export function ActivityHistory({
     setFilters({ ...initialState });
     setPage(initialState.page);
     setPerPage(initialState.perPage);
+
+    if (scopeRequestId) {
+      setIsLoading(true);
+      setListError(null);
+    }
   }
 
   const navigateToState = (
@@ -724,19 +730,21 @@ export function ActivityHistory({
         title: <TableHeaderTitle parts={['Changed', 'fields']} />,
 
         render: (item) => {
-          const changedFields = item.changedFields.filter(
-            (field) =>
-              item.entityType !== 'pharmacy' ||
-              (field !== 'revision' && field !== 'editedSections')
-          );
+          const changedFields =
+            item.entityType === 'productRequest'
+              ? getProductRequestAuditFieldLabels(item)
+              : item.changedFields
+                  .filter(
+                    (field) =>
+                      item.entityType !== 'pharmacy' ||
+                      (field !== 'revision' && field !== 'editedSections')
+                  )
+                  .map(getAdminAuditFieldLabel);
 
           return (
             <span className={css.changedFields}>
               <span className={css.changedFieldsPreview}>
-                {changedFields
-                  .slice(0, 3)
-                  .map(getAdminAuditFieldLabel)
-                  .join(', ') || '—'}
+                {changedFields.slice(0, 3).join(', ') || '—'}
               </span>
 
               {changedFields.length > 3 ? (
@@ -956,11 +964,13 @@ export function ActivityHistory({
             />
           </div>
 
-          {data ? (
+          {data || (scopeRequestId && isLoading) ? (
             <CountLabel
               className={css.countLabel}
-              shown={data.items.length}
-              total={data.total}
+              shown={
+                scopeRequestId && isLoading ? 0 : (data?.items.length ?? 0)
+              }
+              total={scopeRequestId && isLoading ? 0 : (data?.total ?? 0)}
               label="records"
             />
           ) : null}

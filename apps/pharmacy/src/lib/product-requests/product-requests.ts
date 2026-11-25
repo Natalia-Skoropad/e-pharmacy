@@ -114,6 +114,8 @@ export type ProductRequestHistoryViewModel = Readonly<{
   description: string;
   createdAt: ISODateTimeString;
   isInferred: boolean;
+  actorName?: string;
+  actorNameSource?: 'current_owner';
 }>;
 
 export type ProductRequestRowViewModel = Readonly<{
@@ -309,6 +311,10 @@ function normalizeProductRequestHistoryEntry(
     return null;
   }
 
+  const actorName = !isInferred
+    ? getTrimmedString(rawEntry.actorName)
+    : undefined;
+
   return {
     id,
     status: status.value,
@@ -316,6 +322,12 @@ function normalizeProductRequestHistoryEntry(
     description,
     createdAt,
     isInferred,
+
+    ...(actorName ? { actorName } : {}),
+
+    ...(actorName && rawEntry.actorNameSource === 'current_owner'
+      ? { actorNameSource: 'current_owner' as const }
+      : {}),
   };
 }
 

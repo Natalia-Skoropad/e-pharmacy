@@ -4,7 +4,7 @@ import {
   FileText,
   MapPinned,
   Package,
-  PackageSearch,
+  FilePlus2,
   ShoppingBag,
   Tags,
   UsersRound,
@@ -92,7 +92,7 @@ function sectionIcon(section: AdminAuditSection) {
     case 'products':
       return <Package size={size} />;
     case 'productRequests':
-      return <PackageSearch size={size} />;
+      return <FilePlus2 size={size} />;
     case 'orders':
       return <ShoppingBag size={size} />;
     case 'clients':
@@ -322,12 +322,29 @@ export function ActivityFiltersDrawer({
           id="admin-audit-action-filter"
           label="Change type"
           value={filters.changeType}
+          disabled={
+            productRequestScoped && filters.section !== 'productRequests'
+          }
           options={
             productRequestScoped
               ? [
                   { value: '', label: 'All change types' },
-                  { value: 'status', label: 'Product request status changed' },
-                  { value: 'data', label: 'Product request data changed' },
+                  {
+                    value: 'status',
+                    label: 'Product request status changed',
+                    content: withIcon(
+                      'productRequests',
+                      'Product request status changed'
+                    ),
+                  },
+                  {
+                    value: 'data',
+                    label: 'Product request data changed',
+                    content: withIcon(
+                      'productRequests',
+                      'Product request data changed'
+                    ),
+                  },
                 ]
               : PHARMACY_CHANGE_TYPE_OPTIONS
           }

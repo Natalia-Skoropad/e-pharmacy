@@ -39,6 +39,7 @@
 }
 
 .imagePreview {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   width: 100%;
@@ -116,4 +117,22 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   min-width: 0;
+}
+
+.optionWithIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.optionIcon {
+  display: inline-grid;
+  flex: 0 0 26px;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: 50%;
 }

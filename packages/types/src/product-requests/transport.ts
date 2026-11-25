@@ -14,6 +14,10 @@ export type ProductRequestHistoryResponseDto = Readonly<{
   description: string;
   createdAt: ISODateTimeString;
   isInferred: boolean;
+
+  /** Present in authorized request detail and mutation responses. */
+  actorName?: string;
+  actorNameSource?: 'current_owner';
 }>;
 
 //=============================================================================

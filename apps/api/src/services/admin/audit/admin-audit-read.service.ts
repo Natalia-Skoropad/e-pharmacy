@@ -27,6 +27,7 @@ import type {
 
 import { httpError } from '../../../utils/http/httpError';
 
+import { resolveProductRequestAuditCategoryNames } from './admin-audit-product-request-category';
 import { getAuditActorIdsByType } from './admin-audit-actors.service';
 
 import {
@@ -210,6 +211,19 @@ export async function getAdminAuditLogService(
   }
 
   let details = serializeAuditDetails(auditLog);
+
+  if (
+    details.entityType === 'productRequest' &&
+    details.changedFields.some(
+      (field) => field === 'categoryId' || field === 'categoryMode'
+    )
+  ) {
+    await resolveProductRequestAuditCategoryNames(
+      details.before,
+      details.after,
+      { legacyRead: true }
+    );
+  }
 
   // Legacy blocking audit records may predate blockSource snapshots. Recover
   // provenance from the immutable blocking actor + the owner ID, only if

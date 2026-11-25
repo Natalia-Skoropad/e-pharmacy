@@ -71,6 +71,8 @@ export type RequestHistoryEntry = {
   description: string;
   createdAt: string;
   isInferred: boolean;
+  actorName?: string;
+  actorNameSource?: 'current_owner';
 };
 
 export type AdminRequestDetail = ProductRequestRowViewModel & {
@@ -163,6 +165,18 @@ export function parseAdminRequestDetail(raw: unknown): AdminRequestDetail {
             description: entry.description,
             createdAt: entry.createdAt,
             isInferred: entry.isInferred !== false,
+
+            ...(entry.isInferred === false &&
+            typeof entry.actorName === 'string' &&
+            entry.actorName.trim()
+              ? {
+                  actorName: entry.actorName.trim(),
+
+                  ...(entry.actorNameSource === 'current_owner'
+                    ? { actorNameSource: 'current_owner' as const }
+                    : {}),
+                }
+              : {}),
           },
         ];
       })

@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 
 import {
   CalendarClock,
-  ChevronDown,
-  ChevronUp,
   Fingerprint,
   FilePenLine,
   History,
@@ -16,22 +14,10 @@ import {
   UserRound,
 } from 'lucide-react';
 
-import {
-  DataTable,
-  MarkdownContent,
-  WorkingHours,
-  type DataTableColumn,
-} from '@e-pharmacy/ui/data-display';
-
+import { DataTable, type DataTableColumn } from '@e-pharmacy/ui/data-display';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
-import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
-
-import {
-  PharmacyBlockSourceBadge,
-  StatusBadge,
-} from '@e-pharmacy/ui/statistics';
-
-import { ResponsivePhoto } from '@e-pharmacy/ui/media';
+import { CloseIconButton } from '@e-pharmacy/ui/primitives';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import type {
@@ -40,22 +26,22 @@ import type {
 } from '@/lib/audit/admin-audit';
 
 import {
-  formatAdminAuditValue,
   getAdminAuditDisplayType,
   getAdminAuditChangeTone,
   getAdminAuditStatusPresentation,
 } from '@/lib/audit/admin-audit-presentation';
 
-import {
-  getAdminAuditChangedFieldLabel,
-  getAuditColorSwatch,
-} from '@/lib/audit/admin-audit-fields';
-
+import { getAdminAuditChangedFieldLabel } from '@/lib/audit/admin-audit-fields';
 import type { AdminAuditValue } from '@/lib/audit/admin-audit';
+import { getProductRequestAuditReason } from '@/lib/audit/product-request-audit-presentation';
+
 import { getAdminPharmacyComments } from '@/lib/api/browser/admin-pharmacy-detail.api';
 
 import { ActivityActorIdentity } from './ActivityActorIdentity';
 import { ActivityPageLink, ActivitySectionLink } from './ActivitySectionLink';
+import { AuditLongText } from './AuditLongText';
+import { RenderAuditValue } from './AuditChangeValue';
+import { ProductRequestAuditChanges } from './ProductRequestAuditChanges';
 
 import css from './ActivityHistory.module.css';
 
@@ -86,115 +72,6 @@ type AuditChangeRow = Readonly<{
   beforePhotoUrl?: string | null;
   afterPhotoUrl?: string | null;
 }>;
-
-//===================================================================
-
-function AuditLongText({ value }: Readonly<{ value: string }>) {
-  const [expanded, setExpanded] = useState(false);
-  const canExpand = value.length > 180 || value.split('\n').length > 5;
-
-  return (
-    <div className={css.auditLongText}>
-      <div
-        className={[
-          css.auditTextContent,
-          !expanded && canExpand ? css.auditTextCollapsed : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        <MarkdownContent value={value} />
-      </div>
-      {canExpand ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          fullWidth
-          className={css.auditExpandButton}
-          iconLeft={
-            expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />
-          }
-          aria-expanded={expanded}
-          onClick={() => setExpanded((current) => !current)}
-        >
-          {expanded ? 'Show less' : 'Show more'}
-        </Button>
-      ) : null}
-    </div>
-  );
-}
-
-//===================================================================
-
-function RenderAuditValue({
-  value,
-  field,
-  isStatus = false,
-  photoUrl,
-  blockSource,
-}: Readonly<{
-  value: AdminAuditValue | undefined;
-  field: string;
-  isStatus?: boolean;
-  photoUrl?: string | null;
-  blockSource?: 'owner_deactivated' | 'admin_blocked';
-}>) {
-  const color = getAuditColorSwatch(value);
-
-  const status =
-    isStatus && typeof value === 'string'
-      ? getAdminAuditStatusPresentation(value)
-      : null;
-
-  return (
-    <div className={css.changeValue}>
-      {color ? (
-        <span
-          className={css.colorSwatch}
-          style={{ backgroundColor: color }}
-          aria-label={`Color ${color}`}
-        />
-      ) : null}
-      {field === 'photoFingerprint' ? (
-        photoUrl ? (
-          <span className={css.auditPhotoPreview}>
-            <ResponsivePhoto
-              preset="table"
-              src={photoUrl}
-              alt="Pharmacy photo at this change"
-              sizes="110px"
-              unoptimized
-            />
-          </span>
-        ) : (
-          <span className={css.auditPhotoUnavailable}>
-            {value === null
-              ? 'No pharmacy photo'
-              : 'Historical photo preview unavailable'}
-          </span>
-        )
-      ) : status ? (
-        <>
-          <StatusBadge {...status} />
-          <PharmacyBlockSourceBadge
-            status={typeof value === 'string' ? value : ''}
-            blockSource={blockSource}
-          />
-        </>
-      ) : field === 'workingHours' &&
-        typeof value === 'string' &&
-        value.trim() ? (
-        <WorkingHours value={value} />
-      ) : ['description', 'shortDescription', 'text'].includes(field) &&
-        typeof value === 'string' ? (
-        <AuditLongText value={value} />
-      ) : (
-        formatAdminAuditValue(value)
-      )}
-    </div>
-  );
-}
 
 //===================================================================
 
@@ -347,6 +224,11 @@ export function AuditDetailsModal({
     return () => controller.abort();
   }, [details, isOpen]);
 
+  const reason =
+    details?.entityType === 'productRequest'
+      ? getProductRequestAuditReason(details)
+      : details?.reason;
+
   const tone = details ? getAdminAuditChangeTone(details) : 'info';
   const toneClassName = getChangeToneClassName(tone);
 
@@ -356,6 +238,7 @@ export function AuditDetailsModal({
   const reviewFields = details?.changedFields ?? [];
 
   const visibleFields = reviewFields.filter((field) => {
+    if (details?.entityType === 'productRequest') return false;
     if (details?.entityType !== 'pharmacy') return true;
 
     // Legacy revision tokens and section bookkeeping are internal audit
@@ -672,16 +555,14 @@ export function AuditDetailsModal({
               </div>
             </dl>
 
-            {details.reason ? (
+            {reason ? (
               <section className={css.detailsReason} aria-label="Change reason">
                 <span className={css.detailsReasonIcon} aria-hidden="true">
                   <MessageSquareText size={18} />
                 </span>
                 <span className={css.detailsReasonCopy}>
                   <strong>Reason / description</strong>
-                  {details.reason ? (
-                    <AuditLongText value={details.reason} />
-                  ) : null}
+                  <AuditLongText value={reason} />
                 </span>
               </section>
             ) : null}
@@ -697,14 +578,18 @@ export function AuditDetailsModal({
                 <h3 id="audit-changes-title">Changes</h3>
               </div>
 
-              <DataTable
-                columns={CHANGE_COLUMNS}
-                items={changeRows}
-                getItemKey={(item) => item.field}
-                minWidth={650}
-                ariaLabel="Audit changes"
-                labels={{ empty: 'No field-level changes were recorded.' }}
-              />
+              {details.entityType === 'productRequest' ? (
+                <ProductRequestAuditChanges details={details} />
+              ) : (
+                <DataTable
+                  columns={CHANGE_COLUMNS}
+                  items={changeRows}
+                  getItemKey={(item) => item.field}
+                  minWidth={650}
+                  ariaLabel="Audit changes"
+                  labels={{ empty: 'No field-level changes were recorded.' }}
+                />
+              )}
             </section>
           </div>
         ) : null}

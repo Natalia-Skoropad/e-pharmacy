@@ -675,3 +675,10 @@
   width: 100%;
   white-space: normal;
 }
+
+.productRequestAuditValue {
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

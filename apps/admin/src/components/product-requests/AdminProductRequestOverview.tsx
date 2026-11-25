@@ -1,9 +1,4 @@
-import {
-  PackageSearch,
-  ArrowRight,
-  Settings,
-  UserRoundCog,
-} from 'lucide-react';
+import { PackageSearch, ArrowRight, UserRoundCog } from 'lucide-react';
 
 import {
   PRODUCT_REQUEST_STATUS_PRESENTATION,
@@ -14,13 +9,13 @@ import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import { PharmacyPhotoPlaceholder, ShimmerImage } from '@e-pharmacy/ui/media';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { CategoryIcon } from '@e-pharmacy/ui/forms';
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 
 import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 import { getProductRequestImageSrc } from '@/lib/product-requests/product-request-images';
 import type { AdminRequestDetail } from '@/lib/product-requests/admin-product-request-detail';
 
+import { AdminProductRequestCategory } from './AdminProductRequestCategory';
 import { ProductRequestStatusActivity } from './AdminProductRequestStatusActivity';
 
 import ownerCss from '../pharmacies/PharmacyDetailsPageContent/PharmacyInformationTab.module.css';
@@ -40,8 +35,6 @@ export function AdminProductRequestOverview({
   );
 
   const { ownerDetail: owner } = request;
-  const custom = request.categoryMode === 'custom' && !request.category;
-  const categoryName = custom ? request.customCategory : request.category?.name;
 
   const notice =
     request.reviewState === 'changes_requested'
@@ -112,18 +105,7 @@ export function AdminProductRequestOverview({
             <div className={css.metadataItem}>
               <dt>Category</dt>
               <dd className={css.statusLine}>
-                {categoryName ? (
-                  <>
-                    {custom ? (
-                      <Settings size={16} />
-                    ) : request.category?.icon ? (
-                      <CategoryIcon name={request.category.icon} size={16} />
-                    ) : null}
-                    {categoryName}
-                  </>
-                ) : (
-                  '—'
-                )}
+                <AdminProductRequestCategory request={request} />
               </dd>
             </div>
 

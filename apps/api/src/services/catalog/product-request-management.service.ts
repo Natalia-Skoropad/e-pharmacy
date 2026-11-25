@@ -25,13 +25,14 @@ import {
   requireProductCategoryById,
 } from './product-category.service';
 
+import {
+  getProductRequestHistoryActorName,
+  serializeProductRequestDetail,
+} from './product-request-history-actor';
+
 import { getProductRequestOwnerScope } from './product-request-access';
 import { assertArticleAvailable } from './product-request-articles';
-
-import {
-  getStatusHistoryCopy,
-  serializeProductRequest,
-} from './product-request-projection';
+import { getStatusHistoryCopy } from './product-request-projection';
 
 import {
   ADMIN_AUDIT_ACTIONS,
@@ -133,7 +134,18 @@ export async function createProductRequestService(
               ...formUpdate,
               additionalFiles: files.length ? files : undefined,
 
-              history: [{ status: 'new', ...historyCopy, createdAt: now }],
+              history: [
+                {
+                  status: 'new',
+                  ...historyCopy,
+                  createdAt: now,
+
+                  actorNameSnapshot: await getProductRequestHistoryActorName(
+                    userId,
+                    session
+                  ),
+                },
+              ],
             },
           ],
           { session }
@@ -163,7 +175,7 @@ export async function createProductRequestService(
       : new Map<string, ProductCategoryReferenceDto>();
 
     return {
-      request: serializeProductRequest(
+      request: await serializeProductRequestDetail(
         request.toObject() as unknown as ProductRequestDocument,
         0,
 
@@ -345,7 +357,7 @@ export async function updateProductRequestService(
     : new Map<string, ProductCategoryReferenceDto>();
 
   return {
-    request: serializeProductRequest(
+    request: await serializeProductRequestDetail(
       updatedRequest.toObject() as unknown as ProductRequestDocument,
       commentsTotal,
 
@@ -547,6 +559,11 @@ export async function submitProductRequestService(
           status: 'on_moderation',
           ...getStatusHistoryCopy('on_moderation'),
           createdAt: new Date(),
+
+          actorNameSnapshot: await getProductRequestHistoryActorName(
+            userId,
+            session
+          ),
         },
       ];
 
@@ -578,7 +595,7 @@ export async function submitProductRequestService(
     throw new Error('Product request submit result not found.');
 
   return {
-    request: serializeProductRequest(
+    request: await serializeProductRequestDetail(
       updatedRequest.toObject() as unknown as ProductRequestDocument
     ),
   };
@@ -643,6 +660,11 @@ export async function cancelProductRequestService(
             'The owner cancelled the request after Admin requested corrections.',
 
           createdAt: new Date(),
+
+          actorNameSnapshot: await getProductRequestHistoryActorName(
+            userId,
+            session
+          ),
         },
       ];
 
@@ -674,7 +696,7 @@ export async function cancelProductRequestService(
     throw new Error('Product request cancel result not found.');
 
   return {
-    request: serializeProductRequest(
+    request: await serializeProductRequestDetail(
       updatedRequest.toObject() as unknown as ProductRequestDocument
     ),
   };

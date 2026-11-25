@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { Settings } from 'lucide-react';
 
 import {
   DataTable,
@@ -11,7 +10,6 @@ import {
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { CategoryIcon } from '@e-pharmacy/ui/forms';
 
 import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
@@ -24,6 +22,8 @@ import { ADMIN_ROUTES } from '@/lib/routes';
 
 import { canAdmin } from '@/lib/permissions/can-admin';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
+
+import { AdminProductRequestCategory } from './AdminProductRequestCategory';
 
 import css from './AdminProductRequestsList.module.css';
 
@@ -122,27 +122,7 @@ function ProductRequestsTable({
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
 
-        render: (request) => {
-          const custom = request.categoryMode === 'custom' && !request.category;
-          const name = custom ? request.customCategory : request.category?.name;
-
-          return name ? (
-            <span className={css.categoryCell}>
-              {custom || request.category?.icon ? (
-                <span className={css.categoryIconWrap}>
-                  {custom ? (
-                    <Settings size={16} aria-hidden="true" />
-                  ) : (
-                    <CategoryIcon name={request.category?.icon} size={16} />
-                  )}
-                </span>
-              ) : null}
-              <span className={css.categoryText}>{name}</span>
-            </span>
-          ) : (
-            '—'
-          );
-        },
+        render: (request) => <AdminProductRequestCategory request={request} />,
       },
       {
         key: 'status',

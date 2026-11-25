@@ -290,10 +290,11 @@ export function PharmacyCommentsTab({
         description={`Private working comments about this ${resource}. Pharmacy owners and staff cannot see them.`}
         icon={<MessageSquareText size={22} />}
         action={
-          effectiveStatus === 'success' ? (
+          effectiveStatus === 'success' ||
+          (resource === 'product request' && effectiveStatus === 'loading') ? (
             <CountLabel
-              shown={comments.length}
-              total={comments.length}
+              shown={effectiveStatus === 'success' ? comments.length : 0}
+              total={effectiveStatus === 'success' ? comments.length : 0}
               label="comments"
               fullWidthOnMobile
             />

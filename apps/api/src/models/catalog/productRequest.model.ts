@@ -204,6 +204,7 @@ const productRequestHistorySchema = new Schema(
     title: { type: String, trim: true, required: true, maxlength: 180 },
     description: { type: String, trim: true, required: true, maxlength: 1000 },
     createdAt: { type: Date, required: true },
+    actorNameSnapshot: { type: String, trim: true, default: undefined },
   },
   { _id: true }
 );

@@ -37,6 +37,8 @@ import {
 import {
   getProductRequestArticleAvailabilityService,
   getAdminProductRequestsService,
+  getAdminProductRequestByIdService,
+  getProductRequestByIdService,
   getAdminProductRequestOwnerOptionsService,
   getAdminProductRequestStatisticsService,
 } from './product-request-read.service';
@@ -243,6 +245,89 @@ test(
           assert.equal(first.request.article, '');
           assert.equal(second.request.article, '');
           assert.notEqual(first.request.id, second.request.id);
+
+          const actor = await User.findById(ownerA).select('name').lean();
+
+          assert.ok(actor?.name);
+
+          assert.equal(
+            (await getAdminProductRequestByIdService(first.request.id)).request
+              .history?.[0]?.actorName,
+            actor.name
+          );
+
+          assert.equal(first.request.history?.[0]?.actorName, actor.name);
+
+          assert.equal(
+            (
+              await getProductRequestByIdService(
+                ownerA.toString(),
+                first.request.id
+              )
+            ).request.history?.[0]?.actorName,
+            actor.name
+          );
+
+          // Simulate a request from before actor snapshots were stored in history.
+          await ProductRequest.updateOne(
+            { _id: first.request.id },
+            { $unset: { 'history.0.actorNameSnapshot': 1 } }
+          );
+
+          assert.equal(
+            (await getAdminProductRequestByIdService(first.request.id)).request
+              .history?.[0]?.actorName,
+            actor.name
+          );
+
+          assert.equal(
+            (
+              await getProductRequestByIdService(
+                ownerA.toString(),
+                first.request.id
+              )
+            ).request.history?.[0]?.actorName,
+            actor.name
+          );
+
+          // A direct owner-scoped draft from before detailed auditing can
+          // display the current owner's name, explicitly labelled as current.
+          await ProductRequest.updateOne(
+            { _id: second.request.id },
+            { $unset: { 'history.0.actorNameSnapshot': 1 } }
+          );
+
+          await AdminAuditLog.deleteMany({
+            entityType: 'productRequest',
+            entityId: second.request.id,
+            action: 'productRequest.created',
+          });
+
+          const older = await getAdminProductRequestByIdService(
+            second.request.id
+          );
+
+          assert.equal(older.request.history?.[0]?.actorName, actor.name);
+
+          assert.equal(
+            older.request.history?.[0]?.actorNameSource,
+            'current_owner'
+          );
+
+          const ownerDetails = await getProductRequestByIdService(
+            ownerA.toString(),
+            second.request.id
+          );
+
+          assert.equal(
+            ownerDetails.request.history?.[0]?.actorName,
+            actor.name
+          );
+
+          assert.equal(
+            ownerDetails.request.history?.[0]?.actorNameSource,
+            'current_owner'
+          );
         }
       );
 
@@ -264,6 +349,7 @@ test(
             name: 'Audit original name',
             article: '',
             categoryMode: 'catalog' as const,
+            categoryId: medicineCategoryId.toString(),
           };
 
           const first = await createProductRequestService(
@@ -315,6 +401,28 @@ test(
           );
 
           assert.equal(activity.total, 3);
+
+          const creation = activity.items.find(
+            (item) => item.action === 'productRequest.created'
+          );
+
+          assert.ok(creation);
+
+          const creationDetails = await getAdminAuditLogService(creation.id, {
+            productRequestId: id,
+          });
+
+          const category = await ProductCategory.findById(medicineCategoryId)
+            .select('name')
+            .lean();
+
+          assert.ok(category);
+          assert.equal(creationDetails.after.categoryName, category.name);
+
+          assert.equal(
+            creationDetails.after.categoryId,
+            medicineCategoryId.toString()
+          );
 
           const edit = activity.items.find(
             (item) => item.action === 'productRequest.updated'
@@ -629,6 +737,38 @@ test(
 
           assert.equal(result.request.status, 'approved');
           assert.ok(result.request.productId);
+
+          const adminActor = await User.findById(adminUserId)
+            .select('name')
+            .lean();
+
+          assert.ok(adminActor?.name);
+
+          assert.equal(
+            (
+              await getAdminProductRequestByIdService(String(request._id))
+            ).request.history?.at(-1)?.actorName,
+            adminActor.name
+          );
+
+          assert.equal(
+            result.request.history?.at(-1)?.actorName,
+            adminActor.name
+          );
+
+          assert.equal(
+            (
+              await getProductRequestByIdService(
+                ownerA.toString(),
+                String(request._id)
+              )
+            ).request.history?.at(-1)?.actorName,
+            adminActor.name
+          );
+
+          await assert.rejects(() =>
+            getProductRequestByIdService(ownerB.toString(), String(request._id))
+          );
 
           const product = await Product.findById(result.request.productId)
             .select(

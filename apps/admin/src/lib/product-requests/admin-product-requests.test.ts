@@ -447,6 +447,7 @@ test('request detail tabs have stable canonical URLs and separate saved values',
           status: 'on_moderation',
           title: 'Changes requested',
           description: 'Correct the data.',
+          actorName: 'Reviewing Admin',
           createdAt: '2026-11-25T12:00:00.000Z',
           isInferred: false,
         },
@@ -460,6 +461,7 @@ test('request detail tabs have stable canonical URLs and separate saved values',
   assert.equal(result.ownerDetail?.id, OWNER);
   assert.equal(result.files[0]?.documentId, OWNER);
   assert.equal(result.history[0]?.isInferred, false);
+  assert.equal(result.history[0]?.actorName, 'Reviewing Admin');
   assert.equal(result.reviewState, 'changes_requested');
 
   assert.throws(() =>
@@ -550,4 +552,246 @@ test('private Admin comments and audit endpoints are scoped to a product request
     [...ownerMutation.matchAll(/await auditProductRequestMutation\(/g)].length,
     5
   );
+});
+
+//===============================================================
+
+test('Admin product data contains the fill image and stacks both ingredient fields', async () => {
+  const read = (path: string) =>
+    readFile(new URL(path, import.meta.url), 'utf8');
+
+  const [panels, styles] = await Promise.all([
+    read('../../components/product-requests/AdminProductRequestPanels.tsx'),
+
+    read(
+      '../../components/product-requests/AdminProductRequestPanels.module.css'
+    ),
+  ]);
+
+  assert.match(styles, /\.imagePreview\s*\{[^}]*position:\s*relative;/);
+  assert.match(styles, /\.imagePreview\s*\{[^}]*overflow:\s*hidden;/);
+  assert.match(panels, /<ShimmerImage\s+key=\{image\}/);
+  assert.match(panels, /labels=\{\{ dropzoneTitle: 'Product image' \}\}/);
+
+  assert.match(
+    panels,
+    /className=\{css\.stackedFields\}>\s*\{input\('activeIngredients',[^\n]*\)\}\s*\{input\('activeIngredientCount',/
+  );
+
+  assert.match(
+    styles,
+    /\.stackedFields\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/
+  );
+});
+
+//===============================================================
+
+test('request comments and audit show a zero count while loading, without a duplicate legacy history block', async () => {
+  const read = (path: string) =>
+    readFile(new URL(path, import.meta.url), 'utf8');
+
+  const [detail, comments, history] = await Promise.all([
+    read('../../components/product-requests/AdminProductRequests.tsx'),
+
+    read(
+      '../../components/pharmacies/PharmacyDetailsPageContent/PharmacyCommentsTab.tsx'
+    ),
+
+    read('../../components/activity/ActivityHistory.tsx'),
+  ]);
+
+  assert.doesNotMatch(detail, /Recorded request history|legacyHistory/);
+  assert.match(detail, /<ActivityHistory[\s\S]*?scopeRequestId=\{requestId\}/);
+
+  assert.match(
+    comments,
+    /resource === 'product request' && effectiveStatus === 'loading'/
+  );
+
+  assert.match(
+    comments,
+    /shown=\{effectiveStatus === 'success' \? comments\.length : 0\}/
+  );
+
+  assert.match(
+    comments,
+    /total=\{effectiveStatus === 'success' \? comments\.length : 0\}/
+  );
+
+  assert.match(history, /data \|\| \(scopeRequestId && isLoading\)/);
+
+  assert.match(
+    history,
+    /scopeRequestId && isLoading \? 0 : \(data\?\.items\.length \?\? 0\)/
+  );
+
+  assert.match(
+    history,
+    /scopeRequestId && isLoading \? 0 : \(data\?\.total \?\? 0\)/
+  );
+});
+
+//===============================================================
+
+test('request activity change type requires the selected section and uses request icons', async () => {
+  const read = (path: string) =>
+    readFile(new URL(path, import.meta.url), 'utf8');
+
+  const [drawer, route] = await Promise.all([
+    read('../../components/activity/ActivityFiltersDrawer.tsx'),
+
+    read(
+      '../../app/admin/product-requests/[requestId]/activity/[...filters]/page.tsx'
+    ),
+  ]);
+
+  assert.match(drawer, /case 'productRequests':\s*return <FilePlus2/);
+
+  assert.match(
+    drawer,
+    /disabled=\{\s*productRequestScoped && filters\.section !== 'productRequests'\s*\}/
+  );
+
+  for (const label of ['status', 'data']) {
+    assert.match(
+      drawer,
+      new RegExp(
+        `content: withIcon\\(\\s*'productRequests',\\s*'Product request ${label} changed'`
+      )
+    );
+  }
+
+  assert.match(
+    drawer,
+    /onChange\(\{ \.\.\.filters, section, action: '', changeType: '' \}\)/
+  );
+
+  assert.match(
+    route,
+    /state\.section === 'productRequests'[\s\S]*?section: '' as const,[\s\S]*?changeType: '' as const/
+  );
+});
+
+//===============================================================
+
+test('Admin read-only category select renders the saved category icon like Pharmacy', async () => {
+  const read = (path: string) =>
+    readFile(new URL(path, import.meta.url), 'utf8');
+
+  const [panels, styles] = await Promise.all([
+    read('../../components/product-requests/AdminProductRequestPanels.tsx'),
+
+    read(
+      '../../components/product-requests/AdminProductRequestPanels.module.css'
+    ),
+  ]);
+
+  assert.match(
+    panels,
+    /content: renderCategoryOption\(\s*request\.category\.name,\s*<CategoryIcon\s+name=\{request\.category\.icon\}\s+size=\{16\}\s*\/>\s*\)/
+  );
+
+  assert.match(
+    panels,
+    /content: renderCategoryOption\(\s*'Other category',\s*<Settings size=\{16\} aria-hidden="true" \/>\s*\)/
+  );
+
+  assert.match(panels, /\{ value: '', label: 'Not assigned' \}/);
+
+  assert.match(
+    panels,
+    /values\.categoryMode === 'custom'\s*\? '__custom__'\s*:\s*\(request\.category\?\.id \?\? ''\)/
+  );
+
+  assert.match(
+    panels,
+    /id="request-category"[\s\S]*?disabled\s+required\s+onChange=\{noop\}/
+  );
+
+  assert.match(panels, /className=\{css\.optionIcon\}>\{icon\}/);
+
+  assert.match(
+    styles,
+    /\.optionIcon\s*\{[^}]*width:\s*26px;[^}]*height:\s*26px;[^}]*border-radius:\s*50%;/
+  );
+});
+
+//===============================================================
+
+test('request category overview and table use the same chip and approved palette', async () => {
+  const [overview, table, category, styles, pharmacyStyles] = await Promise.all(
+    [
+      readFile(
+        new URL(
+          '../../components/product-requests/AdminProductRequestOverview.tsx',
+          import.meta.url
+        ),
+        'utf8'
+      ),
+
+      readFile(
+        new URL(
+          '../../components/product-requests/ProductRequestsTable.tsx',
+          import.meta.url
+        ),
+        'utf8'
+      ),
+
+      readFile(
+        new URL(
+          '../../components/product-requests/AdminProductRequestCategory.tsx',
+          import.meta.url
+        ),
+        'utf8'
+      ),
+
+      readFile(
+        new URL(
+          '../../components/product-requests/AdminProductRequestsList.module.css',
+          import.meta.url
+        ),
+        'utf8'
+      ),
+
+      readFile(
+        new URL(
+          '../../../../pharmacy/src/components/product-requests/ProductRequestCategory.module.css',
+          import.meta.url
+        ),
+        'utf8'
+      ),
+    ]
+  );
+
+  assert.match(overview, /<AdminProductRequestCategory request=\{request\}/);
+  assert.match(table, /<AdminProductRequestCategory request=\{request\}/);
+  assert.match(category, /if \(!name\) return <span>—<\/span>/);
+  assert.match(category, /css\.categoryIconWrap/);
+  assert.match(category, /<CategoryIcon name=\{request\.category\?\.icon\}/);
+
+  for (const name of ['categoryCell', 'categoryText', 'categoryIconWrap']) {
+    const pattern = new RegExp(`\\.${name} \\{[^}]+\\}`);
+
+    assert.equal(
+      styles.match(pattern)?.[0],
+      pharmacyStyles.match(pattern)?.[0]
+    );
+  }
+});
+
+//===============================================================
+
+test('status activity prefers the recorded actor name rather than an invented owner name', async () => {
+  const source = await readFile(
+    new URL(
+      '../../components/product-requests/AdminProductRequestStatusActivity.tsx',
+      import.meta.url
+    ),
+    'utf8'
+  );
+
+  assert.match(source, /activity\.entry\.actorName \|\|/);
+  assert.doesNotMatch(source, /ownerDetail\.name/);
+  assert.match(source, /actorNameSource === 'current_owner'/);
+  assert.match(source, /current account name/);
 });

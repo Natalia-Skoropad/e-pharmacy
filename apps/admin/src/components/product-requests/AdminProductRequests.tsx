@@ -413,35 +413,11 @@ export function AdminProductRequestDetails({
               icon={<Icon size={21} />}
             />
             {activeTab === 'activity' ? (
-              <>
-                <ActivityHistory
-                  key={requestId}
-                  scopeRequestId={requestId}
-                  initialState={initialActivityState}
-                />
-                {request?.history.some((entry) => !entry.isInferred) ? (
-                  <details className={css.legacyHistory}>
-                    <summary>Recorded request history</summary>
-                    <p>
-                      These lifecycle messages may predate detailed auditing.
-                      They do not contain field-by-field comparisons or verified
-                      author names.
-                    </p>
-                    <ol>
-                      {[...request.history]
-                        .reverse()
-                        .filter((entry) => !entry.isInferred)
-                        .map((entry) => (
-                          <li key={entry.id}>
-                            <strong>{entry.title}</strong> — {entry.description}{' '}
-                            ·{' '}
-                            {new Date(entry.createdAt).toLocaleString('en-GB')}
-                          </li>
-                        ))}
-                    </ol>
-                  </details>
-                ) : null}
-              </>
+              <ActivityHistory
+                key={requestId}
+                scopeRequestId={requestId}
+                initialState={initialActivityState}
+              />
             ) : !current ? (
               <ProfileResourceState
                 variant="loading"

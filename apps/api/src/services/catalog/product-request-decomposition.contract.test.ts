@@ -22,6 +22,7 @@ const files = [
   'product-request-access.ts',
   'product-request-articles.ts',
   'product-request-projection.ts',
+  'product-request-history-actor.ts',
 ] as const;
 
 //===================================================================
@@ -192,4 +193,67 @@ test('S10.5 moderation preserves transitions and atomic approved-product audit',
     moderation,
     /PRODUCT_REQUEST_ERROR_CODES\.APPROVAL_PRODUCT_CONFLICT/
   );
+});
+
+//===================================================================
+
+test('recorded status actors are captured on writes and exposed in authorized detail responses', () => {
+  const historyActor = read('product-request-history-actor.ts');
+  const management = read('product-request-management.service.ts');
+  const moderation = read('product-request-moderation.service.ts');
+  const readService = read('product-request-read.service.ts');
+  const projection = read('product-request-projection.ts');
+
+  assert.equal(
+    [
+      ...management.matchAll(
+        /actorNameSnapshot: await getProductRequestHistoryActorName\(userId, session\)/g
+      ),
+    ].length,
+    3
+  );
+
+  assert.match(
+    moderation,
+    /actorNameSnapshot: await getProductRequestHistoryActorName\(adminUserId, session\)/
+  );
+
+  assert.match(
+    historyActor,
+    /User\.findById\(userId\)[\s\S]*?\.session\(session\)/
+  );
+
+  assert.match(
+    historyActor,
+    /action: ADMIN_AUDIT_ACTIONS\.PRODUCT_REQUEST_CREATED/
+  );
+
+  assert.match(historyActor, /entityId: String\(request\._id\)/);
+  assert.match(historyActor, /records\.length === 1/);
+  assert.match(historyActor, /entry\.isInferred/);
+
+  assert.match(
+    readService,
+    /export async function getAdminProductRequestByIdService[\s\S]*?await serializeProductRequestDetail/
+  );
+
+  assert.match(
+    readService,
+    /export async function getProductRequestByIdService[\s\S]*?await serializeProductRequestDetail/
+  );
+
+  assert.equal(
+    [...management.matchAll(/request: await serializeProductRequestDetail/g)]
+      .length,
+    4
+  );
+
+  assert.match(moderation, /request: await serializeProductRequestDetail/);
+
+  assert.match(
+    historyActor,
+    /serializeProductRequest\(request, commentsTotal, category\)/
+  );
+
+  assert.doesNotMatch(projection, /actorNameSnapshot|actorName:/);
 });

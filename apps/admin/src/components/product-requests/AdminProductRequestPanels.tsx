@@ -1,6 +1,8 @@
-import { PackageSearch } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { PackageSearch, Settings } from 'lucide-react';
 
 import {
+  CategoryIcon,
   CommentInput,
   DocumentUpload,
   MarkdownTextarea,
@@ -32,6 +34,17 @@ import css from './AdminProductRequestPanels.module.css';
 //===================================================================
 
 const noop = () => undefined;
+
+//===================================================================
+
+function renderCategoryOption(label: string, icon: ReactNode) {
+  return (
+    <span className={css.optionWithIcon}>
+      <span className={css.optionIcon}>{icon}</span>
+      <span>{label}</span>
+    </span>
+  );
+}
 
 //===================================================================
 
@@ -71,6 +84,7 @@ export function AdminProductRequestPanels({
           <div className={css.imagePreview}>
             {image ? (
               <ShimmerImage
+                key={image}
                 src={image}
                 alt={request.name}
                 sizes="(min-width: 1440px) 420px, 90vw"
@@ -86,6 +100,7 @@ export function AdminProductRequestPanels({
           </div>
           <div className={css.imageUploadSlot}>
             <DocumentUpload
+              className={css.productImageUpload}
               id="request-image"
               name="productImage"
               label="Product image"
@@ -95,6 +110,7 @@ export function AdminProductRequestPanels({
               multiple={false}
               maxFiles={1}
               accept={PRODUCT_REQUEST_IMAGE_ACCEPT}
+              labels={{ dropzoneTitle: 'Product image' }}
               hint="Product image submitted by the pharmacy owner."
               onChange={noop}
             />
@@ -114,8 +130,9 @@ export function AdminProductRequestPanels({
               id="request-category"
               label="Category"
               value={
-                request.category?.id ??
-                (values.categoryMode === 'custom' ? '__custom__' : '')
+                values.categoryMode === 'custom'
+                  ? '__custom__'
+                  : (request.category?.id ?? '')
               }
               options={[
                 { value: '', label: 'Not assigned' },
@@ -124,10 +141,24 @@ export function AdminProductRequestPanels({
                       {
                         value: request.category.id,
                         label: request.category.name,
+                        content: renderCategoryOption(
+                          request.category.name,
+                          <CategoryIcon
+                            name={request.category.icon}
+                            size={16}
+                          />
+                        ),
                       },
                     ]
                   : []),
-                { value: '__custom__', label: 'Other category' },
+                {
+                  value: '__custom__',
+                  label: 'Other category',
+                  content: renderCategoryOption(
+                    'Other category',
+                    <Settings size={16} aria-hidden="true" />
+                  ),
+                },
               ]}
               disabled
               required
@@ -161,7 +192,7 @@ export function AdminProductRequestPanels({
         </div>
 
         <div className={css.fieldGroup}>
-          <div className={css.fieldsGrid}>
+          <div className={css.stackedFields}>
             {input('activeIngredients', 'Active ingredients')}
             {input('activeIngredientCount', 'Active ingredient count')}
           </div>

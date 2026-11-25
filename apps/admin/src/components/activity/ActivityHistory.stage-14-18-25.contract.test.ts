@@ -32,10 +32,46 @@ test('audit details render rich text, working hours and comment text', () => {
     '../../../../api/src/services/admin/pharmacies/pharmacy-admin-comment.service.ts'
   );
 
-  assert.match(details, /<WorkingHours value=\{value\}/);
-  assert.match(details, /<MarkdownContent value=\{value\}/);
-  assert.match(details, /Show more/);
-  assert.match(details, /Show less/);
+  const sharedValue = source('./AuditChangeValue.tsx');
+
+  assert.match(sharedValue, /<WorkingHours value=\{value\}/);
+
+  const longText = source('./AuditLongText.tsx');
+  const productChanges = source('./ProductRequestAuditChanges.tsx');
+
+  assert.match(sharedValue, /<AuditLongText key=\{value\} value=\{value\}/);
+  assert.match(details, /<RenderAuditValue/);
+  assert.match(longText, /<MarkdownContent value=\{value\}/);
+  assert.match(longText, /Show more/);
+  assert.match(longText, /Show less/);
+
+  assert.match(
+    productChanges,
+    /import \{ RenderAuditValue \} from '\.\/AuditChangeValue'/
+  );
+
+  assert.match(
+    productChanges,
+    /field === 'fullDescription' \|\| field === 'pharmacyComment'/
+  );
+
+  assert.match(
+    productChanges,
+    /<RenderAuditValue field=\{field\} value=\{value\}/
+  );
+
+  assert.match(sharedValue, /'fullDescription', 'pharmacyComment'/);
+
+  assert.match(
+    productChanges,
+    /<Value field=\{row\.field\} value=\{row\.before\}/
+  );
+
+  assert.match(
+    productChanges,
+    /<Value field=\{row\.field\} value=\{row\.after\}/
+  );
+
   assert.match(details, /getAdminPharmacyComments\(pharmacyId/);
   assert.match(comments, /text: comment\.text/);
 });

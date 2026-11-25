@@ -13,9 +13,11 @@ import {
 
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { User } from '../../../models/accounts/user.model';
-import { appendAuditPharmacyPhotos } from './admin-audit-photo.service';
 
 import type { AdminAuditSnapshot } from '../../../types/admin/audit/admin-audit';
+
+import { appendAuditPharmacyPhotos } from './admin-audit-photo.service';
+import { resolveProductRequestAuditCategoryNames } from './admin-audit-product-request-category';
 
 import {
   normalizeAdminAuditSnapshot,
@@ -127,6 +129,15 @@ export async function appendAdminAuditLog({
 
   const after = normalizeAdminAuditSnapshot(rawAfter, 'Audit after snapshot');
   const changedFields = normalizeChangedFields(rawChangedFields, before, after);
+
+  if (
+    entityType === ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST &&
+    changedFields.some(
+      (field) => field === 'categoryId' || field === 'categoryMode'
+    )
+  ) {
+    await resolveProductRequestAuditCategoryNames(before, after, { session });
+  }
 
   // Never persist a photo change without its companion photo audit snapshot.
   if (

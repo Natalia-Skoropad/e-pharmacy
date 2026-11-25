@@ -20,7 +20,9 @@ test('activity list and filters use the same section and change names', async ()
   assert.match(history, /parts=\{\['Changed', 'fields'\]\}/);
   assert.match(filters, /label="Section name"/);
   assert.match(filters, /section !== 'profile'/);
-  assert.match(history, /\.slice\(0, 3\)\s*\.map\(getAdminAuditFieldLabel\)/);
+  assert.match(history, /\.map\(getAdminAuditFieldLabel\)/);
+  assert.match(history, /getProductRequestAuditFieldLabels\(item\)/);
+  assert.match(history, /\.slice\(0, 3\)\s*\.join/);
   assert.match(history, /changedFields\.length > 3/);
   assert.match(history, /\+\{changedFields\.length - 3\} more changes/);
 
@@ -48,7 +50,7 @@ test('audit modal separates section and page and has accessible change values', 
   assert.match(modal, /<ActivitySectionLink item=\{details\} \/>/);
   assert.match(modal, /<ActivityPageLink/);
   assert.match(modal, /getAdminAuditChangedFieldLabel/);
-  assert.match(modal, /getAuditColorSwatch/);
+  assert.match(await source('./AuditChangeValue.tsx'), /getAuditColorSwatch/);
   assert.match(modal, /<StatusBadge/);
   assert.match(modal, /Reason \/ description/);
   assert.match(presentation, /getAdminAuditPageLocation/);
@@ -71,13 +73,47 @@ test('audit modal separates section and page and has accessible change values', 
 
 test('audit photo previews use an explicit historical before URL and shimmer while loading', async () => {
   const modal = await source('./AuditDetailsModal.tsx');
+  const value = await source('./AuditChangeValue.tsx');
 
-  assert.match(modal, /<ResponsivePhoto/);
-  assert.match(modal, /preset="table"/);
+  assert.match(value, /<ResponsivePhoto/);
+  assert.match(value, /preset="table"/);
   assert.match(modal, /photoUrl=\{item\.beforePhotoUrl\}/);
   assert.match(modal, /photoUrl=\{item\.afterPhotoUrl\}/);
-  assert.match(modal, /Historical photo preview unavailable/);
+  assert.match(value, /Historical photo preview unavailable/);
   assert.doesNotMatch(modal, /photoDigest\?\.url === pagePhotoUrl/);
   assert.doesNotMatch(modal, /item\.photoUrl/);
   assert.match(modal, /beforePhotoUrl/);
+});
+
+//===================================================================
+
+test('product request audit uses one four-column table with the pharmacy layout without changing other entities', async () => {
+  const [modal, grouped] = await Promise.all([
+    source('./AuditDetailsModal.tsx'),
+    source('./ProductRequestAuditChanges.tsx'),
+  ]);
+
+  assert.match(
+    modal,
+    /details.entityType === 'productRequest' \? \(\s*<ProductRequestAuditChanges/
+  );
+
+  assert.match(modal, /columns=\{CHANGE_COLUMNS\}/);
+  assert.match(grouped, /getProductRequestAuditRows\(details\)/);
+  assert.equal([...grouped.matchAll(/<DataTable\b/g)].length, 1);
+
+  assert.deepEqual(
+    [...grouped.matchAll(/title: '([^']+)'/g)].map((match) => match[1]),
+    ['Changed field', 'Field', 'Before', 'After']
+  );
+
+  assert.deepEqual(
+    [...grouped.matchAll(/width: '([^']+)'/g)].map((match) => match[1]),
+    ['27%', '23%', '25%', '25%']
+  );
+
+  assert.match(grouped, /css\.changeDeveloperField\}>\{row\.developerField\}/);
+  assert.match(grouped, /items=\{rows\}/);
+  assert.match(grouped, /minWidth=\{650\}/);
+  assert.doesNotMatch(grouped, /<h4>|groups\.map|<section/);
 });

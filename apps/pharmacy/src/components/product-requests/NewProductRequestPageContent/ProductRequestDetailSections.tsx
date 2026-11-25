@@ -45,6 +45,7 @@ export function ProductRequestDetailSections({
           <EntityComments
             entityKey={`product-request:${requestId}`}
             presentation="profile"
+            showCountWhileLoading
             title="Comments"
             description="Private working notes about this product request, visible to authorized pharmacy staff."
             emptyTitle="No internal comments yet"

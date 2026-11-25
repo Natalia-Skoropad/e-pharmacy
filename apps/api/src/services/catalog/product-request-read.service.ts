@@ -34,6 +34,7 @@ import {
 
 import { getProductRequestOwnerScope } from './product-request-access';
 import { getArticleConflict } from './product-request-articles';
+import { serializeProductRequestDetail } from './product-request-history-actor';
 import { serializeProductRequest } from './product-request-projection';
 import type { ProductRequestDocument } from './product-request-projection';
 
@@ -279,7 +280,7 @@ export async function getProductRequestByIdService(
     : new Map<string, ProductCategoryReferenceDto>();
 
   return {
-    request: serializeProductRequest(
+    request: await serializeProductRequestDetail(
       request,
       commentsTotal,
 
@@ -634,13 +635,15 @@ export async function getAdminProductRequestByIdService(requestId: string) {
         }
       : null,
 
-    request: serializeProductRequest(
+    request: await serializeProductRequestDetail(
       request,
       0,
 
       request.categoryId
         ? getProductCategoryReferenceOrThrow(categories, request.categoryId)
-        : undefined
+        : undefined,
+
+      owner ? { id: String(owner._id), name: owner.name } : undefined
     ),
   };
 }

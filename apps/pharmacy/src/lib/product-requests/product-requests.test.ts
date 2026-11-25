@@ -199,3 +199,29 @@ test('product request statistics require all canonical non-negative integer coun
     );
   }
 });
+
+//===================================================================
+
+// Both historical snapshots and explicitly labelled legacy names survive normalization.
+test('product request detail preserves recorded actor names but never assigns inferred history an actor', () => {
+  const request = validRequest();
+  const entry = { ...request.history[0]!, actorName: 'Recorded owner' };
+
+  const parse = (history: unknown[]) =>
+    normalizeProductRequestDetails({ ...request, history })?.history[0];
+
+  assert.equal(parse([entry])?.actorName, 'Recorded owner');
+
+  assert.equal(
+    parse([{ ...entry, actorNameSource: 'current_owner' }])?.actorNameSource,
+    'current_owner'
+  );
+
+  assert.equal(parse([{ ...entry, isInferred: true }])?.actorName, undefined);
+
+  assert.equal(
+    parse([{ ...entry, actorName: ' ', actorNameSource: 'current_owner' }])
+      ?.actorNameSource,
+    undefined
+  );
+});

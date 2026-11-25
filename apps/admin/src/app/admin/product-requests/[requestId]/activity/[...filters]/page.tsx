@@ -19,12 +19,24 @@ export default async function Page({
 
   if (!isValidObjectId(requestId)) notFound();
 
+  const state = parseAdminActivityUrl(filters);
+
+  const initialActivityState =
+    state.section === 'productRequests'
+      ? state
+      : {
+          ...state,
+          section: '' as const,
+          action: '' as const,
+          changeType: '' as const,
+        };
+
   return (
     <AdminPermissionGate permission={ADMIN_PERMISSIONS.productRequests.view}>
       <AdminProductRequestDetails
         requestId={requestId}
         activeTab="activity"
-        initialActivityState={parseAdminActivityUrl(filters)}
+        initialActivityState={initialActivityState}
       />
     </AdminPermissionGate>
   );

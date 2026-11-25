@@ -28,6 +28,7 @@ export type ProductRequestHistoryEntry = {
   title: string;
   description: string;
   createdAt: Date;
+  actorNameSnapshot?: string;
 };
 
 //===============================================================
@@ -98,6 +99,10 @@ export type ProductRequestResponseDto = {
     description: string;
     createdAt: ISODateTimeString;
     isInferred: boolean;
+
+    /** Present in authorized request detail and mutation responses. */
+    actorName?: string;
+    actorNameSource?: 'current_owner';
   }>;
 
   commentsTotal?: number;
