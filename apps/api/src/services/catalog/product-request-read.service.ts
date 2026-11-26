@@ -293,15 +293,11 @@ export async function getProductRequestByIdService(
 
 //===============================================================
 
-/** Admin read scope is separate from owner scope. Authorization is enforced
- * by the admin route permission guard, never by client-supplied owner IDs. */
-export async function getAdminProductRequestsService(
-  query: AdminProductRequestsQuery
-) {
+async function buildAdminProductRequestOwnerScope(ownerIdValue?: string) {
   const scope: Record<string, unknown> = {};
 
-  if (query.ownerId) {
-    const ownerId = new Types.ObjectId(query.ownerId);
+  if (ownerIdValue) {
+    const ownerId = new Types.ObjectId(ownerIdValue);
 
     const pharmacies = await Pharmacy.find({ ownerId })
       .select('_id')
@@ -316,7 +312,18 @@ export async function getAdminProductRequestsService(
     ];
   }
 
-  const filter = await buildProductRequestFilter(query, scope);
+  return scope;
+}
+
+//===============================================================
+
+/** Admin read scope is separate from owner scope. Authorization is enforced
+ * by the admin route permission guard, never by client-supplied owner IDs. */
+export async function getAdminProductRequestsService(
+  query: AdminProductRequestsQuery
+) {
+  const scope = await buildAdminProductRequestOwnerScope(query.ownerId);
+  const filter = await buildProductRequestFilter(query, { ...scope });
 
   if (query.keyword?.trim()) {
     const expression = createFlexibleSearchRegExp(query.keyword.trim());
@@ -348,7 +355,7 @@ export async function getAdminProductRequestsService(
   const [total, earliestRequest] = await Promise.all([
     ProductRequest.countDocuments(filter),
 
-    ProductRequest.findOne({})
+    ProductRequest.findOne(scope)
       .sort({ createdAt: 1 })
       .select('createdAt')
       .lean<{ createdAt: Date } | null>(),
@@ -452,7 +459,11 @@ export async function getAdminProductRequestsService(
 
 //===============================================================
 
-export async function getAdminProductRequestStatisticsService() {
+export async function getAdminProductRequestStatisticsService(
+  ownerId?: string
+) {
+  const scope = await buildAdminProductRequestOwnerScope(ownerId);
+
   const statistics: Record<ProductRequestStatus, number> = {
     new: 0,
     on_moderation: 0,
@@ -463,7 +474,7 @@ export async function getAdminProductRequestStatisticsService() {
   const rows = await ProductRequest.aggregate<{
     _id: ProductRequestStatus;
     count: number;
-  }>([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
+  }>([{ $match: scope }, { $group: { _id: '$status', count: { $sum: 1 } } }]);
 
   for (const row of rows)
     if (row._id in statistics) statistics[row._id] = row.count;

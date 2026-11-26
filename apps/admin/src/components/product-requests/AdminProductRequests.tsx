@@ -31,23 +31,26 @@ import {
   ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
 
-import { parseApiResponseData } from '@e-pharmacy/api-client/response';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import { adminApiRoutes } from '@/lib/api/routes/admin-api-routes';
-import { getAdminProductRequestCategories } from '@/lib/api/browser/admin-product-requests.api';
-import { productRequestCommentsApi } from '@/lib/api/browser/admin-product-request-resources.api';
-
-import { requestProductRequestNavigationRefresh } from '@/lib/product-requests/product-request-navigation-refresh';
 
 import {
-  parseAdminRequestDetail,
+  getAdminProductRequestCategories,
+  getAdminProductRequestDetail,
+} from '@/lib/api/browser/admin-product-requests.api';
+
+import { productRequestCommentsApi } from '@/lib/api/browser/admin-product-request-resources.api';
+
+import {
   REQUEST_TABS,
   REQUEST_TAB_LABELS,
   requestTabPath,
   type AdminRequestDetail,
   type RequestTab,
 } from '@/lib/product-requests/admin-product-request-detail';
+
+import { requestProductRequestNavigationRefresh } from '@/lib/product-requests/product-request-navigation-refresh';
 
 import { dispatchAdminBreadcrumbLabel } from '@/lib/layout/breadcrumb-label-event';
 import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
@@ -197,15 +200,15 @@ export function AdminProductRequestDetails({
   useEffect(() => {
     const controller = new AbortController();
 
-    void localApiRequest(adminApiRoutes.productRequests.details(requestId), {
+    void getAdminProductRequestDetail(requestId, {
       signal: controller.signal,
     })
-      .then((raw) => {
+      .then((request) => {
         if (!controller.signal.aborted)
           setResult({
             id: requestId,
             version: reload,
-            request: parseApiResponseData(raw, parseAdminRequestDetail),
+            request,
           });
       })
       .catch(() => {
@@ -334,76 +337,77 @@ export function AdminProductRequestDetails({
           icon={<FilePlus2 size={23} />}
           actions={
             canModerate && request?.status === 'on_moderation' ? (
-              <div
-                className={`${menuCss.menuWrapper} ${css.statusMenu}`}
-                data-request-status-menu
-              >
-                <Button
-                  type="button"
-                  size="sm"
-                  fullWidth
-                  variant="secondary"
-                  iconLeft={<ClipboardCheck size={17} />}
-                  aria-expanded={menuOpen}
-                  onClick={() => setMenuOpen((v) => !v)}
+              <div className={css.headerActions}>
+                <div
+                  className={`${menuCss.menuWrapper} ${css.statusMenu}`}
+                  data-request-status-menu
                 >
-                  Manage request status{' '}
-                  <ChevronDown size={16} aria-hidden="true" />
-                </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    fullWidth
+                    variant="secondary"
+                    iconLeft={<ClipboardCheck size={17} />}
+                    aria-expanded={menuOpen}
+                    onClick={() => setMenuOpen((v) => !v)}
+                  >
+                    Manage request status{' '}
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </Button>
 
-                {menuOpen ? (
-                  <div className={`${menuCss.menu} ${css.statusMenuOptions}`}>
-                    {choices.map(
-                      ({
-                        action: choice,
-                        label,
-                        Icon: ActionIcon,
-                        style,
-                        help,
-                      }) => (
-                        <div key={choice} className={menuCss.menuActionRow}>
-                          <button
-                            type="button"
-                            className={style}
-                            disabled={!canDecide || busy}
-                            onClick={() => {
-                              setMenuOpen(false);
-                              setReason('');
-                              setCategoryId('');
-                              setCategoriesError(false);
-                              setAction(choice);
-                            }}
-                          >
-                            <ActionIcon size={17} aria-hidden="true" />
-                            {label}
-                          </button>
-                          <InfoTooltip
-                            label={
-                              canDecide
-                                ? `About ${label}`
-                                : `Why ${label} is unavailable`
-                            }
-                            title={label}
-                            icon={<Info size={17} aria-hidden="true" />}
-                            escapeOverflow
-                            preferTopLayer
-                            items={[
-                              {
-                                title: canDecide
-                                  ? 'Moderation action'
-                                  : 'Action unavailable',
-                                description:
-                                  request.reviewState === 'changes_requested'
-                                    ? 'Only the pharmacy owner can resubmit after corrections.'
-                                    : help,
-                              },
-                            ]}
-                          />
-                        </div>
-                      )
-                    )}
-                  </div>
-                ) : null}
+                  {menuOpen ? (
+                    <div className={`${menuCss.menu} ${css.statusMenuOptions}`}>
+                      {choices.map(
+                        ({
+                          action: choice,
+                          label,
+                          Icon: ActionIcon,
+                          style,
+                          help,
+                        }) => (
+                          <div key={choice} className={menuCss.menuActionRow}>
+                            <button
+                              type="button"
+                              className={style}
+                              disabled={!canDecide || busy}
+                              onClick={() => {
+                                setMenuOpen(false);
+                                setReason('');
+                                setCategoryId('');
+                                setCategoriesError(false);
+                                setAction(choice);
+                              }}
+                            >
+                              <ActionIcon size={17} aria-hidden="true" />
+                              {label}
+                            </button>
+                            {!canDecide || busy ? (
+                              <InfoTooltip
+                                label={`Why ${label} is unavailable`}
+                                title={label}
+                                icon={<Info size={17} aria-hidden="true" />}
+                                escapeOverflow
+                                preferTopLayer
+                                items={[
+                                  {
+                                    title: 'Action unavailable',
+                                    description:
+                                      request.reviewState ===
+                                      'changes_requested'
+                                        ? 'Only the pharmacy owner can resubmit after corrections.'
+                                        : busy
+                                          ? 'A moderation decision is being saved.'
+                                          : help,
+                                  },
+                                ]}
+                              />
+                            ) : null}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ) : undefined
           }

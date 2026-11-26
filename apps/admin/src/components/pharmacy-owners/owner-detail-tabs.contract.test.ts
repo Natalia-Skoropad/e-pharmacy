@@ -104,3 +104,64 @@ test('owner activity reuses global audit UI and fetches only the selected owner 
   assert.match(history, /key: 'details'/);
   assert.match(history, /key: 'location'/);
 });
+
+//===================================================================
+
+test('owner detail adds Products and scoped Product requests directly after Pharmacies', () => {
+  const detail = read(
+    './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.tsx'
+  );
+
+  const registry = read('../product-requests/AdminProductRequestsList.tsx');
+
+  assert.match(
+    detail,
+    /value: 'pharmacies',[\s\S]*?value: 'products',[\s\S]*?value: 'product-requests',[\s\S]*?value: 'documents',/
+  );
+
+  assert.match(
+    detail,
+    /<AdminProductRequestsList key=\{ownerId\} scopeOwnerId=\{ownerId\}/
+  );
+
+  assert.match(detail, /permission=\{ADMIN_PERMISSIONS.productRequests.view\}/);
+  assert.match(registry, /scopeOwnerId \? \{ ownerId: scopeOwnerId \}/);
+  assert.match(registry, /hideOwner=\{Boolean\(scopeOwnerId\)\}/);
+  assert.match(registry, /!scopeOwnerId \? <PharmacyOwnerSearch/);
+  assert.doesNotMatch(registry, /Create request/);
+});
+
+//===================================================================
+
+test('owner resource counts are zero while loading and documents are marked required', () => {
+  const list = read(
+    './PharmacyOwnersPageContent/PharmacyOwnersPageContent.tsx'
+  );
+
+  const linked = read(
+    './PharmacyOwnerDetailsPageContent/LinkedPharmaciesTab.tsx'
+  );
+
+  const comments = read(
+    './PharmacyOwnerDetailsPageContent/OwnerCommentsTab.tsx'
+  );
+
+  const docs = read('./PharmacyOwnerDetailsPageContent/OwnerDocumentsTab.tsx');
+  const table = read('./PharmacyOwnersTable/PharmacyOwnersTable.tsx');
+
+  for (const source of [list, linked]) {
+    assert.match(
+      source,
+      /shown=\{isLoading \? 0 : \(data\?\.items\.length \?\? 0\)\}/
+    );
+    assert.match(source, /total=\{isLoading \? 0 : \(data\?\.total \?\? 0\)\}/);
+  }
+
+  assert.match(
+    comments,
+    /shown=\{effectiveStatus === 'loading' \? 0 : comments.length\}/
+  );
+
+  assert.match(docs, /editable=\{false\}\s+required/);
+  assert.match(table, /escapeOverflow\s+preferTopLayer\s+scrollable/);
+});

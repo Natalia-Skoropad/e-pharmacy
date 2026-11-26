@@ -33,6 +33,7 @@ type ProductRequestsTableProps = Readonly<{
   requests: ProductRequestRowViewModel[];
   emptyMessage: string;
   isLoading?: boolean;
+  hideOwner?: boolean;
 }>;
 
 //===================================================================
@@ -41,6 +42,7 @@ function ProductRequestsTable({
   requests,
   emptyMessage,
   isLoading = false,
+  hideOwner = false,
 }: ProductRequestsTableProps) {
   const { access } = useAdminAuthorization();
   const mayViewOwner = canAdmin(access, ADMIN_PERMISSIONS.pharmacyOwners.view);
@@ -51,6 +53,7 @@ function ProductRequestsTable({
         key: 'createdAt',
         title: <TableHeaderTitle parts={['Created', 'date']} />,
         render: (request) => <TableDateTime value={request.createdAt} />,
+        width: '6%',
       },
       {
         key: 'owner',
@@ -76,7 +79,7 @@ function ProductRequestsTable({
       {
         key: 'requestNumber',
         title: <TableHeaderTitle parts={['Request', 'number']} />,
-        width: '15%',
+        width: '8%',
 
         render: (request) => (
           <TextActionButton
@@ -111,7 +114,7 @@ function ProductRequestsTable({
       },
       {
         key: 'productName',
-        width: '22%',
+        width: '15%',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
 
         render: (request) => (
@@ -156,8 +159,14 @@ function ProductRequestsTable({
 
   return (
     <DataTable
-      className={css.requestTable}
-      columns={columns}
+      className={`${css.requestTable} ${hideOwner ? css.ownerTable : ''}`}
+      columns={
+        hideOwner
+          ? columns
+              .filter((column) => column.key !== 'owner')
+              .map((column) => ({ ...column, width: undefined }))
+          : columns
+      }
       items={requests}
       getItemKey={(request) => String(request.id)}
       isLoading={isLoading}

@@ -40,3 +40,26 @@ test('tablet and desktop top bar keep the current breadcrumb rendered', async ()
   assert.match(css, /text-overflow:\s*ellipsis/);
   assert.match(breadcrumbTrail, /aria-current="page"/);
 });
+
+//===================================================================
+
+test('compact mobile breadcrumbs keep only the first section and preserve desktop layout', async () => {
+  const source = await readFile(
+    new URL('./CabinetTopBar.tsx', import.meta.url),
+    'utf8'
+  );
+
+  const styles = await readFile(
+    new URL('./CabinetTopBar.module.css', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(source, /compactOnMobile = false/);
+
+  assert.match(
+    styles,
+    /@media \(max-width: 767px\) \{[\s\S]*?\.compactOnMobile \.pathItem:not\(:first-child\)/
+  );
+
+  assert.match(styles, /\.compactOnMobile \.leadingIcon \{ flex-shrink: 0; \}/);
+});

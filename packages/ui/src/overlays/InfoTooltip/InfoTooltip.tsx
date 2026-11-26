@@ -92,7 +92,11 @@ function InfoTooltip({
 
     const availableBelow = window.innerHeight - rect.bottom - viewportPadding;
     const availableAbove = rect.top - viewportPadding;
-    const openAbove = availableBelow < 230 && availableAbove > availableBelow;
+
+    // Long, scrollable help uses the larger free area, even when the smaller
+    // side could fit a short tooltip (e.g. a table near the viewport bottom).
+    const openAbove =
+      availableAbove > availableBelow && (scrollable || availableBelow < 230);
 
     setFloatingPosition({
       ...(openAbove
@@ -112,7 +116,7 @@ function InfoTooltip({
         )
       ),
     });
-  }, [escapeOverflow]);
+  }, [escapeOverflow, scrollable]);
 
   const showFloatingTooltip = useCallback(() => {
     if (!escapeOverflow) return;

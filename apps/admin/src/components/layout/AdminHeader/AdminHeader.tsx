@@ -114,6 +114,7 @@ export function AdminHeader({ breadcrumbs, navigation }: AdminHeaderProps) {
       <header className={css.header}>
         <CabinetTopBar
           className={css.topbar}
+          compactOnMobile
           items={breadcrumbs}
           leadingIcon={
             navigationItem?.icon ??

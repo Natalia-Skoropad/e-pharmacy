@@ -19,6 +19,7 @@ export type CabinetTopBarProps = Readonly<{
   leadingIcon?: ReactNode;
   navigationToggle?: ReactNode;
   className?: string;
+  compactOnMobile?: boolean;
   ariaLabel?: string;
   renderLink?: (props: BreadcrumbLinkRenderProps) => ReactNode;
 }>;
@@ -31,11 +32,18 @@ function CabinetTopBar({
   leadingIcon,
   navigationToggle,
   className,
+  compactOnMobile = false,
   ariaLabel = 'Current cabinet page',
   renderLink,
 }: CabinetTopBarProps) {
   return (
-    <div className={clsx(css.topbar, className)}>
+    <div
+      className={clsx(
+        css.topbar,
+        compactOnMobile && css.compactOnMobile,
+        className
+      )}
+    >
       <BreadcrumbTrail
         items={items}
         ariaLabel={ariaLabel}

@@ -26,8 +26,6 @@ import {
 } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 
 import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-moderation-refresh';
-
-import { LinkedPharmaciesFiltersDrawer } from './LinkedPharmaciesFiltersDrawer';
 import { getPharmacyLocationFilterOptions } from '@/lib/pharmacies/pharmacy-location-filter-options';
 
 import {
@@ -36,6 +34,7 @@ import {
 } from '@/lib/pharmacies/load-complete-pharmacy-locations';
 
 import { LinkedPharmaciesTable } from './LinkedPharmaciesTable';
+import { LinkedPharmaciesFiltersDrawer } from './LinkedPharmaciesFiltersDrawer';
 import { PharmacySearch } from '../../pharmacies/PharmacySearch/PharmacySearch';
 
 import css from './PharmacyOwnerDetailsPageContent.module.css';
@@ -330,11 +329,11 @@ export function LinkedPharmaciesTab({
               />
             </div>
 
-            {data && !listError ? (
+            {isLoading || (data && !listError) ? (
               <CountLabel
                 className={css.linkedPharmaciesCountLabel}
-                shown={data.items.length}
-                total={data.total}
+                shown={isLoading ? 0 : (data?.items.length ?? 0)}
+                total={isLoading ? 0 : (data?.total ?? 0)}
                 label="pharmacies"
                 fullWidthOnMobile
               />

@@ -56,6 +56,7 @@ import {
   getRequestActivityDetails,
 } from '@/lib/api/browser/admin-product-request-resources.api';
 
+import { getAdminProductRequestDetail } from '@/lib/api/browser/admin-product-requests.api';
 import { getAdminPharmacyOwnerDetail } from '@/lib/api/browser/admin-pharmacy-owners.api';
 import { getAdminPharmacyDetail } from '@/lib/api/browser/admin-pharmacy-detail.api';
 
@@ -88,6 +89,8 @@ import {
 } from '@/lib/audit/admin-activity-url';
 
 import { buildAdminPharmacyDetailUrl } from '@/lib/pharmacies/admin-pharmacy-url';
+import { getProductRequestImageSrc } from '@/lib/product-requests/product-request-images';
+
 import { ADMIN_ROUTES } from '@/lib/routes';
 
 import {
@@ -262,6 +265,12 @@ export function ActivityHistory({
   } | null>(null);
 
   const [pharmacyPagePreview, setPharmacyPagePreview] = useState<{
+    id: string;
+    name: string;
+    pictureUrl?: string;
+  } | null>(null);
+
+  const [requestPagePreview, setRequestPagePreview] = useState<{
     id: string;
     name: string;
     pictureUrl?: string;
@@ -528,6 +537,34 @@ export function ActivityHistory({
     return () => controller.abort();
   }, [details]);
 
+  useEffect(() => {
+    const page = details ? getAdminAuditPageLocation(details) : null;
+
+    if (!page || page.section !== 'productRequests') return;
+
+    const controller = new AbortController();
+
+    void getAdminProductRequestDetail(page.entityId, {
+      signal: controller.signal,
+    })
+      .then((request) => {
+        if (!controller.signal.aborted && request.id === page.entityId) {
+          setRequestPagePreview({
+            id: request.id,
+            name: request.name,
+            pictureUrl: getProductRequestImageSrc(
+              request.image?.dataUrl ?? request.productImageUrl
+            ),
+          });
+        }
+      })
+      .catch(() => {
+        // Removed or inaccessible requests retain their audit snapshot/link.
+      });
+
+    return () => controller.abort();
+  }, [details]);
+
   const actorById = useMemo(
     () => new Map(actors.map((actor) => [actor.id, actor] as const)),
     [actors]
@@ -562,6 +599,12 @@ export function ActivityHistory({
       ? pharmacyPagePreview
       : null;
 
+  const matchingRequestPreview =
+    pageLocation?.section === 'productRequests' &&
+    requestPagePreview?.id === pageLocation.entityId
+      ? requestPagePreview
+      : null;
+
   const activeFiltersCount = [
     filters.dateFrom || filters.dateTo,
     filters.action,
@@ -578,6 +621,7 @@ export function ActivityHistory({
     setDetails(null);
     setOwnerPagePreview(null);
     setPharmacyPagePreview(null);
+    setRequestPagePreview(null);
     setDetailsError(null);
     setIsDetailsLoading(true);
     setSelectedAuditId(auditLogId);
@@ -657,6 +701,8 @@ export function ActivityHistory({
               title="Change colors"
               icon={<Palette size={20} aria-hidden="true" />}
               escapeOverflow
+              preferTopLayer
+              scrollable
               items={[
                 {
                   title: 'Added',
@@ -964,13 +1010,19 @@ export function ActivityHistory({
             />
           </div>
 
-          {data || (scopeRequestId && isLoading) ? (
+          {data || ((scopeRequestId || scopeOwnerId) && isLoading) ? (
             <CountLabel
               className={css.countLabel}
               shown={
-                scopeRequestId && isLoading ? 0 : (data?.items.length ?? 0)
+                (scopeRequestId || scopeOwnerId) && isLoading
+                  ? 0
+                  : (data?.items.length ?? 0)
               }
-              total={scopeRequestId && isLoading ? 0 : (data?.total ?? 0)}
+              total={
+                (scopeRequestId || scopeOwnerId) && isLoading
+                  ? 0
+                  : (data?.total ?? 0)
+              }
               label="records"
             />
           ) : null}
@@ -1005,7 +1057,7 @@ export function ActivityHistory({
               items={data?.items ?? []}
               getItemKey={(item) => item.id}
               isLoading={isLoading}
-              minWidth={950}
+              minWidth={scopeOwnerId ? 960 : 950}
               ariaLabel={
                 scopePharmacyId
                   ? 'Pharmacy activity history'
@@ -1015,6 +1067,7 @@ export function ActivityHistory({
                 loading: data
                   ? 'Refreshing activity history...'
                   : 'Loading activity history...',
+
                 empty: hasFilters
                   ? 'No activity matches the selected filters.'
                   : 'Activity history is empty.',
@@ -1074,7 +1127,8 @@ export function ActivityHistory({
           actor={details ? (actorById.get(details.actorUserId) ?? null) : null}
           pagePhotoUrl={
             pageLocation
-              ? (matchingPharmacyPreview?.pictureUrl ??
+              ? (matchingRequestPreview?.pictureUrl ??
+                matchingPharmacyPreview?.pictureUrl ??
                 matchingOwnerPreview?.pictureUrl ??
                 (pageLocation.section === 'employees'
                   ? actorById.get(pageLocation.entityId)?.pictureUrl
@@ -1082,6 +1136,7 @@ export function ActivityHistory({
               : undefined
           }
           pageName={
+            matchingRequestPreview?.name ??
             matchingPharmacyPreview?.name ??
             matchingOwnerPreview?.name ??
             (pageLocation?.section === 'employees'

@@ -107,7 +107,8 @@ test('linked pharmacies table exposes canonical owner metrics and keeps status r
     assert.match(table, new RegExp(`key: ['"]${key}['"]`));
   }
 
-  assert.match(table, /formatMoney\(pharmacy\.successfulRevenue\)/);
+  assert.match(table, /formatAmount\(pharmacy\.successfulRevenue\)/);
+  assert.match(table, /minWidth=\{960\}/);
   assert.match(table, /RatingSummary/);
   assert.match(table, /OrderMetricsTooltip/);
   assert.match(table, /reviewsCount=\{pharmacy\.reviewsCount\}/);

@@ -330,3 +330,41 @@ test('a lost mutation response is confirmed only by a new matching saved history
     false
   );
 });
+
+//===================================================================
+
+test('registry preserves the saved corrections marker on moderation rows', () => {
+  const result = normalizeProductRequestsResponse({
+    items: [{ ...validRequest(), reviewState: 'changes_requested' }],
+    page: 1,
+    perPage: 20,
+    total: 1,
+    totalPages: 1,
+    earliestCreatedAt: '2026-08-12',
+  });
+
+  assert.equal(result.items[0]?.status, 'on_moderation');
+  assert.equal(result.items[0]?.reviewState, 'changes_requested');
+});
+
+//===================================================================
+
+test('fresh registry responses remove the corrections marker after resubmission', () => {
+  const normalize = (reviewState?: 'changes_requested') =>
+    normalizeProductRequestsResponse({
+      items: [{ ...validRequest(), reviewState }],
+      page: 1,
+      perPage: 20,
+      total: 1,
+      totalPages: 1,
+      earliestCreatedAt: '2026-08-12',
+    }).items[0];
+
+  assert.equal(
+    normalize('changes_requested')?.reviewState,
+    'changes_requested'
+  );
+
+  assert.equal(normalize()?.status, 'on_moderation');
+  assert.equal(normalize()?.reviewState, undefined);
+});

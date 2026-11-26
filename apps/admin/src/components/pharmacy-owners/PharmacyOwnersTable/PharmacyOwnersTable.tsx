@@ -72,10 +72,14 @@ export function PharmacyOwnersTable({
       },
       {
         key: 'name',
+        width: '15%',
         title: <TableHeaderTitle parts={["Owner's", 'name']} />,
 
         render: (owner) => (
-          <TextActionButton href={buildAdminPharmacyOwnerDetailUrl(owner.id)}>
+          <TextActionButton
+            className={css.breakableName}
+            href={buildAdminPharmacyOwnerDetailUrl(owner.id)}
+          >
             {owner.name}
           </TextActionButton>
         ),
@@ -104,6 +108,8 @@ export function PharmacyOwnersTable({
               title="Operating and not operating pharmacies"
               icon={<Building2 size={20} aria-hidden="true" />}
               escapeOverflow
+              preferTopLayer
+              scrollable
               items={[
                 {
                   title: 'Active pharmacies',
@@ -146,7 +152,7 @@ export function PharmacyOwnersTable({
       items={owners}
       getItemKey={(owner) => owner.id}
       isLoading={isLoading}
-      minWidth={1000}
+      minWidth={960}
       ariaLabel="Pharmacy owners"
       labels={{
         loading: 'Loading pharmacy owners...',

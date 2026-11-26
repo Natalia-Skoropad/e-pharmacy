@@ -78,6 +78,6 @@ test('owners table links ids and names to owner detail and uses canonical status
   assert.match(table, /USER_STATUS_PRESENTATION\[owner\.status\]/);
 
   // Preserve readable desktop-sized columns with horizontal scrolling on narrow screens.
-  assert.match(table, /minWidth=\{1000\}/);
+  assert.match(table, /minWidth=\{960\}/);
   assert.doesNotMatch(table, /Create|Add owner/);
 });

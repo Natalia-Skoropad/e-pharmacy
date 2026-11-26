@@ -9,9 +9,7 @@ import {
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
 import type { ProductRequestRowViewModel } from '@/lib/product-requests/product-requests';
@@ -24,6 +22,7 @@ import {
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import { ProductRequestCategory } from '../ProductRequestCategory';
+import { ProductRequestStatusBadges } from '../ProductRequestStatusBadges';
 
 import css from './ProductRequestsTable.module.css';
 
@@ -138,19 +137,7 @@ function ProductRequestsTable({
 
         render: (request) => (
           <span className={css.statusCell}>
-            <StatusBadge
-              {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
-            />
-            {request.status === 'rejected' ? (
-              <StatusBadge
-                label={
-                  request.cancelledBy === 'owner'
-                    ? 'Cancelled by owner'
-                    : 'Cancelled by admin'
-                }
-                tone="neutral"
-              />
-            ) : null}
+            <ProductRequestStatusBadges request={request} />
           </span>
         ),
       },

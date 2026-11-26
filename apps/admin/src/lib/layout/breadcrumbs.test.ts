@@ -163,3 +163,31 @@ test('owner subpages show selected tab with owner name and link to personal deta
     );
   }
 });
+
+//===================================================================
+
+test('owner product tabs and sales filters retain canonical breadcrumbs', () => {
+  const base = `${ADMIN_ROUTES.PHARMACY_OWNERS}/507f1f77bcf86cd799439011`;
+
+  for (const [suffix, label] of [
+    ['products', 'Products'],
+    ['product-requests/status-new/per-page-50', 'Product requests'],
+  ]) {
+    assert.deepEqual(
+      getAdminBreadcrumbsByPathname(`${base}/${suffix}`, 'Owner'),
+      [
+        { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
+        { label: 'Owner', href: base },
+        { label },
+      ]
+    );
+  }
+
+  assert.deepEqual(
+    getAdminBreadcrumbsByPathname(`${base}/year-2025/month-02`, 'Owner'),
+    [
+      { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
+      { label: 'Owner' },
+    ]
+  );
+});

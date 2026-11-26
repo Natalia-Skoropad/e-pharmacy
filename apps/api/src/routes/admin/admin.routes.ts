@@ -184,6 +184,7 @@ import {
   productRequestModerationSchema,
   productRequestParamsSchema,
   adminProductRequestsQuerySchema,
+  adminProductRequestStatisticsQuerySchema,
 } from '../../schemas/catalog/product-request.schema';
 
 import { orderSalesStatisticsQuerySchema } from '../../schemas/orders/order.schema';
@@ -779,6 +780,7 @@ adminRoutes.get(
 adminRoutes.get(
   '/product-requests/statistics',
   requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  validate({ query: adminProductRequestStatisticsQuerySchema }),
   ctrlWrapper(getAdminProductRequestStatistics)
 );
 

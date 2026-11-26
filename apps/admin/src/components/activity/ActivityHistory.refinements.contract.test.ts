@@ -117,3 +117,51 @@ test('product request audit uses one four-column table with the pharmacy layout 
   assert.match(grouped, /minWidth=\{650\}/);
   assert.doesNotMatch(grouped, /<h4>|groups\.map|<section/);
 });
+
+//===================================================================
+
+test('change color help escapes the table and scrolls; request page link uses the parent preview', async () => {
+  const [history, link, api] = await Promise.all([
+    source('./ActivityHistory.tsx'),
+    source('./ActivitySectionLink.tsx'),
+    source('../../lib/api/browser/admin-product-requests.api.ts'),
+  ]);
+
+  assert.match(
+    history,
+    /label="Change color help"[\s\S]*?escapeOverflow\s+preferTopLayer\s+scrollable/
+  );
+
+  assert.match(history, /getAdminProductRequestDetail\(page\.entityId,/);
+  assert.match(history, /request\.id === page\.entityId/);
+
+  assert.match(
+    history,
+    /request\.image\?\.dataUrl \?\? request\.productImageUrl/
+  );
+
+  assert.match(history, /requestPagePreview\?\.id === pageLocation\.entityId/);
+
+  assert.match(
+    history,
+    /pagePhotoUrl=\{[\s\S]*?matchingRequestPreview\?\.pictureUrl/
+  );
+
+  assert.match(history, /pageName=\{\s*matchingRequestPreview\?\.name/);
+
+  assert.match(
+    link,
+    /location\.section === 'productRequests' \? \(\s*<TableImagePreview/
+  );
+
+  assert.match(api, /adminApiRoutes\.productRequests\.details\(id\)/);
+
+  const tooltip = await source(
+    '../../../../../packages/ui/src/overlays/InfoTooltip/InfoTooltip.tsx'
+  );
+
+  assert.match(
+    tooltip,
+    /availableAbove > availableBelow && \(scrollable \|\| availableBelow < 230\)/
+  );
+});

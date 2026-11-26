@@ -1,7 +1,5 @@
 import { ArrowRight, PackageSearch } from 'lucide-react';
 
-import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-
 import type { ProductRequestStatus } from '@e-pharmacy/types/product-requests';
 import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
@@ -12,7 +10,6 @@ import { PharmacyPhotoPlaceholder, ShimmerImage } from '@e-pharmacy/ui/media';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { Button } from '@e-pharmacy/ui/primitives';
 import { ProfileSectionHeader } from '@e-pharmacy/ui/profile';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/product-requests';
@@ -21,7 +18,7 @@ import { getPharmacyAllProductPath } from '@/lib/routes';
 import { ProductRequestCategory } from '../ProductRequestCategory';
 
 import { ProductRequestStatusActivity } from './ProductRequestStatusActivity';
-import { getProductRequestCancellationLabel } from './product-request-status-activity';
+import { ProductRequestStatusBadges } from '../ProductRequestStatusBadges';
 
 import css from './ProductRequestOverview.module.css';
 
@@ -55,8 +52,6 @@ export function ProductRequestOverview({
     request.status === 'approved' && isValidObjectId(request.productId)
       ? getPharmacyAllProductPath(request.productId)
       : null;
-
-  const cancellationLabel = getProductRequestCancellationLabel(request);
 
   const notice =
     request.reviewState === 'changes_requested'
@@ -110,15 +105,7 @@ export function ProductRequestOverview({
             <div className={css.metadataItem}>
               <dt>Status</dt>
               <dd className={css.statusLine}>
-                <StatusBadge
-                  {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
-                />
-                {request.reviewState === 'changes_requested' ? (
-                  <StatusBadge label="Needs changes" tone="neutral" />
-                ) : null}
-                {cancellationLabel ? (
-                  <StatusBadge label={cancellationLabel} tone="neutral" />
-                ) : null}
+                <ProductRequestStatusBadges request={request} />
               </dd>
             </div>
 

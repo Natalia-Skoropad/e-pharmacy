@@ -6,6 +6,7 @@ import { PRODUCT_REQUEST_ATTACHMENT_RULES } from '../../constants/catalog/produc
 
 import {
   adminProductRequestsQuerySchema,
+  adminProductRequestStatisticsQuerySchema,
   productRequestsQuerySchema,
   productRequestFormSchema,
   productRequestModerationSchema,
@@ -580,6 +581,31 @@ test('owner cancellation requires a non-empty reason of at most 1000 characters'
       reason: 'valid',
       status: 'approved',
     }).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('admin request statistics accepts only an optional valid owner scope', () => {
+  const ownerId = '507f1f77bcf86cd799439011';
+
+  assert.deepEqual(adminProductRequestStatisticsQuerySchema.parse({}), {});
+
+  assert.deepEqual(
+    adminProductRequestStatisticsQuerySchema.parse({ ownerId }),
+    { ownerId }
+  );
+
+  assert.equal(
+    adminProductRequestStatisticsQuerySchema.safeParse({ ownerId: 'invalid' })
+      .success,
+    false
+  );
+
+  assert.equal(
+    adminProductRequestStatisticsQuerySchema.safeParse({ status: 'new' })
+      .success,
     false
   );
 });

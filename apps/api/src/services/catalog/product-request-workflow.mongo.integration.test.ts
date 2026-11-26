@@ -42,6 +42,7 @@ import {
   getAdminProductRequestsService,
   getAdminProductRequestByIdService,
   getProductRequestByIdService,
+  getProductRequestsService,
   getAdminProductRequestOwnerOptionsService,
   getAdminProductRequestStatisticsService,
 } from './product-request-read.service';
@@ -218,6 +219,17 @@ test(
           const stats = await getAdminProductRequestStatisticsService();
 
           assert.ok(stats.new >= 3);
+
+          const ownerStats = await getAdminProductRequestStatisticsService(
+            ownerA.toString()
+          );
+
+          const otherStats = await getAdminProductRequestStatisticsService(
+            ownerB.toString()
+          );
+
+          assert.equal(ownerStats.new, 2);
+          assert.equal(otherStats.new, 1);
 
           await ProductRequest.deleteMany({
             _id: { $in: [direct._id, legacy._id, other._id] },
@@ -571,6 +583,35 @@ test(
             randomUUID()
           );
 
+          const ownerListQuery = {
+            page: 1,
+            perPage: 20 as const,
+            requestId: id,
+          };
+
+          const correctionsList = await getProductRequestsService(
+            ownerA.toString(),
+            ownerListQuery
+          );
+
+          const correctionsDetail = await getProductRequestByIdService(
+            ownerA.toString(),
+            id
+          );
+
+          assert.equal(correctionsList.items.length, 1);
+          assert.equal(correctionsList.items[0]?.status, 'on_moderation');
+
+          assert.equal(
+            correctionsList.items[0]?.reviewState,
+            'changes_requested'
+          );
+
+          assert.equal(
+            correctionsList.items[0]?.reviewState,
+            correctionsDetail.request.reviewState
+          );
+
           const resent = await submitProductRequestService(
             ownerA.toString(),
             id,
@@ -579,6 +620,14 @@ test(
 
           assert.equal(resent.request.category?.id, String(medicineCategoryId));
           assert.equal(resent.request.reviewState, undefined);
+
+          const resentList = await getProductRequestsService(
+            ownerA.toString(),
+            ownerListQuery
+          );
+
+          assert.equal(resentList.items[0]?.status, 'on_moderation');
+          assert.equal(resentList.items[0]?.reviewState, undefined);
 
           await moderateProductRequestByAdminService(
             id,

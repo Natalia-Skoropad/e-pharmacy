@@ -142,6 +142,7 @@ export function OwnerDocumentsTab({
       headerIcon={<Files size={22} />}
       value={effectiveStatus === 'success' ? values : []}
       editable={false}
+      required
       readOnlyUploadView={effectiveStatus === 'success'}
       disabled={effectiveStatus !== 'success'}
       maxFiles={PHARMACY_OWNER_DOCUMENT_RULES.maxFiles}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { FilePlus2, Search } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
+
 import {
   SearchableSelect,
   type SearchableSelectOption,
@@ -142,7 +143,12 @@ export function ProductRequestSearch({
     const controller = new AbortController();
 
     void getAdminProductRequests(
-      { requestId: value, page: 1, perPage: 1 },
+      {
+        ownerId: relatedFilters.ownerId,
+        requestId: value,
+        page: 1,
+        perPage: 1,
+      },
       { signal: controller.signal }
     )
       .then((response) => {
@@ -154,7 +160,7 @@ export function ProductRequestSearch({
       });
 
     return () => controller.abort();
-  }, [value, selected?.id]);
+  }, [value, selected?.id, relatedFilters.ownerId]);
 
   const current =
     result?.query === debouncedQuery && debouncedQuery === query.trim();

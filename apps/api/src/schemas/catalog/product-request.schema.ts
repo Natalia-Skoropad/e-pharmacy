@@ -257,6 +257,16 @@ export type AdminProductRequestsQuery = z.infer<
   typeof adminProductRequestsQuerySchema
 >;
 
+export const adminProductRequestStatisticsQuerySchema = z
+  .object({
+    ownerId: mongoIdSchema.optional(),
+  })
+  .strict();
+
+export type AdminProductRequestStatisticsQuery = z.infer<
+  typeof adminProductRequestStatisticsQuerySchema
+>;
+
 //===============================================================
 
 export const productRequestFormSchema = z

@@ -17,9 +17,26 @@ import {
   type ProductRequestsQueryParams,
 } from '@/lib/product-requests/admin-product-requests';
 
+import { parseAdminRequestDetail } from '@/lib/product-requests/admin-product-request-detail';
+
 //===================================================================
 
 type ReadOptions = Readonly<{ signal?: AbortSignal }>;
+
+//===================================================================
+
+export async function getAdminProductRequestDetail(
+  id: string,
+  options?: ReadOptions
+) {
+  const path = adminApiRoutes.productRequests.details(id);
+
+  return parseApiResponseData(
+    await localApiRequest(path, { signal: options?.signal }),
+
+    parseAdminRequestDetail
+  );
+}
 
 //===================================================================
 
@@ -38,11 +55,16 @@ export async function getAdminProductRequests(
 
 //===================================================================
 
-export async function getAdminProductRequestStatistics(options?: ReadOptions) {
+export async function getAdminProductRequestStatistics(
+  options?: ReadOptions,
+  ownerId?: string
+) {
+  const path = appendQueryParams(adminApiRoutes.productRequests.statistics, {
+    ownerId,
+  });
+
   return parseApiResponseData(
-    await localApiRequest(adminApiRoutes.productRequests.statistics, {
-      signal: options?.signal,
-    }),
+    await localApiRequest(path, { signal: options?.signal }),
 
     normalizeProductRequestStatisticsResponse
   );

@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { AdminPharmacyOwnerPharmacySummary } from '@e-pharmacy/types/admin';
+import { formatAmount } from '@e-pharmacy/utils/money';
 
 import {
   DataTable,
@@ -22,8 +23,6 @@ import {
   StatusBadge,
   PharmacyBlockSourceBadge,
 } from '@e-pharmacy/ui/statistics';
-
-import { formatMoney } from '@e-pharmacy/utils';
 
 import { ADMIN_ROUTES } from '@/lib/routes';
 
@@ -86,10 +85,14 @@ export function LinkedPharmaciesTable({
       },
       {
         key: 'name',
+        width: '20%',
         title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
 
         render: (pharmacy) => (
-          <TextActionButton href={buildPharmacyDetailsHref(pharmacy.id)}>
+          <TextActionButton
+            className={css.breakableName}
+            href={buildPharmacyDetailsHref(pharmacy.id)}
+          >
             {pharmacy.name}
           </TextActionButton>
         ),
@@ -119,7 +122,7 @@ export function LinkedPharmaciesTable({
       {
         key: 'successfulRevenue',
         title: <TableHeaderTitle parts={['Orders', 'amount, ₴']} />,
-        render: (pharmacy) => formatMoney(pharmacy.successfulRevenue) ?? '—',
+        render: (pharmacy) => formatAmount(pharmacy.successfulRevenue) ?? '—',
       },
       {
         key: 'rating',
@@ -163,7 +166,7 @@ export function LinkedPharmaciesTable({
       items={pharmacies}
       getItemKey={(pharmacy) => pharmacy.id}
       isLoading={isLoading}
-      minWidth={950}
+      minWidth={960}
       ariaLabel="Linked pharmacies"
       labels={{
         loading: 'Loading linked pharmacies...',

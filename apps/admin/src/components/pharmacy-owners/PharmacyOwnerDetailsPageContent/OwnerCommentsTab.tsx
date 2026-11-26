@@ -242,10 +242,10 @@ export function OwnerCommentsTab({
         description="Internal Admin comments about this pharmacy owner. The owner cannot see these notes."
         icon={<MessageSquareText size={22} />}
         action={
-          effectiveStatus === 'success' ? (
+          effectiveStatus !== 'error' ? (
             <CountLabel
-              shown={comments.length}
-              total={comments.length}
+              shown={effectiveStatus === 'loading' ? 0 : comments.length}
+              total={effectiveStatus === 'loading' ? 0 : comments.length}
               label="comments"
               fullWidthOnMobile
             />

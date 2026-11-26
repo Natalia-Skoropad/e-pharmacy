@@ -203,3 +203,25 @@
   }
 }
 
+/* The page title already identifies the entity. Keep the section link and menu visible. */
+@media (max-width: 767px) {
+  .compactOnMobile .pathItem:not(:first-child),
+  .compactOnMobile .separator,
+  .compactOnMobile .actions {
+    display: none;
+  }
+
+  .compactOnMobile .pathItem:first-child {
+    flex: 1 1 auto;
+  }
+
+  .compactOnMobile .pathItem:first-child .link,
+  .compactOnMobile .pathItem:first-child .current {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .compactOnMobile .leadingIcon {
+    flex-shrink: 0;
+  }
+}

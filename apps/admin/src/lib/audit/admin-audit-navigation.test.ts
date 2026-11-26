@@ -82,3 +82,29 @@ test('positions and product categories do not invent entity detail URLs', () => 
     );
   }
 });
+
+//===================================================================
+
+test('product request audit links resolve the parent request, including deleted admin comments', () => {
+  const requestId = '507f191e810c19729de860e4';
+
+  for (const entityType of [
+    'productRequest',
+    'productRequestAdminComment',
+  ] as const) {
+    const location = getAdminAuditPageLocation({
+      ...baseAudit,
+      section: 'productRequests',
+      entityType,
+
+      entityId:
+        entityType === 'productRequest' ? requestId : baseAudit.entityId,
+
+      scopeEntityType: 'productRequest',
+      scopeEntityId: requestId,
+    });
+
+    assert.equal(location?.entityId, requestId);
+    assert.equal(location?.href, `/admin/product-requests/${requestId}`);
+  }
+});

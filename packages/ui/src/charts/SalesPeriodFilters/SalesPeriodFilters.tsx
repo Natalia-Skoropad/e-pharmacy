@@ -1,10 +1,12 @@
 'use client';
 
 import clsx from 'clsx';
+import { RotateCcw } from 'lucide-react';
 
 import type { SalesPeriodMonth } from '@e-pharmacy/types/primitives';
 
 import { SelectField } from '../../forms';
+import { Button } from '../../primitives/Button/Button';
 
 import css from './SalesPeriodFilters.module.css';
 
@@ -23,6 +25,7 @@ type SalesPeriodFiltersProps = Readonly<{
   className?: string;
   yearsBack?: number;
   showAppliedPeriod?: boolean;
+  onReset?: () => void;
 }>;
 
 //===================================================================
@@ -88,6 +91,7 @@ function SalesPeriodFilters({
   className,
   yearsBack = 2,
   showAppliedPeriod = false,
+  onReset,
 }: SalesPeriodFiltersProps) {
   const yearOptions = Array.from({ length: yearsBack + 1 }, (_, index) => {
     const optionYear = CURRENT_YEAR - index;
@@ -120,6 +124,19 @@ function SalesPeriodFilters({
         escapeOverflow
         onChange={onMonthChange}
       />
+
+      {onReset ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className={css.resetButton}
+          iconLeft={<RotateCcw size={17} aria-hidden="true" />}
+          onClick={onReset}
+        >
+          Reset filters
+        </Button>
+      ) : null}
 
       {showAppliedPeriod ? (
         <p className={css.appliedPeriod} aria-live="polite">

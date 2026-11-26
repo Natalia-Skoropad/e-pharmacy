@@ -7,7 +7,12 @@ import { FilePlus2, RefreshCw } from 'lucide-react';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+
+import {
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
+
 import { StatsLoadingSkeleton, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { RowsPerPageSelect } from '@e-pharmacy/ui/forms';
 import { PageHeader } from '@e-pharmacy/ui/layout';
@@ -56,9 +61,10 @@ import css from './AdminProductRequestsList.module.css';
 function navigate(
   filters: ProductRequestsFilterState,
   pagination: ProductRequestsPagination,
-  replace = false
+  replace = false,
+  scopeOwnerId?: string
 ) {
-  const next = buildProductRequestsPath(filters, pagination);
+  const next = buildProductRequestsPath(filters, pagination, scopeOwnerId);
 
   if (window.location.pathname === next) return;
   if (replace) window.history.replaceState(null, '', next);
@@ -106,20 +112,28 @@ type Resource<T> = Readonly<{ key: string; value: T | null; error: boolean }>;
 
 //===================================================================
 
-export function AdminProductRequestsList() {
+export function AdminProductRequestsList({
+  scopeOwnerId,
+}: Readonly<{ scopeOwnerId?: string }> = {}) {
   const pathname = usePathname();
 
+  const basePath = scopeOwnerId
+    ? `${ADMIN_ROUTES.PHARMACY_OWNERS}/${scopeOwnerId}/product-requests`
+    : ADMIN_ROUTES.PRODUCT_REQUESTS;
+
   const { filters, pagination } = useMemo(() => {
-    const segments = pathname
-      .slice(ADMIN_ROUTES.PRODUCT_REQUESTS.length)
-      .split('/')
-      .filter(Boolean);
+    const segments = pathname.startsWith(`${basePath}/`)
+      ? pathname.slice(basePath.length + 1).split('/')
+      : [];
 
     return {
-      filters: parseProductRequestsSegments({ filters: segments }),
+      filters: {
+        ...parseProductRequestsSegments({ filters: segments }),
+        ...(scopeOwnerId ? { ownerId: scopeOwnerId } : {}),
+      },
       pagination: parseProductRequestsPaginationSegments({ filters: segments }),
     };
-  }, [pathname]);
+  }, [pathname, basePath, scopeOwnerId]);
 
   const params = useMemo(
     () => queryFor(filters, pagination),
@@ -142,7 +156,7 @@ export function AdminProductRequestsList() {
 
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const listKey = `${pathname}|${listRetry}`;
-  const statsKey = String(statsRetry);
+  const statsKey = `${scopeOwnerId ?? 'all'}:${statsRetry}`;
   const categoryKey = String(categoryRetry);
 
   useEffect(() => {
@@ -153,12 +167,18 @@ export function AdminProductRequestsList() {
         if (
           controller.signal.aborted ||
           window.location.pathname !==
-            buildProductRequestsPath(filters, pagination)
+            buildProductRequestsPath(filters, pagination, scopeOwnerId)
         )
           return;
 
         if (pagination.page !== value.page) {
-          navigate(filters, { ...pagination, page: value.page }, true);
+          navigate(
+            filters,
+            { ...pagination, page: value.page },
+            true,
+            scopeOwnerId
+          );
+
           return;
         }
 
@@ -170,12 +190,15 @@ export function AdminProductRequestsList() {
       });
 
     return () => controller.abort();
-  }, [params, listKey, filters, pagination]);
+  }, [params, listKey, filters, pagination, scopeOwnerId]);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    void getAdminProductRequestStatistics({ signal: controller.signal })
+    void getAdminProductRequestStatistics(
+      { signal: controller.signal },
+      scopeOwnerId
+    )
       .then((value) => {
         if (!controller.signal.aborted)
           setStats({ key: statsKey, value, error: false });
@@ -186,7 +209,7 @@ export function AdminProductRequestsList() {
       });
 
     return () => controller.abort();
-  }, [statsKey]);
+  }, [statsKey, scopeOwnerId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -256,7 +279,7 @@ export function AdminProductRequestsList() {
   );
 
   const activeCount = [
-    Boolean(ownerId),
+    Boolean(!scopeOwnerId && ownerId),
     Boolean(requestId),
     category !== 'all',
     status !== 'all',
@@ -264,7 +287,7 @@ export function AdminProductRequestsList() {
   ].filter(Boolean).length;
 
   const changeFilters = (next: ProductRequestsFilterState) =>
-    navigate(next, { ...pagination, page: 1 });
+    navigate(next, { ...pagination, page: 1 }, false, scopeOwnerId);
 
   const data = list?.key === listKey ? list.value : null;
   const loading = list?.key !== listKey;
@@ -298,17 +321,28 @@ export function AdminProductRequestsList() {
   const categoryUnavailable =
     categories?.key === categoryKey && categories.error;
 
+  const Root = scopeOwnerId ? 'section' : 'main';
+
   return (
-    <main className={css.page} aria-labelledby="product-requests-page-title">
+    <Root className={css.page} aria-labelledby="product-requests-page-title">
       <section
         className={css.heroCard}
         aria-labelledby="product-requests-page-title"
       >
-        <PageHeader
-          title="Product requests"
-          titleId="product-requests-page-title"
-          icon={<FilePlus2 size={23} aria-hidden="true" />}
-        />
+        {scopeOwnerId ? (
+          <ProfileSectionHeader
+            title="Product requests"
+            titleId="product-requests-page-title"
+            icon={<FilePlus2 size={22} aria-hidden="true" />}
+            description="Review product requests submitted by this pharmacy owner."
+          />
+        ) : (
+          <PageHeader
+            title="Product requests"
+            titleId="product-requests-page-title"
+            icon={<FilePlus2 size={23} aria-hidden="true" />}
+          />
+        )}
         <div className={css.requestStatistics}>
           {stats?.key !== statsKey ? (
             <StatsLoadingSkeleton
@@ -344,14 +378,18 @@ export function AdminProductRequestsList() {
         className={css.heroCard}
         aria-label="Search and filter product requests"
       >
-        <div className={css.searchGrid}>
+        <div
+          className={`${css.searchGrid} ${scopeOwnerId ? css.scopedSearchGrid : ''}`}
+        >
           {/* Scope changes reset remote suggestions; sibling keys must remain distinct even with identical scopes. */}
-          <PharmacyOwnerSearch
-            key={`owner-search:${JSON.stringify(ownerScope)}`}
-            value={ownerId}
-            loadOptions={loadScopedOwnerOptions}
-            onChange={(next) => changeFilters({ ...filters, ownerId: next })}
-          />
+          {!scopeOwnerId ? (
+            <PharmacyOwnerSearch
+              key={`owner-search:${JSON.stringify(ownerScope)}`}
+              value={ownerId}
+              loadOptions={loadScopedOwnerOptions}
+              onChange={(next) => changeFilters({ ...filters, ownerId: next })}
+            />
+          ) : null}
 
           <ProductRequestSearch
             key={`request-search:${JSON.stringify(requestScope)}`}
@@ -378,7 +416,9 @@ export function AdminProductRequestsList() {
             <RowsPerPageSelect
               id="product-requests-rows-per-page"
               value={pagination.perPage}
-              onChange={(perPage) => navigate(filters, { page: 1, perPage })}
+              onChange={(perPage) =>
+                navigate(filters, { page: 1, perPage }, false, scopeOwnerId)
+              }
             />
           </div>
 
@@ -411,6 +451,7 @@ export function AdminProductRequestsList() {
         ) : null}
         <ProductRequestsTable
           requests={data ? [...data.items] : []}
+          hideOwner={Boolean(scopeOwnerId)}
           isLoading={loading}
           emptyMessage={
             listError
@@ -425,7 +466,9 @@ export function AdminProductRequestsList() {
           currentPage={pagination.page}
           totalPages={Math.max(1, data?.totalPages ?? 1)}
           ariaLabel="Product requests pagination"
-          onPageChange={(page) => navigate(filters, { ...pagination, page })}
+          onPageChange={(page) =>
+            navigate(filters, { ...pagination, page }, false, scopeOwnerId)
+          }
         />
       </section>
 
@@ -441,13 +484,15 @@ export function AdminProductRequestsList() {
           onChange={changeFilters}
           onClose={() => setIsFiltersOpen(false)}
           onReset={() =>
-            navigate(DEFAULT_PRODUCT_REQUESTS_FILTERS, {
-              page: 1,
-              perPage: pagination.perPage,
-            })
+            navigate(
+              DEFAULT_PRODUCT_REQUESTS_FILTERS,
+              { page: 1, perPage: pagination.perPage },
+              false,
+              scopeOwnerId
+            )
           }
         />
       ) : null}
-    </main>
+    </Root>
   );
 }

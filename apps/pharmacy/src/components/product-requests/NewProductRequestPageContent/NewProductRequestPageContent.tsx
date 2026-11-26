@@ -94,6 +94,7 @@ import {
 
 import { ProductRequestModerationModal } from './ProductRequestModerationModal';
 import { ProductRequestSectionState } from './ProductRequestSectionState';
+import { ProductRequestCancelModal } from './ProductRequestCancelModal';
 import { ProductRequestDetailSections } from './ProductRequestDetailSections';
 import { ProductRequestOverview } from '../ProductRequestDetailsPageContent/ProductRequestOverview';
 import { uploadProductRequestDocuments } from './product-request-document-upload';
@@ -307,6 +308,7 @@ function NewProductRequestPageContent({
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   const [commentsTotal, setCommentsTotal] = useState(0);
   const [isModerationConfirmOpen, setIsModerationConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -986,16 +988,26 @@ function NewProductRequestPageContent({
   };
 
   const handleCancelRequest = async () => {
-    if (!requestId || !request || mutationLockRef.current) return;
+    if (
+      !requestId ||
+      !request ||
+      !cancelReason.trim() ||
+      mutationLockRef.current
+    )
+      return;
 
     mutationLockRef.current = true;
     setIsDeleting(true);
 
     try {
-      const result = await cancelPharmacyProductRequest(request);
+      const result = await cancelPharmacyProductRequest(
+        request,
+        cancelReason.trim()
+      );
 
       setRequest(result);
       setIsCancelConfirmOpen(false);
+      setCancelReason('');
       setStatusMenuOpen(false);
       toast.success('Product request cancelled.');
       router.refresh();
@@ -1254,6 +1266,7 @@ function NewProductRequestPageContent({
                       disabled={!request?.reviewState || isMutating}
                       onClick={() => {
                         setStatusMenuOpen(false);
+                        setCancelReason('');
                         setIsCancelConfirmOpen(true);
                       }}
                     >
@@ -1365,16 +1378,6 @@ function NewProductRequestPageContent({
           onChange={onEditorTabChange}
         />
 
-        {request?.reviewState === 'changes_requested' &&
-        request.rejectionReason ? (
-          <StatusBanner
-            tone="warning"
-            label="Needs changes"
-            title="Admin feedback"
-            message={request.rejectionReason}
-          />
-        ) : null}
-
         {requestId &&
         (loadError || (isLoading && activeEditorTab !== 'comments')) ? (
           <ProductRequestSectionState
@@ -1441,16 +1444,15 @@ function NewProductRequestPageContent({
       ) : null}
 
       {isCancelConfirmOpen ? (
-        <ConfirmationModal
-          title="Cancel product request?"
-          eyebrow="CANCEL REQUEST"
-          text="The request will become Rejected / Cancelled by owner. This cannot be undone."
-          destructive
-          confirmLabel="Cancel request"
-          cancelLabel="Keep request"
+        <ProductRequestCancelModal
+          reason={cancelReason}
           isLoading={isDeleting}
+          onReasonChange={setCancelReason}
           onConfirm={() => void handleCancelRequest()}
-          onCancel={() => setIsCancelConfirmOpen(false)}
+          onCancel={() => {
+            setIsCancelConfirmOpen(false);
+            setCancelReason('');
+          }}
         />
       ) : null}
 

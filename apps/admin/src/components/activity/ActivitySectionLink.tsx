@@ -113,7 +113,8 @@ export function ActivityPageLink({
     <span className={css.sectionLink}>
       {location.section === 'pharmacies' ||
       location.section === 'pharmacyOwners' ||
-      location.section === 'employees' ? (
+      location.section === 'employees' ||
+      location.section === 'productRequests' ? (
         <TableImagePreview
           src={photoUrl}
           alt=""

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 import type { OrderSalesStatistics } from '@e-pharmacy/types/orders';
 
@@ -15,6 +16,12 @@ import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { getAdminPharmacySalesStatistics } from '@/lib/api/browser/admin-pharmacy-detail.api';
 import { getAdminPharmacyOwnerSalesStatistics } from '@/lib/api/browser/admin-pharmacy-owners.api';
+
+import {
+  buildSalesChartPath,
+  getSalesChartYear,
+  parseSalesChartSegments,
+} from '@/lib/pharmacy-owners/owner-sales-chart-paths';
 
 //===================================================================
 
@@ -31,8 +38,38 @@ export function PharmacySalesChart({
   pharmacyId,
   ownerId,
 }: Readonly<{ pharmacyId?: string; ownerId?: string }>) {
-  const [year, setYear] = useState(() => String(new Date().getFullYear()));
-  const [month, setMonth] = useState<SalesPeriodMonth>('all');
+  const pathname = usePathname();
+  const router = useRouter();
+  const [localYear, setYear] = useState(() => String(new Date().getFullYear()));
+  const [localMonth, setMonth] = useState<SalesPeriodMonth>('all');
+  const base = `/admin/pharmacy-owners/${ownerId}`;
+
+  const segments =
+    ownerId && pathname.startsWith(`${base}/`)
+      ? pathname
+          .slice(base.length + 1)
+          .split('/')
+          .filter((part) => /^(year|month)-/.test(part))
+      : [];
+
+  const period = parseSalesChartSegments(segments);
+  const year = ownerId ? getSalesChartYear(period) : localYear;
+  const month = ownerId ? period.month : localMonth;
+
+  const updatePeriod = (nextYear: string, nextMonth: SalesPeriodMonth) => {
+    if (ownerId) {
+      router.push(
+        buildSalesChartPath(base, { year: nextYear, month: nextMonth }),
+        {
+          scroll: false,
+        }
+      );
+    } else {
+      setYear(nextYear);
+      setMonth(nextMonth);
+    }
+  };
+
   const [retry, setRetry] = useState(0);
   const [snapshot, setSnapshot] = useState<SalesSnapshot | null>(null);
 
@@ -102,8 +139,13 @@ export function PharmacySalesChart({
           idPrefix={ownerId ? 'admin-owner-sales' : 'admin-pharmacy-sales'}
           year={year}
           month={month}
-          onYearChange={setYear}
-          onMonthChange={setMonth}
+          onYearChange={(value) => updatePeriod(value, month)}
+          onMonthChange={(value) => updatePeriod(year, value)}
+          onReset={
+            ownerId && (period.year || period.month !== 'all')
+              ? () => router.push(base, { scroll: false })
+              : undefined
+          }
         />
       }
     />

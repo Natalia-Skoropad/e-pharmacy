@@ -40,6 +40,7 @@ import {
 } from '@/lib/product-requests/product-request-paths';
 
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
+import { subscribeToProductRequestCounterRefresh } from '@/lib/product-requests/product-request-counter-refresh';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { clampProductListPage } from '@/lib/products/product-pagination';
 
@@ -195,6 +196,36 @@ function ProductRequestsPageContent({
 
     return () => controller.abort();
   }, [retryVersion]);
+
+  // Admin may request corrections in another browser tab. Re-read the saved
+  // list (including reviewState) when returning to this view. Reuse the same
+  // refresh event as the navigation counters after owner mutations.
+  useEffect(() => {
+    const refreshVisibleRequests = () => {
+      if (document.visibilityState !== 'visible') return;
+
+      setRetryVersion((version) => version + 1);
+    };
+
+    const restoreRequests = (event: PageTransitionEvent) => {
+      if (event.persisted) refreshVisibleRequests();
+    };
+
+    const unsubscribe = subscribeToProductRequestCounterRefresh(
+      refreshVisibleRequests
+    );
+
+    window.addEventListener('focus', refreshVisibleRequests);
+    document.addEventListener('visibilitychange', refreshVisibleRequests);
+    window.addEventListener('pageshow', restoreRequests);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('focus', refreshVisibleRequests);
+      document.removeEventListener('visibilitychange', refreshVisibleRequests);
+      window.removeEventListener('pageshow', restoreRequests);
+    };
+  }, []);
 
   const queryParams = useMemo(
     () => getProductRequestsQueryParams(filters, rowsPerPage, currentPage),

@@ -301,7 +301,8 @@ export async function uploadPharmacyProductRequestDocument(payload: {
 // Owner lifecycle transitions are separate from ordinary Save changes.
 async function mutatePharmacyProductRequestStatus(
   previous: ProductRequestDetailsViewModel,
-  transition: 'submit' | 'cancel'
+  transition: 'submit' | 'cancel',
+  reason?: string
 ): Promise<ProductRequestDetailsViewModel> {
   const path = PHARMACY_API_ROUTES.productRequests[transition](previous.id);
 
@@ -309,7 +310,11 @@ async function mutatePharmacyProductRequestStatus(
 
   try {
     result = parseApiResponseData(
-      await localApiRequest(path, { method: 'POST' }),
+      await localApiRequest(path, {
+        method: 'POST',
+        ...(transition === 'cancel' ? { body: { reason } } : {}),
+      }),
+
       parseProductRequestDetails,
       { url: path, method: 'POST' }
     );
@@ -354,7 +359,8 @@ export function submitPharmacyProductRequest(
 //===================================================================
 
 export function cancelPharmacyProductRequest(
-  previous: ProductRequestDetailsViewModel
+  previous: ProductRequestDetailsViewModel,
+  reason: string
 ) {
-  return mutatePharmacyProductRequestStatus(previous, 'cancel');
+  return mutatePharmacyProductRequestStatus(previous, 'cancel', reason);
 }

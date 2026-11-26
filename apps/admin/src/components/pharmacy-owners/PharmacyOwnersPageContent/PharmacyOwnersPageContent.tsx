@@ -464,11 +464,11 @@ export function PharmacyOwnersPageContent({
                 />
               </div>
 
-              {data && !listError ? (
+              {isLoading || (data && !listError) ? (
                 <CountLabel
                   className={css.countLabel}
-                  shown={data.items.length}
-                  total={data.total}
+                  shown={isLoading ? 0 : (data?.items.length ?? 0)}
+                  total={isLoading ? 0 : (data?.total ?? 0)}
                   label="owners"
                   fullWidthOnMobile
                 />

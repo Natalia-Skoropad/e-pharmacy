@@ -2,6 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildSalesChartPath,
+  parseSalesChartSegments,
+} from './owner-sales-chart-paths';
+
+import {
+  buildProductRequestsPath,
+  parseProductRequestsSegments,
+  parseProductRequestsPaginationSegments,
+} from '../product-requests/admin-product-request-paths';
+
+import {
   buildAdminPharmacyOwnerDetailUrl,
   buildAdminPharmacyOwnerPharmaciesUrl,
   parseAdminPharmacyOwnerPharmaciesSegments,
@@ -185,4 +196,64 @@ test('linked-pharmacy location filters round-trip in the owner URL', () => {
 
   assert.equal(restored.settlement, original.settlement.toLowerCase());
   assert.equal(restored.region, original.region.toLowerCase());
+});
+
+//===================================================================
+
+test('owner tabs and sales period paths keep the owner identity', () => {
+  const base = `/admin/pharmacy-owners/${OWNER_ID}`;
+
+  assert.equal(
+    buildAdminPharmacyOwnerDetailUrl(OWNER_ID, { tab: 'products' }),
+    `${base}/products`
+  );
+
+  assert.equal(
+    buildAdminPharmacyOwnerDetailUrl(OWNER_ID, { tab: 'product-requests' }),
+    `${base}/product-requests`
+  );
+
+  const period = parseSalesChartSegments(['year-2025', 'month-02']);
+
+  assert.equal(buildSalesChartPath(base, period), `${base}/year-2025/month-02`);
+  assert.equal(buildSalesChartPath(base, parseSalesChartSegments([])), base);
+  assert.throws(() => parseSalesChartSegments(['month-13']));
+  assert.throws(() => parseSalesChartSegments(['year-2025', 'year-2026']));
+});
+
+//===================================================================
+
+test('scoped request filter URL excludes any separately supplied owner ID', () => {
+  const segments = [
+    'owner-id-507f1f77bcf86cd799439011',
+    'request-id-507f1f77bcf86cd799439012',
+    'category-medicine',
+    'status-on-moderation',
+    'date-from-2026-11-01',
+    'date-to-2026-11-26',
+    'page-2',
+    'per-page-50',
+  ];
+
+  const filters = parseProductRequestsSegments({ filters: segments });
+
+  const pagination = parseProductRequestsPaginationSegments({
+    filters: segments,
+  });
+
+  const base = `/admin/pharmacy-owners/${OWNER_ID}/product-requests`;
+
+  assert.equal(
+    buildProductRequestsPath(filters, pagination, OWNER_ID),
+    `${base}/${segments.slice(1).join('/')}`
+  );
+
+  assert.equal(
+    buildProductRequestsPath(
+      parseProductRequestsSegments(),
+      undefined,
+      OWNER_ID
+    ),
+    base
+  );
 });

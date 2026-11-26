@@ -620,16 +620,19 @@ test('request comments and audit show a zero count while loading, without a dupl
     /total=\{effectiveStatus === 'success' \? comments\.length : 0\}/
   );
 
-  assert.match(history, /data \|\| \(scopeRequestId && isLoading\)/);
-
   assert.match(
     history,
-    /scopeRequestId && isLoading \? 0 : \(data\?\.items\.length \?\? 0\)/
+    /data \|\| \(\(scopeRequestId \|\| scopeOwnerId\) && isLoading\)/
   );
 
   assert.match(
     history,
-    /scopeRequestId && isLoading \? 0 : \(data\?\.total \?\? 0\)/
+    /\(scopeRequestId \|\| scopeOwnerId\) && isLoading \? 0 : \(data\?\.items\.length \?\? 0\)/
+  );
+
+  assert.match(
+    history,
+    /\(scopeRequestId \|\| scopeOwnerId\) && isLoading \? 0 : \(data\?\.total \?\? 0\)/
   );
 });
 
@@ -877,6 +880,10 @@ test('request status header keeps mobile width and uses the existing moderation 
 
   assert.match(detail, /<Button[\s\S]*?fullWidth[\s\S]*?Manage request status/);
   assert.match(styles, /\.card \.statusMenu > button\s*\{[^}]*width: 100%/);
+  assert.match(detail, /className=\{css\.headerActions\}/);
+  assert.match(styles, /\.card \.headerActions\s*\{[^}]*width: 100%/);
+  assert.match(detail, /disabled=\{!canDecide \|\| busy\}/);
+  assert.match(detail, /\{!canDecide \|\| busy \? \(\s*<InfoTooltip/);
 
   assert.match(
     detail,

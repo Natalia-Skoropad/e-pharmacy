@@ -9,10 +9,10 @@
 }
 
 .statusCell {
-  display: inline-flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 5px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .requestTable {

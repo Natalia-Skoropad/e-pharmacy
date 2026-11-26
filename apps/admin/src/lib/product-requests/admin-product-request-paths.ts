@@ -160,12 +160,15 @@ export function parseProductRequestsSegments(
 
 export function buildProductRequestsPath(
   filters: ProductRequestsFilterState,
-  pagination: ProductRequestsPagination = DEFAULT_PRODUCT_REQUESTS_PAGINATION
+  pagination: ProductRequestsPagination = DEFAULT_PRODUCT_REQUESTS_PAGINATION,
+  scopeOwnerId?: string
 ): string {
   const segments: string[] = [];
 
   if (filters.requestId) segments.push(`request-id-${filters.requestId}`);
-  if (filters.ownerId) segments.push(`owner-id-${filters.ownerId}`);
+
+  if (!scopeOwnerId && filters.ownerId)
+    segments.push(`owner-id-${filters.ownerId}`);
 
   if (filters.category === CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER) {
     segments.push('category-mode-custom');
@@ -189,7 +192,9 @@ export function buildProductRequestsPath(
     segments.push(`per-page-${pagination.perPage}`);
   }
 
-  return segments.length
-    ? `${ADMIN_ROUTES.PRODUCT_REQUESTS}/${segments.join('/')}`
+  const base = scopeOwnerId
+    ? `${ADMIN_ROUTES.PHARMACY_OWNERS}/${scopeOwnerId}/product-requests`
     : ADMIN_ROUTES.PRODUCT_REQUESTS;
+
+  return segments.length ? `${base}/${segments.join('/')}` : base;
 }

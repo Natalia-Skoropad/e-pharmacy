@@ -48,6 +48,13 @@
   }
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
 /* Menu sizing follows the Pharmacy request editor; PageHeader owns layout. */
 .statusMenu,
 .statusMenu > button {
@@ -64,6 +71,11 @@
 }
 
 @media (min-width: 768px) {
+  .headerActions {
+    width: auto;
+    justify-content: flex-end;
+  }
+
   .statusMenu {
     width: auto;
   }
@@ -77,13 +89,24 @@
 }
 
 @media (max-width: 767px) {
-  .card .statusMenu {
+  .card .headerActions {
     flex: 1 1 100%;
     width: 100%;
   }
 
+  .card .statusMenu {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
   .card .statusMenu > button {
     width: 100%;
+    min-width: 100%;
+    justify-self: stretch;
   }
 
   .statusMenuOptions {

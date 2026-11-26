@@ -116,7 +116,9 @@ export function ProductRequestDetailSections({
                 entry.status === 'rejected' &&
                 request.rejectionReason &&
                 entry.description.trim() === request.rejectionReason.trim()
-                  ? 'Admin rejected the request because the submitted information needs correction.'
+                  ? request.cancelledBy === 'owner'
+                    ? 'The owner cancelled the request after Admin requested corrections.'
+                    : 'Admin rejected the request because the submitted information needs correction.'
                   : entry.description;
 
               return (
@@ -146,7 +148,12 @@ export function ProductRequestDetailSections({
 
                     {entry.status === 'rejected' && request.rejectionReason ? (
                       <p className={css.historyRejectionReason}>
-                        <b>Rejection reason:</b> {request.rejectionReason}
+                        <b>
+                          {request.cancelledBy === 'owner'
+                            ? 'Cancellation reason:'
+                            : 'Rejection reason:'}
+                        </b>{' '}
+                        {request.rejectionReason}
                       </p>
                     ) : null}
                   </div>

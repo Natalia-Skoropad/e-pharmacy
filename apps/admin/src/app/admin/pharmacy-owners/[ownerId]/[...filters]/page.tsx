@@ -13,6 +13,18 @@ import {
   resolveAdminPharmacyOwnersRoute,
 } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 
+import {
+  buildSalesChartPath,
+  parseSalesChartSegments,
+} from '@/lib/pharmacy-owners/owner-sales-chart-paths';
+
+import {
+  buildProductRequestsPath,
+  isProductRequestsFilterRoute,
+  parseProductRequestsSegments,
+  parseProductRequestsPaginationSegments,
+} from '@/lib/product-requests/admin-product-request-paths';
+
 import { AdminPermissionGate } from '@/components/auth/AdminPermissionGate';
 import { PharmacyOwnerDetailsPageContent } from '@/components/pharmacy-owners/PharmacyOwnerDetailsPageContent';
 import { PharmacyOwnersPageContent } from '@/components/pharmacy-owners/PharmacyOwnersPageContent/PharmacyOwnersPageContent';
@@ -34,6 +46,63 @@ export default async function AdminPharmacyOwnersFilteredPage({
     params,
     searchParams,
   ]);
+
+  if (/^[a-f0-9]{24}$/i.test(ownerId) && filters[0] === 'product-requests') {
+    const segments = filters.slice(1);
+
+    if (!isProductRequestsFilterRoute(segments)) notFound();
+
+    const canonical = buildProductRequestsPath(
+      parseProductRequestsSegments({ filters: segments }),
+      parseProductRequestsPaginationSegments({ filters: segments }),
+      ownerId
+    );
+
+    const incoming = `/admin/pharmacy-owners/${ownerId}/${filters.join('/')}`;
+
+    if (incoming !== canonical) redirect(canonical);
+
+    return (
+      <AdminPermissionGate permission={ADMIN_PERMISSIONS.pharmacyOwners.view}>
+        <PharmacyOwnerDetailsPageContent
+          ownerId={ownerId}
+          initialState={{ tab: 'product-requests' }}
+          initialPharmaciesState={parseAdminPharmacyOwnerPharmaciesSearchParams(
+            query
+          )}
+        />
+      </AdminPermissionGate>
+    );
+  }
+
+  if (
+    /^[a-f0-9]{24}$/i.test(ownerId) &&
+    /^(year|month)-/.test(filters[0] ?? '')
+  ) {
+    const base = `/admin/pharmacy-owners/${ownerId}`;
+
+    let canonical: string;
+
+    try {
+      canonical = buildSalesChartPath(base, parseSalesChartSegments(filters));
+    } catch {
+      notFound();
+    }
+
+    if (`${base}/${filters.join('/')}` !== canonical) redirect(canonical);
+
+    return (
+      <AdminPermissionGate permission={ADMIN_PERMISSIONS.pharmacyOwners.view}>
+        <PharmacyOwnerDetailsPageContent
+          ownerId={ownerId}
+          initialState={{ tab: 'personal' }}
+          initialPharmaciesState={parseAdminPharmacyOwnerPharmaciesSearchParams(
+            query
+          )}
+        />
+      </AdminPermissionGate>
+    );
+  }
 
   if (/^[a-f0-9]{24}$/i.test(ownerId) && filters[0] === 'pharmacies') {
     const segments = filters.slice(1);

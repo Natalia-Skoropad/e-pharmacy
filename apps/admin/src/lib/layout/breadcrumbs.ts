@@ -109,6 +109,8 @@ export function getAdminBreadcrumbsByPathname(
 
     const ownerTabs: Readonly<Record<string, string>> = {
       pharmacies: 'Linked pharmacies',
+      products: 'Products',
+      'product-requests': 'Product requests',
       documents: 'Documents',
       comments: 'Comments',
       activity: 'Activity history',
@@ -118,7 +120,9 @@ export function getAdminBreadcrumbsByPathname(
     if (
       ownerId &&
       isValidObjectId(ownerId) &&
-      (parts.length === 1 || Boolean(ownerTabs[parts[1]]))
+      (parts.length === 1 ||
+        Boolean(ownerTabs[parts[1]]) ||
+        /^(year|month)-/.test(parts[1] ?? ''))
     ) {
       const ownerUrl = `${ADMIN_ROUTES.PHARMACY_OWNERS}/${ownerId}`;
 
@@ -126,11 +130,11 @@ export function getAdminBreadcrumbsByPathname(
         { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
         {
           label: currentDetailLabel ?? `Owner #${ownerId}`,
-          ...(parts.length > 1 ? { href: ownerUrl } : {}),
+          ...(ownerTabs[parts[1]] ? { href: ownerUrl } : {}),
         },
       ];
 
-      if (parts.length > 1) base.push({ label: ownerTabs[parts[1]] });
+      if (ownerTabs[parts[1]]) base.push({ label: ownerTabs[parts[1]] });
 
       return base;
     }

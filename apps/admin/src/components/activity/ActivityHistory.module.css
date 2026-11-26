@@ -682,3 +682,11 @@
   overflow-wrap: anywhere;
   min-width: 0;
 }
+
+.actorIdentityNameLink.actorIdentityNameLink,
+.actorIdentityName {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+}

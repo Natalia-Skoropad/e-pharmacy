@@ -13,6 +13,8 @@ import {
   CirclePlus,
   Clock3,
   Files,
+  FilePlus2,
+  Boxes,
   History,
   ImageOff,
   Mail,
@@ -81,6 +83,8 @@ import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
 import { PharmacySalesChart } from '@/components/pharmacies/PharmacyDetailsPageContent/PharmacySalesChart';
+import { AdminProductRequestsList } from '@/components/product-requests/AdminProductRequestsList';
+import { AdminPermissionGate } from '@/components/auth/AdminPermissionGate';
 
 import { LinkedPharmaciesTab } from './LinkedPharmaciesTab';
 import { OwnerActivityTab } from './OwnerActivityTab';
@@ -327,6 +331,16 @@ function PharmacyOwnerDetailsPageContent({
       value: 'pharmacies',
       label: 'Pharmacies',
       icon: <Building2 size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'products',
+      label: 'Products',
+      icon: <Boxes size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'product-requests',
+      label: 'Product requests',
+      icon: <FilePlus2 size={17} aria-hidden="true" />,
     },
     {
       value: 'documents',
@@ -786,6 +800,27 @@ function PharmacyOwnerDetailsPageContent({
               ownerId={ownerId}
               initialState={initialPharmaciesState}
             />
+          ) : activeTab === 'products' ? (
+            <section>
+              <ProfileSectionHeader
+                title="Products"
+                icon={<Boxes size={22} />}
+                description="Products linked to this pharmacy owner."
+              />
+            </section>
+          ) : activeTab === 'product-requests' ? (
+            <AdminPermissionGate
+              permission={ADMIN_PERMISSIONS.productRequests.view}
+              fallback={
+                <ProfileResourceState
+                  variant="error"
+                  title="Product requests are unavailable"
+                  description="You do not have permission to view product requests."
+                />
+              }
+            >
+              <AdminProductRequestsList key={ownerId} scopeOwnerId={ownerId} />
+            </AdminPermissionGate>
           ) : activeTab === 'documents' ? (
             <OwnerDocumentsTab
               ownerId={ownerId}

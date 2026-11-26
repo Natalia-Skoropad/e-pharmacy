@@ -22,6 +22,7 @@ import type {
   ProductRequestModerationInput,
   ProductRequestParams,
   AdminProductRequestsQuery,
+  AdminProductRequestStatisticsQuery,
 } from '../../schemas/catalog/product-request.schema';
 
 import {
@@ -240,9 +241,11 @@ export async function getAdminProductRequestById(
 
 export async function getAdminProductRequestStatistics(
   _req: Request,
-  res: ValidatedResponse
+  res: ValidatedResponse<unknown, unknown, AdminProductRequestStatisticsQuery>
 ): Promise<void> {
-  const data = await getAdminProductRequestStatisticsService();
+  const data = await getAdminProductRequestStatisticsService(
+    res.locals.validated.query.ownerId
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

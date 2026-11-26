@@ -890,7 +890,7 @@ test('overview renders the saved status activity and pending requests label resu
   assert.match(activity, /activity.entry.actorName/);
   assert.match(activity, /current account name/);
   assert.match(activity, /activity.entry.description/);
-  assert.match(overview, /getProductRequestCancellationLabel\(request\)/);
+  assert.match(overview, /<ProductRequestStatusBadges request=\{request\}/);
 
   assert.match(
     activity,
@@ -984,5 +984,70 @@ test('product request comments show zero while their own resource is loading', a
   assert.match(
     comments,
     /total=\{hasLoadedComments \? comments\.data\.total : 0\}/
+  );
+});
+
+//===================================================================
+
+test('product request registry shows corrections and owner cancellation uses reason dialog and API body', async () => {
+  const root = 'src/components/product-requests/';
+  const editorRoot = `${root}NewProductRequestPageContent/`;
+
+  const [editor, modal, table, api, badges, page] = await Promise.all([
+    read(`${editorRoot}NewProductRequestPageContent.tsx`),
+    read(`${editorRoot}ProductRequestCancelModal.tsx`),
+    read(`${root}ProductRequestsTable/ProductRequestsTable.tsx`),
+    read('src/lib/api/browser/product-requests.api.ts'),
+    read(`${root}ProductRequestStatusBadges.tsx`),
+    read(`${root}ProductRequestsPageContent/ProductRequestsPageContent.tsx`),
+  ]);
+
+  assert.doesNotMatch(editor, /title="Admin feedback"/);
+  assert.match(table, /<ProductRequestStatusBadges request=\{request\}/);
+
+  assert.match(
+    badges,
+    /request\.status === 'on_moderation' &&\s*request\.reviewState === 'changes_requested'/
+  );
+
+  assert.match(badges, /<StatusBadge label="Needs changes" tone="neutral"/);
+  assert.match(badges, /getProductRequestCancellationLabel\(request\)/);
+
+  assert.match(
+    page,
+    /window\.addEventListener\('focus', refreshVisibleRequests\)/
+  );
+
+  assert.match(
+    page,
+    /document\.addEventListener\('visibilitychange', refreshVisibleRequests\)/
+  );
+
+  assert.match(page, /window\.addEventListener\('pageshow', restoreRequests\)/);
+
+  assert.match(
+    page,
+    /subscribeToProductRequestCounterRefresh\(\s*refreshVisibleRequests/
+  );
+
+  assert.match(editor, /<ProductRequestCancelModal/);
+
+  assert.match(
+    editor,
+    /cancelPharmacyProductRequest\(\s*request,\s*cancelReason\.trim\(\)/
+  );
+
+  assert.match(modal, /<ReasonModal/);
+  assert.match(modal, /reasonOptions=\{OWNER_PRODUCT_REQUEST_CANCEL_REASONS\}/);
+  assert.match(modal, /label="Cancelled by owner"/);
+
+  assert.match(
+    modal,
+    /error=\{reason\.trim\(\) \? '' : 'Reason is required\.'\}/
+  );
+
+  assert.match(
+    api,
+    /transition === 'cancel' \? \{ body: \{ reason \} \} : \{\}/
   );
 });
