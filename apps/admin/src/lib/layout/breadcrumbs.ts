@@ -171,7 +171,6 @@ export function getAdminBreadcrumbsByPathname(
         orders: 'Orders',
         clients: 'Clients',
         products: 'Products',
-        'product-requests': 'Product requests',
         activity: 'Activity history',
       };
 

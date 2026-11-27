@@ -61,5 +61,8 @@ test('compact mobile breadcrumbs keep only the first section and preserve deskto
     /@media \(max-width: 767px\) \{[\s\S]*?\.compactOnMobile \.pathItem:not\(:first-child\)/
   );
 
-  assert.match(styles, /\.compactOnMobile \.leadingIcon \{ flex-shrink: 0; \}/);
+  assert.match(
+    styles,
+    /\.compactOnMobile \.leadingIcon\s*\{\s*flex-shrink:\s*0;\s*\}/
+  );
 });

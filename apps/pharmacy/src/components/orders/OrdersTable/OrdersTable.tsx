@@ -1,4 +1,4 @@
-import { useMemo, type MouseEvent } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 
 import {
   DELIVERY_METHOD_LABELS,
@@ -39,11 +39,20 @@ type OrdersTableProps = Readonly<{
   orders: PharmacyOrderRow[];
   emptyMessage: string;
   isLoading?: boolean;
-  onOpenOrder?: (order: PharmacyOrderRow) => void;
   showPharmacy?: boolean;
   productId?: string;
   hideClient?: boolean;
 }>;
+
+//===================================================================
+
+const breakableNameStyle = {
+  display: 'inline-block',
+  minWidth: 0,
+  maxWidth: '100%',
+  overflowWrap: 'anywhere',
+  whiteSpace: 'normal',
+} satisfies CSSProperties;
 
 //===================================================================
 
@@ -62,7 +71,6 @@ function OrdersTable({
   orders,
   emptyMessage,
   isLoading = false,
-  onOpenOrder,
   showPharmacy = false,
   productId,
   hideClient = false,
@@ -80,21 +88,7 @@ function OrdersTable({
         width: '110px',
 
         render: (order) => (
-          <TextActionButton
-            href={getPharmacyOrderPath(order.id)}
-            onClick={(event: MouseEvent<HTMLAnchorElement>) => {
-              if (
-                !onOpenOrder ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-              )
-                return;
-              event.preventDefault();
-              onOpenOrder(order);
-            }}
-          >
+          <TextActionButton href={getPharmacyOrderPath(order.id)}>
             {order.orderNumber}
           </TextActionButton>
         ),
@@ -111,6 +105,7 @@ function OrdersTable({
                   {order.pharmacyId ? (
                     <TextActionButton
                       href={getOwnedPharmacyPath(order.pharmacyId)}
+                      style={breakableNameStyle}
                     >
                       {order.pharmacyName}
                     </TextActionButton>
@@ -138,14 +133,20 @@ function OrdersTable({
         key: 'client',
         title: <TableHeaderTitle parts={['Client', 'name']} />,
 
-        render: (order) =>
-          order.clientId ? (
-            <TextActionButton href={getPharmacyClientPath(order.clientId)}>
-              {order.client}
-            </TextActionButton>
-          ) : (
-            order.client
-          ),
+        render: (order) => (
+          <span style={{ overflowWrap: 'anywhere' }}>
+            {order.clientId ? (
+              <TextActionButton
+                href={getPharmacyClientPath(order.clientId)}
+                style={breakableNameStyle}
+              >
+                {order.client}
+              </TextActionButton>
+            ) : (
+              order.client
+            )}
+          </span>
+        ),
       },
       {
         key: 'deliveryMethod',
@@ -256,7 +257,7 @@ function OrdersTable({
 
       return true;
     });
-  }, [hideClient, productId, showPharmacy, onOpenOrder]);
+  }, [hideClient, productId, showPharmacy]);
 
   return (
     <DataTable

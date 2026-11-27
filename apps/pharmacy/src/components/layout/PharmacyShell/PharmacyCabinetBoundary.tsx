@@ -13,6 +13,7 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
   isOwnerClientDetailPath,
+  isExplicitOrderCreatePath,
   isOwnerClientsListPath,
   isOwnerProductsListPath,
   isOwnerOrdersListPath,
@@ -61,6 +62,7 @@ export function PharmacyCabinetBoundaryRuntime({
     (pathname &&
       (isOwnerOrdersListPath(pathname) ||
         isOwnerOrderDetailPath(pathname) ||
+        isExplicitOrderCreatePath(pathname) ||
         isOwnerClientsListPath(pathname) ||
         isOwnerClientDetailPath(pathname) ||
         isOwnerProductsListPath(pathname) ||

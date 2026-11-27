@@ -231,3 +231,73 @@ test('client Orders and new-order navigation stay explicitly scoped without a gl
   assert.match(source, /getPharmacyNewOrderPath\(filters\.pharmacyId\)/);
   assert.doesNotMatch(source, /orders\/new\?pharmacyId/);
 });
+
+//===================================================================
+
+test('order registry navigates directly and keeps counts zero until the current response', async () => {
+  const source = await readFile(componentPath, 'utf8');
+
+  const table = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/orders/OrdersTable/OrdersTable.tsx'
+    ),
+    'utf8'
+  );
+
+  assert.doesNotMatch(source, /selectCurrentPharmacy|onOpenOrder=/);
+  assert.match(source, /segments !== null && isOrdersFilterRoute\(segments\)/);
+
+  assert.match(
+    source,
+    /if \(!isRegistryPath \|\| \(embedded && !embeddedReady\)\)/
+  );
+
+  assert.match(
+    source,
+    /if \(!isRegistryPath && !isEmbeddedRegistry\) return null/
+  );
+
+  assert.match(
+    source,
+    /router\.push\(getPharmacyNewOrderPath\(filters\.pharmacyId\)\)/
+  );
+
+  assert.match(table, /href=\{getPharmacyOrderPath\(order\.id\)\}/);
+  assert.doesNotMatch(table, /event\.preventDefault|onOpenOrder/);
+
+  assert.match(
+    source,
+    /shown=\{!isLoading && !isError \? resource\.orders\.length : 0\}/
+  );
+
+  assert.match(
+    source,
+    /total=\{!isLoading && !isError \? resource\.totalOrders : 0\}/
+  );
+
+  assert.match(table, /minWidth=\{960\}/);
+});
+
+//===================================================================
+
+test('embedded order tabs retain the loading table during pathname transitions', async () => {
+  const source = await readFile(componentPath, 'utf8');
+
+  assert.match(
+    source,
+    /Boolean\(\s*embedded \|\| embeddedClientId \|\| relatedProductId\s*\)/
+  );
+
+  assert.match(source, /const isLoading =\s*!isRegistryPath \|\|/);
+
+  assert.match(
+    source,
+    /if \(!isRegistryPath && !isEmbeddedRegistry\) return null/
+  );
+
+  assert.match(
+    source,
+    /if \(!isRegistryPath \|\| \(embedded && !embeddedReady\)\)/
+  );
+});

@@ -170,3 +170,55 @@ test('order-specific BFF actions do not rely on a tab-local selected pharmacy', 
     assert.doesNotMatch(untilNextExport, /await localApiRequest\(/, name);
   }
 });
+
+//===================================================================
+
+test('explicit order creation uses the same preparing card during route and membership loading', async () => {
+  const [details, skeleton, route, scope, boundary] = await Promise.all([
+    readFile(DETAILS_SOURCE, 'utf8'),
+
+    readFile(
+      path.join(
+        path.dirname(DETAILS_SOURCE),
+        'OrderDetailsLoadingSkeleton.tsx'
+      ),
+      'utf8'
+    ),
+
+    readFile(
+      new URL('../../app/pharmacy/orders/new/loading.tsx', import.meta.url),
+      'utf8'
+    ),
+
+    readFile(
+      new URL(
+        '../layout/PharmacyShell/PharmacySelectionControls.tsx',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+
+    readFile(
+      new URL(
+        '../layout/PharmacyShell/PharmacyCabinetBoundary.tsx',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+  ]);
+
+  for (const source of [details, route, scope])
+    assert.match(source, /<CreateOrderLoading \/>/);
+
+  assert.match(skeleton, /<LoadingSpinner label="Preparing order\.\.\."/);
+  assert.match(scope, /isExplicitOrderCreatePath\(pathname\) \?/);
+  assert.match(scope, /if \(isInvalid\)/);
+  assert.match(boundary, /isExplicitOrderCreatePath\(pathname\)/);
+
+  assert.match(
+    details,
+    /getOwnedPharmacyDetail\(targetPharmacyId, requestOptions\)/
+  );
+
+  assert.match(details, /targetPharmacyId,\s*waitForLegacyCreateProfile\]\);/);
+});

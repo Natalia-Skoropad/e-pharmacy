@@ -18,10 +18,15 @@
 }
 
 .titleWithHelp {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
+  display: inline;
   min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.titleWithHelp > :last-child {
+  display: inline-flex;
+  margin-inline-start: 8px;
+  vertical-align: middle;
 }
 
 .card {
@@ -41,20 +46,14 @@
   min-width: 0;
 }
 
+.card.headerCard {
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
 .ownerPageHeader {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-}
-
-.ownerStatusAction {
-  display: flex;
-  width: 100%;
-}
-
-.ownerStatusAction > button {
-  justify-content: center;
-  width: 100%;
+  min-width: 0;
 }
 
 .statisticsSection {
@@ -302,39 +301,7 @@
   line-height: var(--lh-base);
 }
 
-.dangerButton {
-  color: var(--color-white);
-  background-color: var(--color-error);
-  border-color: var(--color-error);
-}
-
-.dangerButton:hover:not(:disabled),
-.dangerButton:focus-visible:not(:disabled) {
-  color: var(--color-white);
-  background-color: color-mix(in srgb, var(--color-error) 86%, black);
-  border-color: color-mix(in srgb, var(--color-error) 86%, black);
-}
-
 @media only screen and (min-width: 768px) {
-  .ownerPageHeader {
-    display: flex;
-  }
-
-  .ownerPageHeader > :nth-child(2) {
-    justify-content: flex-end;
-    width: auto;
-    min-width: 0;
-    margin-left: auto;
-  }
-
-  .ownerStatusAction {
-    width: auto;
-  }
-
-  .ownerStatusAction > button {
-    width: auto;
-  }
-
   .statisticsSection {
     display: grid;
     gap: 18px;

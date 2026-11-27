@@ -548,6 +548,7 @@ function ClientDetailsPageContentState({
 
           {activeTab === 'comments' ? (
             <EntityComments
+              showCountWhileLoading
               entityKey={`client:${clientId}`}
               presentation="profile"
               title="Comments"

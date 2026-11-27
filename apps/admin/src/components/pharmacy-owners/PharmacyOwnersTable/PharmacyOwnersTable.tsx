@@ -60,6 +60,7 @@ export function PharmacyOwnersTable({
       {
         key: 'id',
         title: <TableHeaderTitle parts={['Owner', 'ID']} />,
+        width: '12%',
 
         render: (owner) => (
           <TextActionButton

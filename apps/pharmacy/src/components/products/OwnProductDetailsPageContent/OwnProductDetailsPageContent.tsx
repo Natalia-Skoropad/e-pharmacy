@@ -295,11 +295,12 @@ function OwnProductDetailsPageContent({
               titleId="own-product-page-title"
               icon={<Boxes size={23} aria-hidden="true" />}
             />
-            {product ? (
+            {product || isLoading ? (
               <RatingSummary
                 className={css.titleRating}
-                rating={product.rating}
-                reviewsCount={product.reviewsCount}
+                isLoading={isLoading}
+                rating={product?.rating}
+                reviewsCount={product?.reviewsCount ?? 0}
               />
             ) : null}
           </div>

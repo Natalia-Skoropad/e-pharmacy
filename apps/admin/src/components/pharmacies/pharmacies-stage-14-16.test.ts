@@ -97,24 +97,20 @@ test('14.16: pharmacy deep-links reuse the canonical activity filters without ex
 
 //===================================================================
 
-test('14.16: five deferred sections are informational and do not issue resource requests', async () => {
+test('14.16: four deferred sections are informational and do not issue resource requests', async () => {
   const [shell, url, bffPaths] = await Promise.all([
     read('./PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'),
     read('../../lib/pharmacies/admin-pharmacy-url.ts'),
     read('../../lib/api/routes/admin-api-routes.ts'),
   ]);
 
-  for (const tab of [
-    'reviews',
-    'orders',
-    'clients',
-    'products',
-    'product-requests',
-  ]) {
+  for (const tab of ['reviews', 'orders', 'clients', 'products']) {
     assert.match(shell, new RegExp(`\\b['"]?${tab}['"]?: \\{`));
     assert.match(url, new RegExp(`'${tab}'`));
   }
 
+  assert.doesNotMatch(shell, /value: 'product-requests'/);
+  assert.doesNotMatch(url, /'product-requests'/);
   assert.match(shell, /const deferredTab = DEFERRED_TABS\[activeTab\]/);
   assert.match(shell, /variant="empty"\s+icon=\{deferredTab\.icon\}/);
   assert.match(shell, /mobileVisibleCount=\{1\}/);

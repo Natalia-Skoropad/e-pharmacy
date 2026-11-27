@@ -71,6 +71,7 @@ export function ManagerCommentTab({
 }>) {
   return (
     <EntityComments
+      showCountWhileLoading
       entityKey={`order:${orderId}`}
       initialTotal={totalComments}
       presentation="profile"

@@ -11,7 +11,23 @@ import {
   ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
 
+import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
+
 import css from './OrderDetailsPageContent.module.css';
+
+//===================================================================
+
+export function CreateOrderLoading() {
+  return (
+    <main className={css.page} aria-label="Preparing order" aria-busy="true">
+      <section className={css.contentCard}>
+        <div className={css.loaderBox}>
+          <LoadingSpinner label="Preparing order..." />
+        </div>
+      </section>
+    </main>
+  );
+}
 
 //===================================================================
 

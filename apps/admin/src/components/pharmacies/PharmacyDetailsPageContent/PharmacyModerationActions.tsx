@@ -607,7 +607,17 @@ export function PharmacyModerationActions({
             ) : undefined
           }
           isLoading={isSubmitting || isRefreshing}
-          tone={action.option.danger ? 'danger' : 'accent'}
+          tone={
+            action.option.danger
+              ? 'danger'
+              : action.option.action === 'request_corrections' &&
+                  detail.status === 'on_moderation'
+                ? 'moderation'
+                : action.option.action === 'request_corrections' &&
+                    detail.status === 'on_reactivation'
+                  ? 'reactivation'
+                  : 'accent'
+          }
           onValueChange={(reason) =>
             setAction(
               (current) =>

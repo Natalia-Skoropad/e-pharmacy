@@ -34,7 +34,7 @@ import {
 } from '@e-pharmacy/config/orders';
 
 import { STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
-import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { Button } from '@e-pharmacy/ui/primitives';
 import { formatInitials } from '@e-pharmacy/ui/data-display';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
@@ -124,7 +124,12 @@ import {
 
 import { ProductPickerModal } from './ProductPickerModal';
 import { OrderProductsTab } from './OrderProductsTab';
-import { OrderDetailsLoadingSkeleton } from './OrderDetailsLoadingSkeleton';
+
+import {
+  CreateOrderLoading,
+  OrderDetailsLoadingSkeleton,
+} from './OrderDetailsLoadingSkeleton';
+
 import { OrderPriceChangeModal } from './OrderPriceChangeModal';
 import { DeliveryTab, PaymentTab } from './OrderMethodTabs';
 
@@ -525,6 +530,16 @@ function OrderDetailsPageContent({
   const createLockedStatus =
     isCreateMode && !pharmacyId ? pharmacyLockedStatus : null;
 
+  // A URL-bound creation and an order detail do not reload when the
+  // unrelated current-pharmacy summary finishes loading.
+  const targetPharmacyId = isCreateMode
+    ? (pharmacyId ?? pharmacyProfile?.id)
+    : undefined;
+
+  const waitForLegacyCreateProfile = Boolean(
+    isCreateMode && !pharmacyId && (isProfileLoading || createLockedStatus)
+  );
+
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
 
@@ -595,8 +610,7 @@ function OrderDetailsPageContent({
   const resourceGenerationRef = useRef(0);
 
   useEffect(() => {
-    if (isCreateMode && !pharmacyId && (isProfileLoading || createLockedStatus))
-      return;
+    if (waitForLegacyCreateProfile) return;
 
     const generation = resourceGenerationRef.current + 1;
 
@@ -608,8 +622,6 @@ function OrderDetailsPageContent({
     async function loadPage() {
       try {
         if (isCreateMode) {
-          const targetPharmacyId = pharmacyId ?? pharmacyProfile?.id;
-
           if (!targetPharmacyId) {
             throw new Error('Select a pharmacy before creating an order.');
           }
@@ -774,14 +786,7 @@ function OrderDetailsPageContent({
         resourceGenerationRef.current += 1;
       }
     };
-  }, [
-    createLockedStatus,
-    isCreateMode,
-    isProfileLoading,
-    orderId,
-    pharmacyId,
-    pharmacyProfile,
-  ]);
+  }, [isCreateMode, orderId, targetPharmacyId, waitForLegacyCreateProfile]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1709,13 +1714,7 @@ function OrderDetailsPageContent({
 
   if (isLoading) {
     return isCreateMode ? (
-      <main className={css.page} aria-label="Preparing order">
-        <section className={css.contentCard}>
-          <div className={css.loaderBox}>
-            <LoadingSpinner label="Preparing order..." />
-          </div>
-        </section>
-      </main>
+      <CreateOrderLoading />
     ) : (
       <OrderDetailsLoadingSkeleton tab={activeTab} />
     );

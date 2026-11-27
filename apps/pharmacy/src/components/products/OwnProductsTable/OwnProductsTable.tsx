@@ -105,7 +105,10 @@ function OwnProductsTable({
         title: <TableHeaderTitle parts={['Product', 'name']} />,
 
         render: (product) => (
-          <TextActionButton href={getPharmacyProductPath(product.id)}>
+          <TextActionButton
+            className={css.breakableLink}
+            href={getPharmacyProductPath(product.id)}
+          >
             {product.name}
           </TextActionButton>
         ),

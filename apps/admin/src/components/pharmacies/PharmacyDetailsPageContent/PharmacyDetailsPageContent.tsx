@@ -14,7 +14,6 @@ import {
   MessageSquareText,
   History,
   Package,
-  PackageSearch,
   ShoppingBag,
   Star,
   UsersRound,
@@ -125,11 +124,6 @@ const TAB_ITEMS: TabItem<AdminPharmacyDetailTab>[] = [
   { value: 'orders', label: 'Orders', icon: <ShoppingBag size={17} /> },
   { value: 'clients', label: 'Clients', icon: <UsersRound size={17} /> },
   { value: 'products', label: 'Products', icon: <Package size={17} /> },
-  {
-    value: 'product-requests',
-    label: 'Product requests',
-    icon: <PackageSearch size={17} />,
-  },
   { value: 'activity', label: 'Activity history', icon: <History size={17} /> },
 ];
 
@@ -161,8 +155,6 @@ const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
 
   products:
     'Pharmacy products will be available when the products module is ready.',
-  'product-requests':
-    'Product requests will be available when the product requests module is ready.',
 
   activity:
     'Review the exact audit trail of this pharmacy, including moderation and internal Admin comment events.',
@@ -203,13 +195,6 @@ const DEFERRED_TABS: Partial<
     description:
       'The Products module will show this pharmacy’s assortment and its listings when integrated. Product records are not loaded on this page yet.',
     icon: <Package size={30} aria-hidden="true" />,
-  },
-
-  'product-requests': {
-    title: 'Product requests are not connected yet',
-    description:
-      'Requests to add or update products from this pharmacy will appear here after the Product requests module is connected. No requests have been queried.',
-    icon: <PackageSearch size={30} aria-hidden="true" />,
   },
 };
 
@@ -420,53 +405,52 @@ export function PharmacyDetailsPageContent({
             }
           />
 
-          {metrics ? (
-            <StatsGrid
-              className={css.statistics}
-              columns={4}
-              tabletColumns={2}
-              ariaLabel="Pharmacy performance summary"
-            >
-              <StatsCard
-                title="Active clients"
-                value={metrics.activeClientsCount}
-                tone="blue"
-                icon={<UsersRound size={26} aria-hidden="true" />}
-              />
+          <div className={css.statistics}>
+            {metrics ? (
+              <StatsGrid
+                columns={4}
+                tabletColumns={2}
+                ariaLabel="Pharmacy performance summary"
+              >
+                <StatsCard
+                  title="Active clients"
+                  value={metrics.activeClientsCount}
+                  tone="blue"
+                  icon={<UsersRound size={26} aria-hidden="true" />}
+                />
 
-              <StatsCard
-                title="Successful orders"
-                value={metrics.successfulOrdersCount}
-                meta={formatMoney(metrics.successfulRevenue) ?? '—'}
-                tone="green"
-                icon={<ShoppingBag size={26} aria-hidden="true" />}
-              />
+                <StatsCard
+                  title="Successful orders"
+                  value={metrics.successfulOrdersCount}
+                  meta={formatMoney(metrics.successfulRevenue) ?? '—'}
+                  tone="green"
+                  icon={<ShoppingBag size={26} aria-hidden="true" />}
+                />
 
-              <StatsCard
-                title="Added products"
-                value={metrics.addedProductsCount}
-                tone="purple"
-                icon={<Package size={26} aria-hidden="true" />}
-              />
+                <StatsCard
+                  title="Added products"
+                  value={metrics.addedProductsCount}
+                  tone="purple"
+                  icon={<Package size={26} aria-hidden="true" />}
+                />
 
-              <StatsCard
-                title="Rating / reviews"
-                value={metrics.reviewsCount ? metrics.rating.toFixed(1) : 0}
-                meta={`${metrics.reviewsCount} reviews`}
-                tone="orange"
-                icon={<Star size={26} aria-hidden="true" />}
-              />
-            </StatsGrid>
-          ) : (
-            <div className={css.statistics}>
+                <StatsCard
+                  title="Rating / reviews"
+                  value={metrics.reviewsCount ? metrics.rating.toFixed(1) : 0}
+                  meta={`${metrics.reviewsCount} reviews`}
+                  tone="orange"
+                  icon={<Star size={26} aria-hidden="true" />}
+                />
+              </StatsGrid>
+            ) : (
               <StatsLoadingSkeleton
                 count={4}
                 columns={4}
                 tabletColumns={2}
                 label="Loading pharmacy performance summary"
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </section>
 

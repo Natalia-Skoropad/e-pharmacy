@@ -523,7 +523,7 @@ test('existing request save actions belong to editable tabs and long names do no
       'src/components/product-requests/ProductRequestsTable/ProductRequestsTable.module.css'
     ),
 
-    read('src/components/layout/PharmacyHeader/PharmacyHeader.module.css'),
+    read('src/components/layout/PharmacyHeader/PharmacyHeader.tsx'),
   ]);
 
   assert.match(editor, /!requestId \? saveAction : null/);
@@ -534,9 +534,8 @@ test('existing request save actions belong to editable tabs and long names do no
   assert.match(editor, /cancelIconLeft=\{<X/);
   assert.match(table, /key: 'productName',[\s\S]*?css\.breakableLink/);
   assert.match(styles, /\.breakableLink\s*\{[^}]*overflow-wrap: anywhere/);
-  assert.match(topbar, /li:first-child\s*\{[^}]*flex: 1\.5 1 0/);
-  assert.match(topbar, /li:last-child\s*\{[^}]*flex: 1 1 0/);
-  assert.match(topbar, /text-overflow: ellipsis/);
+  assert.match(topbar, /<CabinetTopBar\b[^>]*\bcompactOnMobile\b/);
+  assert.match(topbar, /items=\{breadcrumbs\}/);
   assert.match(styles, /\.requestTable \.breakableLink\s*\{[^}]*width: auto/);
   assert.match(table, /className=\{css\.requestTable\}/);
 

@@ -607,7 +607,7 @@ test('request comments and audit show a zero count while loading, without a dupl
 
   assert.match(
     comments,
-    /resource === 'product request' && effectiveStatus === 'loading'/
+    /effectiveStatus === 'success' \|\| effectiveStatus === 'loading'/
   );
 
   assert.match(
@@ -620,20 +620,9 @@ test('request comments and audit show a zero count while loading, without a dupl
     /total=\{effectiveStatus === 'success' \? comments\.length : 0\}/
   );
 
-  assert.match(
-    history,
-    /data \|\| \(\(scopeRequestId \|\| scopeOwnerId\) && isLoading\)/
-  );
-
-  assert.match(
-    history,
-    /\(scopeRequestId \|\| scopeOwnerId\) && isLoading \? 0 : \(data\?\.items\.length \?\? 0\)/
-  );
-
-  assert.match(
-    history,
-    /\(scopeRequestId \|\| scopeOwnerId\) && isLoading \? 0 : \(data\?\.total \?\? 0\)/
-  );
+  assert.match(history, /data \|\| isLoading/);
+  assert.match(history, /isLoading \? 0 : \(data\?\.items\.length \?\? 0\)/);
+  assert.match(history, /isLoading \? 0 : \(data\?\.total \?\? 0\)/);
 });
 
 //===============================================================

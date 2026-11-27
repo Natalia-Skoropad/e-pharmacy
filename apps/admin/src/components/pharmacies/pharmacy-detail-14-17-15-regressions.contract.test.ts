@@ -61,3 +61,43 @@ test('self-loading tabs do not wait for another overview loading state', () => {
     assert.match(detail, new RegExp(`activeTab === '${tab}' \\?`));
   }
 });
+
+//===================================================================
+
+test('pharmacy statistics hide the entire wrapper on mobile, including loading', () => {
+  const detail = read(
+    './PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'
+  );
+
+  const css = read(
+    './PharmacyDetailsPageContent/PharmacyDetailsPageContent.module.css'
+  );
+
+  assert.match(
+    detail,
+    /<div className=\{css.statistics\}>\s*\{metrics \? \([\s\S]*?<StatsGrid[\s\S]*?<StatsLoadingSkeleton/
+  );
+
+  assert.match(
+    css,
+    /max-width: 767px[\s\S]*?\.statistics\s*\{\s*display: none/
+  );
+});
+
+//===================================================================
+
+test('corrections use existing moderation and reactivation modal tones', () => {
+  const actions = read(
+    './PharmacyDetailsPageContent/PharmacyModerationActions.tsx'
+  );
+
+  assert.match(
+    actions,
+    /action.option.action === 'request_corrections' && detail.status === 'on_moderation'\s*\? 'moderation'/
+  );
+
+  assert.match(
+    actions,
+    /action.option.action === 'request_corrections' && detail.status === 'on_reactivation'\s*\? 'reactivation'/
+  );
+});

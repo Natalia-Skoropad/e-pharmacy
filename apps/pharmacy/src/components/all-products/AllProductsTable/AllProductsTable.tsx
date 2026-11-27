@@ -150,7 +150,10 @@ function AllProductsTable({
         title: <TableHeaderTitle parts={['Product', 'name']} />,
 
         render: (product) => (
-          <TextActionButton href={getPharmacyAllProductPath(product.id)}>
+          <TextActionButton
+            className={css.breakableLink}
+            href={getPharmacyAllProductPath(product.id)}
+          >
             {product.name}
           </TextActionButton>
         ),

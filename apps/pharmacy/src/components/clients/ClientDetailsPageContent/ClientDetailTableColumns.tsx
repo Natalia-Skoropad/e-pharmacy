@@ -82,11 +82,14 @@ export const PRODUCT_COLUMNS: Array<
 
     render: (item) =>
       item.currentProductExists ? (
-        <TextActionButton href={getPharmacyProductPath(item.productId)}>
+        <TextActionButton
+          className={css.breakableLink}
+          href={getPharmacyProductPath(item.productId)}
+        >
           {item.name}
         </TextActionButton>
       ) : (
-        item.name
+        <span className={css.breakableLink}>{item.name}</span>
       ),
   },
   {

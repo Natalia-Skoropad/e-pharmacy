@@ -46,7 +46,7 @@ import {
   ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
 
-import { Button, CopyButton } from '@e-pharmacy/ui/primitives';
+import { CopyButton } from '@e-pharmacy/ui/primitives';
 
 import {
   StatsCard,
@@ -90,6 +90,7 @@ import { LinkedPharmaciesTab } from './LinkedPharmaciesTab';
 import { OwnerActivityTab } from './OwnerActivityTab';
 import { OwnerCommentsTab } from './OwnerCommentsTab';
 import { OwnerDocumentsTab } from './OwnerDocumentsTab';
+import { OwnerStatusActions } from './OwnerStatusActions';
 
 import css from './PharmacyOwnerDetailsPageContent.module.css';
 
@@ -490,10 +491,11 @@ function PharmacyOwnerDetailsPageContent({
 
   return (
     <main className={css.page} aria-labelledby="pharmacy-owner-details-title">
-      <section className={css.card}>
+      <section className={`${css.card} ${css.headerCard}`}>
         <div className={css.headerStack}>
           <PageHeader
             className={css.ownerPageHeader}
+            actionsLayout="responsive"
             title={
               <span className={css.titleWithHelp}>
                 {detail?.name ?? 'Pharmacy owner'}
@@ -523,25 +525,12 @@ function PharmacyOwnerDetailsPageContent({
             icon={<UserCog size={23} aria-hidden="true" />}
             actions={
               detail && canEditOwner ? (
-                <div className={css.ownerStatusAction}>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className={
-                      isDeactivateAction ? css.dangerButton : undefined
-                    }
-                    iconLeft={
-                      isDeactivateAction ? (
-                        <Ban size={17} aria-hidden="true" />
-                      ) : (
-                        <ShieldCheck size={17} aria-hidden="true" />
-                      )
-                    }
-                    onClick={openStatusAction}
-                  >
-                    {isDeactivateAction ? 'Deactivate owner' : 'Activate owner'}
-                  </Button>
-                </div>
+                <OwnerStatusActions
+                  key={`${detail.id}:${detail.status}`}
+                  isDeactivateAction={isDeactivateAction}
+                  disabled={isMutating}
+                  onAction={openStatusAction}
+                />
               ) : undefined
             }
           />

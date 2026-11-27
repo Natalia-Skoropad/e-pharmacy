@@ -370,11 +370,12 @@ function AllProductDetailsPageContent({
               titleId="global-product-page-title"
               icon={<PackageSearch size={23} aria-hidden="true" />}
             />
-            {product ? (
+            {product || isLoading ? (
               <RatingSummary
                 className={css.titleRating}
-                rating={product.rating}
-                reviewsCount={product.reviewsCount}
+                isLoading={isLoading}
+                rating={product?.rating}
+                reviewsCount={product?.reviewsCount ?? 0}
               />
             ) : null}
           </div>

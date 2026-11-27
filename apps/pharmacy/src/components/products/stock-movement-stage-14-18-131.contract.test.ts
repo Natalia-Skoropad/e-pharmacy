@@ -85,3 +85,61 @@ test('rejected stock movement rows reuse the shared cancellation source badge', 
 
   assert.match(helpers, /rejectedByType: movement\.rejectedByType/);
 });
+
+//===================================================================
+
+test('products catch-all accepts filtered stock movement and related orders', async () => {
+  const fallback = await read(
+    'src/app/pharmacy/products/[[...filters]]/page.tsx'
+  );
+
+  assert.match(
+    fallback,
+    /tab === 'stock-movement' \|\| tab === 'related-orders'/
+  );
+
+  assert.match(
+    fallback,
+    /buildStockMovementPath\(productId, parseStockMovementSegments\(filters\)\)/
+  );
+
+  assert.match(fallback, /buildRelatedProductOrdersPath\(/);
+
+  assert.match(
+    fallback,
+    /tab === 'related-orders' && !isOrdersFilterRoute\(filters\)/
+  );
+});
+
+//===================================================================
+
+test('stock movement counts remain visible and zero while current data loads', async () => {
+  const tab = await read(`${base}OwnProductStockMovementTab.tsx`);
+
+  assert.match(
+    tab,
+    /shown=\{\s*stockReadLoading \? 0 : paginatedStockMovementRows.length\s*\}/
+  );
+
+  assert.match(
+    tab,
+    /total=\{stockReadLoading \? 0 : stockMovementRows.length\}/
+  );
+});
+
+//===================================================================
+
+test('own and global product headers reserve the rating summary during loading', async () => {
+  const own = await read(`${base}OwnProductDetailsPageContent.tsx`);
+
+  const global = await read(
+    'src/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent.tsx'
+  );
+
+  for (const source of [own, global]) {
+    assert.match(
+      source,
+      /product \|\| isLoading \? \([\s\S]*?<RatingSummary[\s\S]*?isLoading=\{isLoading\}/
+    );
+  }
+});

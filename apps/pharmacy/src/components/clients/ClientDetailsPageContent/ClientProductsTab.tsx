@@ -174,11 +174,11 @@ export function ClientProductsTab({
                 onChange={onRowsPerPageChange}
               />
             </div>
-            {productsStatus === 'success' ? (
+            {productsStatus !== 'error' ? (
               <CountLabel
                 className={css.countLabel}
-                shown={products.length}
-                total={productsTotal}
+                shown={productsStatus === 'success' ? products.length : 0}
+                total={productsStatus === 'success' ? productsTotal : 0}
                 label="products"
                 fullWidthOnMobile
               />

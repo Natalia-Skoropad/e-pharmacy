@@ -9,7 +9,7 @@ const read = (relativePath: string): string =>
 
 //===================================================================
 
-test('linked pharmacies is the only order metrics table opting into browser top layer', () => {
+test('both pharmacy registries opt into browser top layer', () => {
   const ownerTable = read(
     './PharmacyOwnerDetailsPageContent/LinkedPharmaciesTable.tsx'
   );
@@ -27,7 +27,11 @@ test('linked pharmacies is the only order metrics table opting into browser top 
     /<OrderMetricsTooltip scope="pharmacy" preferTopLayer\s*\/>/
   );
 
-  assert.match(registry, /<OrderMetricsTooltip scope="pharmacy"\s*\/>/);
+  assert.match(
+    registry,
+    /<OrderMetricsTooltip scope="pharmacy" preferTopLayer\s*\/>/
+  );
+
   assert.match(metrics, /preferTopLayer=\{preferTopLayer\}/);
 });
 

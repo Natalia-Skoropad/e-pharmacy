@@ -211,16 +211,18 @@
   }
 }
 
+/* Scoped registry has no owner column: reserve space for both status badges,
+   not an unbroken request ID. IDs and long names wrap as in the global list. */
 .ownerTable th:nth-child(1) {
   width: 8%;
 }
 
 .ownerTable th:nth-child(2) {
-  width: 21%;
+  width: 12%;
 }
 
 .ownerTable th:nth-child(3) {
-  width: 8%;
+  width: 7%;
 }
 
 .ownerTable th:nth-child(4) {
@@ -228,13 +230,13 @@
 }
 
 .ownerTable th:nth-child(5) {
-  width: 25%;
+  width: 30%;
 }
 
 .ownerTable th:nth-child(6) {
-  width: 13%;
+  width: 15%;
 }
 
 .ownerTable th:nth-child(7) {
-  width: 15%;
+  width: 20%;
 }

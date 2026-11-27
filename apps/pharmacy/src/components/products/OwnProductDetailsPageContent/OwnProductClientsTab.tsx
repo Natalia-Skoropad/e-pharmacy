@@ -252,12 +252,12 @@ export function OwnProductClientsTab({
                 onChange={(perPage) => navigate({ perPage })}
               />
             </div>
-            {!isLoading && !isError ? (
+            {!isError ? (
               <CountLabel
                 className={css.countLabel}
                 fullWidthOnMobile
-                shown={data?.items.length ?? 0}
-                total={data?.total ?? 0}
+                shown={!isLoading && !isError ? (data?.items.length ?? 0) : 0}
+                total={!isLoading && !isError ? (data?.total ?? 0) : 0}
                 label="clients"
               />
             ) : null}

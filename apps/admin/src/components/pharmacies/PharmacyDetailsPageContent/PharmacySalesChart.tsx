@@ -40,34 +40,27 @@ export function PharmacySalesChart({
 }: Readonly<{ pharmacyId?: string; ownerId?: string }>) {
   const pathname = usePathname();
   const router = useRouter();
-  const [localYear, setYear] = useState(() => String(new Date().getFullYear()));
-  const [localMonth, setMonth] = useState<SalesPeriodMonth>('all');
-  const base = `/admin/pharmacy-owners/${ownerId}`;
 
-  const segments =
-    ownerId && pathname.startsWith(`${base}/`)
-      ? pathname
-          .slice(base.length + 1)
-          .split('/')
-          .filter((part) => /^(year|month)-/.test(part))
-      : [];
+  const base = ownerId
+    ? `/admin/pharmacy-owners/${ownerId}`
+    : `/admin/pharmacies/${pharmacyId}`;
+
+  const segments = pathname.startsWith(`${base}/`)
+    ? pathname
+        .slice(base.length + 1)
+        .split('/')
+        .filter((part) => /^(year|month)-/.test(part))
+    : [];
 
   const period = parseSalesChartSegments(segments);
-  const year = ownerId ? getSalesChartYear(period) : localYear;
-  const month = ownerId ? period.month : localMonth;
+  const year = getSalesChartYear(period);
+  const month = period.month;
 
   const updatePeriod = (nextYear: string, nextMonth: SalesPeriodMonth) => {
-    if (ownerId) {
-      router.push(
-        buildSalesChartPath(base, { year: nextYear, month: nextMonth }),
-        {
-          scroll: false,
-        }
-      );
-    } else {
-      setYear(nextYear);
-      setMonth(nextMonth);
-    }
+    router.push(
+      buildSalesChartPath(base, { year: nextYear, month: nextMonth }),
+      { scroll: false }
+    );
   };
 
   const [retry, setRetry] = useState(0);
@@ -142,7 +135,7 @@ export function PharmacySalesChart({
           onYearChange={(value) => updatePeriod(value, month)}
           onMonthChange={(value) => updatePeriod(year, value)}
           onReset={
-            ownerId && (period.year || period.month !== 'all')
+            period.year || period.month !== 'all'
               ? () => router.push(base, { scroll: false })
               : undefined
           }

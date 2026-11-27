@@ -521,8 +521,12 @@ function OwnProductsPageContent({
 
           <CountLabel
             className={css.countLabel}
-            shown={products.length}
-            total={totalProducts}
+            shown={
+              !isProfileLoaded || isLoading || loadError ? 0 : products.length
+            }
+            total={
+              !isProfileLoaded || isLoading || loadError ? 0 : totalProducts
+            }
             label="products"
           />
         </div>

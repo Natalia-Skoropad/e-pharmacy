@@ -149,13 +149,9 @@ test('pharmacy detail keeps its embedded own products component alongside the ow
   assert.match(pharmacyDetail, /minWidth=\{960\}/);
   assert.match(ownerRegistry, /export \{ OwnerOwnProductsPageContent \}/);
 
-  // The detail page's width is forwarded only to its embedded table.
+  // Both registries use the same default minimum width.
   assert.match(ownerRegistry, /minWidth\?: number/);
-
-  assert.match(
-    ownerRegistry,
-    /minWidth=\{embeddedPharmacyId \? \(minWidth \?\? 960\) : undefined\}/
-  );
+  assert.match(ownerRegistry, /minWidth=\{minWidth \?\? 960\}/);
 
   assert.match(
     ownerRegistry,

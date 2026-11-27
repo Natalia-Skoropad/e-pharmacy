@@ -516,11 +516,11 @@ function OwnerOwnProductsPageContent({
               }
             />
           </div>
-          {!isLoading && !loadError ? (
+          {isLoading || !loadError ? (
             <CountLabel
               className={css.countLabel}
-              shown={products.length}
-              total={totalProducts}
+              shown={!isLoading && !loadError ? products.length : 0}
+              total={!isLoading && !loadError ? totalProducts : 0}
               label="products"
               fullWidthOnMobile
             />
@@ -539,9 +539,7 @@ function OwnerOwnProductsPageContent({
         ) : null}
 
         <OwnProductsTable
-          // Only the embedded /pharmacy/pharmacies/:id/products table.
-          // The global /pharmacy/products table retains its own default.
-          minWidth={embeddedPharmacyId ? (minWidth ?? 960) : undefined}
+          minWidth={minWidth ?? 960}
           products={products}
           isLoading={isLoading}
           emptyMessage={

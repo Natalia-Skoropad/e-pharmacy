@@ -47,6 +47,14 @@ const ID = /^[0-9a-f]{24}$/i;
 const CREATE_ORDER_PATH =
   /^\/pharmacy\/orders\/new\/pharmacy-id-([0-9a-f]{24})$/i;
 
+//===================================================================
+
+export function isExplicitOrderCreatePath(pathname: string): boolean {
+  return CREATE_ORDER_PATH.test(pathname);
+}
+
+//===================================================================
+
 const DETAIL_OPERATION =
   /^\/pharmacy\/pharmacies\/([0-9a-f]{24})\/(orders|clients|products)(?:\/|$)/i;
 

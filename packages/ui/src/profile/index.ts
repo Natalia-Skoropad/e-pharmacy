@@ -5,6 +5,7 @@ export * from './ProfileIdentityCard';
 export * from './ProfilePictureEditor';
 export * from './ProfileTabsLayout';
 export * from './ProfilePageLoader';
+export * from './ProfilePageSkeleton';
 export * from './ProfileResourceState';
 export * from './ProfileSectionHeader';
 export * from './PharmacyProfileFields';

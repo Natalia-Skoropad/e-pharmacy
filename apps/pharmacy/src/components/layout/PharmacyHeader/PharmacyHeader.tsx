@@ -2,8 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-import { Globe2, LogOut, Store, UserRound } from 'lucide-react';
+import { Globe2, LogOut, UserRound } from 'lucide-react';
 
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 
@@ -21,9 +20,7 @@ import { useAuth } from '@e-pharmacy/auth/react';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getClientAppUrl } from '@/lib/layout/external-links';
-import { getPublicPharmacyLinkState } from '@/lib/layout/public-pharmacy-link-state';
 import { getPharmacyNavigationItemByPathname } from '@/lib/layout/navigation';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu/PharmacyMobileMenu';
 import { subscribeToDesktopBreakpoint } from '@/components/layout/hooks/desktop-breakpoint-lifecycle';
@@ -49,12 +46,6 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
-  const {
-    profile: pharmacyProfile,
-    isLoading: isPharmacyProfileLoading,
-    error: pharmacyProfileError,
-  } = usePharmacyProfile();
-
   const { isLogoutPending, logoutFromPharmacy } =
     usePharmacyLogoutController(logout);
 
@@ -62,13 +53,8 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
 
   const topBarIcon =
     getPharmacyNavigationItemByPathname(pathname)?.icon ?? null;
-  const clientAppUrl = getClientAppUrl();
 
-  const publicPharmacyLink = getPublicPharmacyLinkState({
-    profile: pharmacyProfile,
-    isLoading: isPharmacyProfileLoading,
-    error: pharmacyProfileError,
-  });
+  const clientAppUrl = getClientAppUrl();
 
   const userMenuItems: readonly UserDropdownItem[] = [
     {
@@ -85,20 +71,6 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
       external: true,
       icon: <Globe2 size={18} aria-hidden="true" />,
     },
-    publicPharmacyLink.status === 'available'
-      ? {
-          type: 'link',
-          label: publicPharmacyLink.label,
-          href: publicPharmacyLink.href,
-          external: true,
-          icon: <Store size={18} aria-hidden="true" />,
-        }
-      : {
-          type: 'status',
-          label: publicPharmacyLink.label,
-          ariaBusy: publicPharmacyLink.status === 'loading',
-          icon: <Store size={18} aria-hidden="true" />,
-        },
     { type: 'separator' },
     {
       type: 'action',
@@ -125,6 +97,7 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
       <header className={css.header}>
         <CabinetTopBar
           className={css.topbar}
+          compactOnMobile
           items={breadcrumbs}
           leadingIcon={topBarIcon}
           navigationToggle={

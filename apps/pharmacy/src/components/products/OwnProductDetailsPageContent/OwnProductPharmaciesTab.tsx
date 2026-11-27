@@ -338,12 +338,16 @@ export function OwnProductPharmaciesTab({
                 onChange={(perPage) => navigate({ perPage })}
               />
             </div>
-            {registryReady && !productLoading ? (
+            {!registryError && !productError ? (
               <CountLabel
                 className={css.countLabel}
                 fullWidthOnMobile
-                shown={visibleRows.length}
-                total={filteredRows.length}
+                shown={
+                  registryReady && !productLoading ? visibleRows.length : 0
+                }
+                total={
+                  registryReady && !productLoading ? filteredRows.length : 0
+                }
                 label="pharmacies"
               />
             ) : null}

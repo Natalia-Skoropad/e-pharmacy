@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { buildSalesChartPath } from '../pharmacy-owners/owner-sales-chart-paths';
+
 import {
   ADMIN_PHARMACIES_LIST_URL_DEFAULTS,
   buildAdminPharmaciesListApiParams,
@@ -215,4 +217,43 @@ test('settlement and region survive canonical URL and server query round trips',
     buildAdminPharmaciesListApiParams(parsed).region,
     'dnipropetrovsk oblast'
   );
+});
+
+//===================================================================
+
+test('pharmacy sales chart deep links round trip and removed request tab is invalid', () => {
+  const base = buildAdminPharmacyDetailUrl(PHARMACY_ID);
+
+  const route = resolveAdminPharmaciesRoute([
+    PHARMACY_ID,
+    'year-2025',
+    'month-01',
+  ]);
+
+  assert.equal(route.kind, 'detail');
+
+  if (route.kind !== 'detail' || !route.salesPeriod)
+    throw new Error('Missing sales period');
+
+  assert.equal(route.tab, 'information');
+  assert.deepEqual(route.salesPeriod, { year: '2025', month: '1' });
+
+  assert.equal(
+    buildSalesChartPath(base, route.salesPeriod),
+    `${base}/year-2025/month-01`
+  );
+
+  assert.equal(buildSalesChartPath(base, { year: '', month: 'all' }), base);
+
+  for (const segments of [
+    ['product-requests'],
+    ['year-2025', 'month-13'],
+    ['year-2025', 'year-2026'],
+    ['year-2025', 'documents'],
+    ['documents', 'month-01'],
+  ]) {
+    assert.deepEqual(resolveAdminPharmaciesRoute([PHARMACY_ID, ...segments]), {
+      kind: 'invalid',
+    });
+  }
 });

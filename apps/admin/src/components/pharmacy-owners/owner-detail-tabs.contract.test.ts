@@ -165,3 +165,50 @@ test('owner resource counts are zero while loading and documents are marked requ
   assert.match(docs, /editable=\{false\}\s+required/);
   assert.match(table, /escapeOverflow\s+preferTopLayer\s+scrollable/);
 });
+
+//===================================================================
+
+test('owner status menu uses responsive header and existing moderation menu styles', () => {
+  const detail = read(
+    './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.tsx'
+  );
+
+  const menu = read('./PharmacyOwnerDetailsPageContent/OwnerStatusActions.tsx');
+
+  const css = read(
+    './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.module.css'
+  );
+
+  assert.match(detail, /actionsLayout="responsive"/);
+
+  assert.match(
+    detail,
+    /<OwnerStatusActions[\s\S]*?onAction=\{openStatusAction\}/
+  );
+
+  assert.match(menu, /PharmacyModerationActions\.module\.css/);
+  assert.match(menu, /Manage owner status/);
+  assert.match(menu, /Deactivate owner.*Activate owner/);
+  assert.match(css, /\.titleWithHelp\s*\{[^}]*overflow-wrap: anywhere/);
+  assert.match(css, /\.card\.headerCard\s*\{[^}]*overflow: visible/);
+});
+
+//===================================================================
+
+test('owner request table reserves width for status badges instead of the request ID', () => {
+  const css = read('../product-requests/AdminProductRequestsList.module.css');
+
+  const widths = [
+    ...css.matchAll(/\.ownerTable th:nth-child\((\d)\)\s*\{\s*width: (\d+)%/g),
+  ].map((match) => Number(match[2]));
+
+  assert.equal(widths.length, 7);
+
+  assert.equal(
+    widths.reduce((sum, width) => sum + width, 0),
+    100
+  );
+
+  assert.ok(widths[1] < widths[6]);
+  assert.ok(widths[1] <= 15);
+});

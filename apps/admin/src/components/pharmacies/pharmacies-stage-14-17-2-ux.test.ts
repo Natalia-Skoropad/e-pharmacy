@@ -106,3 +106,24 @@ test('14.17.2: order columns share their canonical info tooltip and put currency
   assert.match(tooltip, /<Wallet/);
   assert.match(tooltip, /status Successful/);
 });
+
+//===================================================================
+
+test('collapsed Admin navigation counters are centered above the icons', () => {
+  for (const [file, selector] of [
+    [
+      '../layout/PharmacyNavigationBadges/PharmacyNavigationBadges.module.css',
+      'collapsedBadges',
+    ],
+    ['../layout/AdminSidebar/AdminSidebar.module.css', 'collapsedBadge'],
+  ]) {
+    const rule = read(file).match(
+      new RegExp(`\\.${selector}\\s*\\{([^}]+)\\}`)
+    )?.[1];
+
+    assert.ok(rule);
+    assert.match(rule, /inset-inline: 0/);
+    assert.match(rule, /margin-inline: auto/);
+    assert.doesNotMatch(rule, /right:/);
+  }
+});

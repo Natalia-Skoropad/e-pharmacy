@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { Globe2, Store } from 'lucide-react';
+import { Globe2 } from 'lucide-react';
 
 import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 import { Logo } from '@e-pharmacy/ui/media';
@@ -14,7 +14,6 @@ import { useAuth } from '@e-pharmacy/auth/react';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getClientAppUrl } from '@/lib/layout/external-links';
-import { getPublicPharmacyLinkState } from '@/lib/layout/public-pharmacy-link-state';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 
 import {
@@ -30,7 +29,6 @@ import {
   useProductRequestNavigationCounts,
 } from '@/hooks/usePharmacyNavigationCounters';
 
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
 
 import { shouldCloseMobileMenuForPathnameChange } from './mobile-menu-route-lifecycle';
@@ -107,20 +105,7 @@ export function PharmacyMobileMenu({
 
   const previousPathnameRef = useRef(pathname);
   const { user } = useAuth();
-
-  const {
-    profile: pharmacyProfile,
-    isLoading: isPharmacyProfileLoading,
-    error: pharmacyProfileError,
-  } = usePharmacyProfile();
-
   const clientAppUrl = getClientAppUrl();
-
-  const publicPharmacyLink = getPublicPharmacyLinkState({
-    profile: pharmacyProfile,
-    isLoading: isPharmacyProfileLoading,
-    error: pharmacyProfileError,
-  });
 
   useEffect(() => {
     if (
@@ -287,28 +272,6 @@ export function PharmacyMobileMenu({
           <Globe2 size={23} aria-hidden="true" />
           <span>Go to the website</span>
         </a>
-
-        {publicPharmacyLink.status === 'available' ? (
-          <a
-            className={css.quickLink}
-            href={publicPharmacyLink.href}
-            target="_blank"
-            rel="noreferrer"
-            onClick={onClose}
-          >
-            <Store size={23} aria-hidden="true" />
-            <span>{publicPharmacyLink.label}</span>
-          </a>
-        ) : (
-          <span
-            className={`${css.quickLink} ${css.quickLinkDisabled}`}
-            aria-disabled="true"
-            aria-busy={publicPharmacyLink.status === 'loading' || undefined}
-          >
-            <Store size={23} aria-hidden="true" />
-            <span>{publicPharmacyLink.label}</span>
-          </span>
-        )}
       </div>
 
       <div className={css.actions}>

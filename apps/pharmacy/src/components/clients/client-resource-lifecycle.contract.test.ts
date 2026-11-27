@@ -304,3 +304,37 @@ test('client resources expose explicit local retry controls without clearing las
   assert.match(sharedOrders, /const reload =/);
   assert.match(detailsSource, /productsRetryVersion/);
 });
+
+//===================================================================
+
+test('registry count labels remain visible during loading and client names wrap', async () => {
+  const [registry, products, pharmacies, table, details] = await Promise.all([
+    read('ClientsPageContent/ClientsPageContent.tsx'),
+    read('ClientDetailsPageContent/ClientProductsTab.tsx'),
+    read('ClientPharmaciesTab/ClientPharmaciesTab.tsx'),
+    read('ClientsTable/ClientsTable.tsx'),
+    read('ClientDetailsPageContent/ClientDetailsPageContent.tsx'),
+  ]);
+
+  assert.match(
+    registry,
+    /shown=\{clientsStatus === 'success' \? clients\.length : 0\}/
+  );
+
+  assert.match(
+    products,
+    /total=\{productsStatus === 'success' \? productsTotal : 0\}/
+  );
+
+  assert.match(pharmacies, /shown=\{data\?\.items\.length \?\? 0\}/);
+
+  for (const source of [products, pharmacies, table])
+    assert.match(source, /minWidth=\{960\}/);
+
+  assert.match(
+    table,
+    /className=\{css\.breakableLink\}[\s\S]*?getClientDisplayName\(client\)/
+  );
+
+  assert.match(details, /<EntityComments\s+showCountWhileLoading/);
+});

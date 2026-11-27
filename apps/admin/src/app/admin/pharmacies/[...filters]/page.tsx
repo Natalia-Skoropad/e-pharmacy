@@ -8,6 +8,7 @@ import {
 } from '@/lib/audit/admin-activity-url';
 
 import { ADMIN_ROUTES } from '@/lib/routes';
+import { buildSalesChartPath } from '@/lib/pharmacy-owners/owner-sales-chart-paths';
 
 import {
   buildAdminPharmaciesListUrl,
@@ -41,15 +42,19 @@ export default async function FilteredPharmaciesPage({
     // filters. Preserve an explicitly selected pharmacy-owner actor in the URL.
     const initialActivityState = parseAdminActivityUrl(route.activitySegments);
 
-    const canonicalUrl =
-      buildAdminPharmacyDetailUrl(route.pharmacyId, route.tab) +
-      (route.tab === 'activity'
-        ? buildAdminActivityUrl(initialActivityState).slice(
-            ADMIN_ROUTES.SETTINGS_ACTIVITY.length
-          )
-        : '');
+    const detailUrl = buildAdminPharmacyDetailUrl(route.pharmacyId, route.tab);
+
+    const canonicalUrl = route.salesPeriod
+      ? buildSalesChartPath(detailUrl, route.salesPeriod)
+      : detailUrl +
+        (route.tab === 'activity'
+          ? buildAdminActivityUrl(initialActivityState).slice(
+              ADMIN_ROUTES.SETTINGS_ACTIVITY.length
+            )
+          : '');
 
     const requestedPath = `/admin/pharmacies/${filters.join('/')}`;
+
     if (canonicalUrl !== requestedPath) redirect(canonicalUrl);
 
     return (

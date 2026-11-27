@@ -273,10 +273,10 @@ export function AdminPrivateComments({
         description="These notes are visible only to you."
         icon={<MessageSquareLock size={22} />}
         action={
-          status === 'success' ? (
+          status === 'success' || status === 'loading' ? (
             <CountLabel
-              shown={data.items.length}
-              total={data.total}
+              shown={status === 'success' ? data.items.length : 0}
+              total={status === 'success' ? data.total : 0}
               label="comments"
               fullWidthOnMobile
             />

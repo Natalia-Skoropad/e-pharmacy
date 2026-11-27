@@ -63,3 +63,16 @@ test('owner resources mount only in the active tab and personal route has no pha
     /Pharmacy documents|Pharmacy status|sendMyPharmacyForVerification|usePharmacyProfile|pharmacy\.id/
   );
 });
+
+//===================================================================
+
+test('profile route and auth bootstrap use the same layout skeleton', () => {
+  const loading = readFileSync(
+    new URL('../../../app/pharmacy/profile/loading.tsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(loading, /<ProfilePageSkeleton \/>/);
+  assert.match(profile, /<ProfilePageSkeleton \/>/);
+  assert.doesNotMatch(loading + profile, /ProfilePageLoader/);
+});

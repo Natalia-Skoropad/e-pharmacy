@@ -449,7 +449,7 @@ export function PharmaciesPageContent({
         title: (
           <span className={css.headerWithHelp}>
             <TableHeaderTitle parts={['Orders', 'count']} />
-            <OrderMetricsTooltip scope="pharmacy" />
+            <OrderMetricsTooltip scope="pharmacy" preferTopLayer />
           </span>
         ),
 
@@ -655,11 +655,11 @@ export function PharmaciesPageContent({
               onChange={changeRowsPerPage}
             />
           </div>
-          {data && !listError ? (
+          {!listError ? (
             <CountLabel
               className={shellCss.countLabel}
-              shown={data.items.length}
-              total={data.total}
+              shown={data?.items.length ?? 0}
+              total={data?.total ?? 0}
               label="pharmacies"
               fullWidthOnMobile
             />
@@ -682,7 +682,7 @@ export function PharmaciesPageContent({
               items={data?.items ?? []}
               getItemKey={(pharmacy) => pharmacy.id}
               isLoading={isLoadingList}
-              minWidth={1000}
+              minWidth={960}
               ariaLabel="Pharmacies"
               labels={{
                 loading: 'Loading pharmacies...',

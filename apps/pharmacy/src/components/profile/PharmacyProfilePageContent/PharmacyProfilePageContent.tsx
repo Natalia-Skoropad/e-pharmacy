@@ -25,7 +25,7 @@ import {
   ActiveSessionsPanel,
   ChangePasswordForm,
   ProfileIdentityCard,
-  ProfilePageLoader,
+  ProfilePageSkeleton,
   ProfilePictureEditor,
   ProfileSectionHeader,
   ProfileTabPanel,
@@ -440,11 +440,7 @@ export function PharmacyProfilePageContent() {
   const { user } = useAuth();
 
   if (!user) {
-    return (
-      <main className={css.page} aria-label="Loading owner profile">
-        <ProfilePageLoader label="Loading owner profile..." />
-      </main>
-    );
+    return <ProfilePageSkeleton />;
   }
   // Remount the personal form if the logged-in identity changes.
   return <OwnerProfile key={user.id} user={user} />;

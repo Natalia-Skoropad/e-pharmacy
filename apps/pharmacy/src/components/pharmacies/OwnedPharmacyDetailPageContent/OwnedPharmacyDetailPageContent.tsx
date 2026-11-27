@@ -22,6 +22,7 @@ import { isApiError } from '@e-pharmacy/api-client/transport';
 import type { OwnedPharmacyDetailResponse } from '@e-pharmacy/types/pharmacies';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { LinkButton, Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 
 import {
@@ -589,6 +590,7 @@ export function OwnedPharmacyDetailPageContent({
               </div>
             ) : visibleTab === 'comments' ? (
               <EntityComments
+                showCountWhileLoading
                 entityKey={`pharmacy:${pharmacyId}`}
                 presentation="profile"
                 isEditable={Boolean(pharmacy && pharmacy.status !== 'blocked')}
@@ -634,6 +636,12 @@ export function OwnedPharmacyDetailPageContent({
                       label="Loading pharmacy client statistics"
                     />
                   </div>
+                  <CountLabel
+                    shown={0}
+                    total={0}
+                    label="clients"
+                    fullWidthOnMobile
+                  />
                   <ClientsTable clients={[]} isLoading emptyMessage="" />
                 </div>
               ) : (
@@ -659,7 +667,6 @@ export function OwnedPharmacyDetailPageContent({
                     initialProductPagination ?? DEFAULT_OWN_PRODUCTS_PAGINATION
                   )}
                   embeddedPharmacyId={pharmacyId}
-                  // Only /pharmacy/pharmacies/:id/products; independent of /pharmacy/products.
                   minWidth={960}
                   initialFilters={initialProductFilters}
                   initialPagination={initialProductPagination}

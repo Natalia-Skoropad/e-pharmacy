@@ -128,6 +128,7 @@ test('owner account pages and pharmacy creation bypass ambiguous summary bootstr
     '/pharmacy/pharmacies/new',
     '/pharmacy/orders',
     '/pharmacy/orders/status-new',
+    `/pharmacy/orders/new/pharmacy-id-${blockedSummary.id}`,
     `/pharmacy/orders/pharmacy-id-${blockedSummary.id}`,
     '/pharmacy/pharmacies/507f1f77bcf86cd799439011',
   ]) {

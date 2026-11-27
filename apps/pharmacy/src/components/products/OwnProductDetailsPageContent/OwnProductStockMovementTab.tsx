@@ -492,15 +492,17 @@ export function OwnProductStockMovementTab({
                           }
                         />
                       </div>
-                      {!stockReadLoading ? (
-                        <CountLabel
-                          className={css.countLabel}
-                          fullWidthOnMobile
-                          shown={paginatedStockMovementRows.length}
-                          total={stockMovementRows.length}
-                          label="records"
-                        />
-                      ) : null}
+                      <CountLabel
+                        className={css.countLabel}
+                        fullWidthOnMobile
+                        shown={
+                          stockReadLoading
+                            ? 0
+                            : paginatedStockMovementRows.length
+                        }
+                        total={stockReadLoading ? 0 : stockMovementRows.length}
+                        label="records"
+                      />
                     </div>
                     <DataTable
                       columns={stockMovementColumns}

@@ -139,7 +139,14 @@ test('new order uses active client badge, matching states and compact controls',
 
   assert.match(detailsSource, /Boolean\(pharmacyLockedStatus\)/);
   assert.match(detailsSource, /manager comment mutations are disabled/);
-  assert.match(detailsSource, /className=\{css\.loaderBox\}/);
+  assert.match(detailsSource, /<CreateOrderLoading \/>/);
+
+  const loader = await readFile(
+    path.join(path.dirname(DETAILS_SOURCE), 'OrderDetailsLoadingSkeleton.tsx'),
+    'utf8'
+  );
+
+  assert.match(loader, /className=\{css\.loaderBox\}/);
   assert.match(detailsSource, /<StatusBanner[\s\S]{0,180}tone="danger"/);
   assert.match(styles, /\.loaderBox\s*\{/);
   assert.match(styles, /\.methodHeader \.tabSaveButton/);

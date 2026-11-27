@@ -31,6 +31,18 @@ import {
   parseOwnProductPharmaciesSegments,
 } from '@/lib/products/own-product-pharmacies-paths';
 
+import {
+  buildStockMovementPath,
+  parseStockMovementSegments,
+} from '@/lib/products/stock-movement-paths';
+
+import {
+  buildRelatedProductOrdersPath,
+  isOrdersFilterRoute,
+  parseOrdersSegments,
+  parseOrdersPaginationSegments,
+} from '@/lib/orders/order-paths';
+
 import { OwnProductDetailsPageContent } from '@/components/products/OwnProductDetailsPageContent';
 import { OwnerOwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
 
@@ -68,6 +80,39 @@ async function ProductsPage({ params, searchParams }: ProductsPageProps) {
       if (tab === 'details') {
         redirect(getOwnProductDetailTabPath(productId, tab));
       }
+
+      return <OwnProductDetailsPageContent productId={productId} />;
+    }
+
+    if (
+      segments &&
+      segments.length > 2 &&
+      (tab === 'stock-movement' || tab === 'related-orders')
+    ) {
+      const filters = segments.slice(2);
+
+      if (tab === 'related-orders' && !isOrdersFilterRoute(filters)) notFound();
+
+      let canonical: string;
+
+      try {
+        canonical =
+          tab === 'stock-movement'
+            ? buildStockMovementPath(
+                productId,
+                parseStockMovementSegments(filters)
+              )
+            : buildRelatedProductOrdersPath(
+                productId,
+                parseOrdersSegments({ filters }),
+                parseOrdersPaginationSegments({ filters })
+              );
+      } catch {
+        notFound();
+      }
+
+      if (`/pharmacy/products/${segments.join('/')}` !== canonical)
+        redirect(canonical);
 
       return <OwnProductDetailsPageContent productId={productId} />;
     }

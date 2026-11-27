@@ -259,7 +259,7 @@ test('14.17: error, conflict, A11y and mobile styles are available without proxy
   assert.match(detailUi, /role="tabpanel"/);
   assert.match(detailUi, /aria-labelledby=/);
   assert.match(detailUi, /mobileVisibleCount=\{1\}/);
-  assert.match(activity, /minWidth=\{scopeOwnerId \? 960 : 950\}/);
+  assert.match(activity, /minWidth=\{960\}/);
   assert.match(moderation, /event\.key === 'Escape'/);
   assert.match(moderation, /aria-expanded=\{menuOpen\}/);
   assert.match(docsCss + tabsCss + actionCss, /max-width: (?:640|767)px/);

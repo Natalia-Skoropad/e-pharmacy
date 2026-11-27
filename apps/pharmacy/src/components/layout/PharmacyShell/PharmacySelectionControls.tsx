@@ -13,10 +13,13 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 import {
   getPharmacyIdFromDetailPath,
   isLegacyOperationalPharmacyPath,
+  isExplicitOrderCreatePath,
   isOwnerOrderDetailPath,
 } from '@/lib/pharmacies/selected-pharmacy-scope';
 
 import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
+
+import { CreateOrderLoading } from '@/components/orders/OrderDetailsPageContent/OrderDetailsLoadingSkeleton';
 
 import css from './PharmacySelectionControls.module.css';
 
@@ -82,7 +85,14 @@ export function PharmacyOperationalScope({
     usePharmacySelection();
 
   if (!isLegacyOperationalPharmacyPath(pathname)) return children;
-  if (isLoading) return <PageLoader label="Loading pharmacy selection..." />;
+
+  if (isLoading) {
+    return isExplicitOrderCreatePath(pathname) ? (
+      <CreateOrderLoading />
+    ) : (
+      <PageLoader label="Loading pharmacy selection..." />
+    );
+  }
 
   if (isInvalid) {
     return (

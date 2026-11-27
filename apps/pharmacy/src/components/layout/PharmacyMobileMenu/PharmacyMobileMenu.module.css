@@ -183,16 +183,6 @@
   outline: none;
 }
 
-.quickLinkDisabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.quickLinkDisabled:hover,
-.quickLinkDisabled:focus-visible {
-  background-color: transparent;
-}
-
 .actions {
   display: grid;
   gap: 12px;

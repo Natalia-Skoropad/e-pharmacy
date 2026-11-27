@@ -115,7 +115,7 @@ test('creation date, status and no-gap ratings use existing URL-backed registry 
   assert.match(content, /<RowsPerPageSelect/);
   assert.match(content, /<CountLabel/);
   assert.match(content, /<PaginationView/);
-  assert.match(content, /minWidth=\{1000\}/);
+  assert.match(content, /minWidth=\{960\}/);
   assert.match(content, /setListRetry\(\(retry\) => retry \+ 1\)/);
   assert.match(content, /setStatsRetry\(\(retry\) => retry \+ 1\)/);
 });
@@ -170,4 +170,16 @@ test('owner autocomplete uses pharmacies.view and exposes only minimal linked ow
   assert.match(browser, /parseAdminPharmacyRegistryOwnerOptionsResponse/);
   assert.match(bff, /createPrivateProxyRoute/);
   assert.match(bff, /API_ROUTES\.admin\.pharmacyRegistry\.ownerOptions/);
+});
+
+//===================================================================
+
+test('pharmacy registry shows zero counts before list response', async () => {
+  const content = await read(
+    './PharmaciesPageContent/PharmaciesPageContent.tsx'
+  );
+
+  assert.match(content, /shown=\{data\?\.items.length \?\? 0\}/);
+  assert.match(content, /total=\{data\?\.total \?\? 0\}/);
+  assert.match(content, /<OrderMetricsTooltip scope="pharmacy" preferTopLayer/);
 });

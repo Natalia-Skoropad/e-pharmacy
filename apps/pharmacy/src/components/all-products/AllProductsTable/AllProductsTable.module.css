@@ -1,5 +1,10 @@
 .breakableLink {
+  display: inline-block;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .categoryCell {

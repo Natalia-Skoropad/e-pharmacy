@@ -1,5 +1,6 @@
 .breakableLink,
 .breakableText {
+  display: inline-block;
   max-width: 150px;
   overflow-wrap: anywhere;
   white-space: normal;

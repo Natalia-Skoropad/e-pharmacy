@@ -63,3 +63,21 @@ test('shared account popover owns disclosure semantics and Escape focus restorat
   assert.doesNotMatch(headerSource, /useOutsidePointerDown/);
   assert.doesNotMatch(headerSource, /userMenuButtonRef/);
 });
+
+//===================================================================
+
+test('header and mobile menu expose the website but no obsolete current-pharmacy link', async () => {
+  for (const url of [
+    './PharmacyHeader.tsx',
+    '../PharmacyMobileMenu/PharmacyMobileMenu.tsx',
+  ]) {
+    const source = await readFile(new URL(url, import.meta.url), 'utf8');
+
+    assert.match(source, /Go to the website/);
+
+    assert.doesNotMatch(
+      source,
+      /getPublicPharmacyLinkState|publicPharmacyLink|Go to my pharmacy/
+    );
+  }
+});

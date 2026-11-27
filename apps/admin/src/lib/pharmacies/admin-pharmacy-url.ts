@@ -4,6 +4,11 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import { ADMIN_ROUTES } from '@/lib/routes/admin-routes';
 
 import {
+  parseSalesChartSegments,
+  type SalesChartRouteState,
+} from '../pharmacy-owners/owner-sales-chart-paths';
+
+import {
   ADMIN_PHARMACY_RATINGS,
   ADMIN_PHARMACY_STATUSES,
   assertAdminPharmacyId,
@@ -48,7 +53,6 @@ export const ADMIN_PHARMACY_DETAIL_TABS = [
   'orders',
   'clients',
   'products',
-  'product-requests',
   'activity',
 ] as const;
 
@@ -66,6 +70,7 @@ export type AdminPharmacyRouteResolution =
       pharmacyId: string;
       tab: AdminPharmacyDetailTab;
       activitySegments?: readonly string[];
+      salesPeriod?: SalesChartRouteState;
     }>
   | Readonly<{ kind: 'invalid' }>;
 
@@ -289,11 +294,24 @@ export function resolveAdminPharmaciesRoute(
   if (isValidObjectId(segments[0])) {
     const tab = segments[1] ?? 'information';
 
+    if (/^(year|month)-/.test(tab)) {
+      try {
+        return {
+          kind: 'detail',
+          pharmacyId: segments[0].toLowerCase(),
+          tab: 'information',
+          salesPeriod: parseSalesChartSegments(segments.slice(1)),
+        };
+      } catch {
+        return { kind: 'invalid' };
+      }
+    }
+
     if (!ADMIN_PHARMACY_DETAIL_TABS.includes(tab as AdminPharmacyDetailTab)) {
       return { kind: 'invalid' };
     }
 
-    // Only Activity has nested URL-backed filters. Other tabs stay exact paths.
+    // Activity has nested URL-backed filters; sales periods are handled above.
     if (segments.length > 2 && tab !== 'activity') {
       return { kind: 'invalid' };
     }

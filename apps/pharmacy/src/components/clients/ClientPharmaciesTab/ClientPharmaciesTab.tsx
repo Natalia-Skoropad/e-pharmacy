@@ -417,7 +417,7 @@ export function ClientPharmaciesTab({
               items={data?.items ?? []}
               getItemKey={(item) => item.pharmacyId}
               isLoading={isLoading}
-              minWidth={950}
+              minWidth={960}
               labels={{
                 loading: 'Loading client pharmacies...',
 

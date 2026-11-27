@@ -18,11 +18,7 @@ import {
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
-import {
-  PHARMACY_ROUTES,
-  getPharmacyOrderPath,
-  getPharmacyNewOrderPath,
-} from '@/lib/routes';
+import { PHARMACY_ROUTES, getPharmacyNewOrderPath } from '@/lib/routes';
 
 import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
@@ -40,6 +36,7 @@ import {
   buildRelatedProductOrdersPath,
   buildClientOrdersPath,
   parseOrdersSegments,
+  isOrdersFilterRoute,
   parseOrdersPaginationSegments,
   DEFAULT_ORDERS_PAGINATION,
   type OrdersPagination,
@@ -90,9 +87,7 @@ function OrdersPageContent({
 }: OrdersPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
-
-  const { select: selectCurrentPharmacy, options: membershipOptions } =
-    usePharmacySelection();
+  const { options: membershipOptions } = usePharmacySelection();
 
   // Both registries use the pathname as the single source of truth. Embedded
   // routes have their own base path and an implicit (non-editable) pharmacy ID.
@@ -112,20 +107,27 @@ function OrdersPageContent({
           ? pathname.slice(base.length + 1).split('/')
           : null;
 
-    const parsed = segments
-      ? parseOrdersSegments({ filters: segments })
-      : initialFilters;
+    // A retained registry during navigation must not parse a destination
+    // such as /orders/details/order-id-... as a list filter.
+    const isRegistryPath = segments !== null && isOrdersFilterRoute(segments);
+
+    const parsed =
+      isRegistryPath && segments
+        ? parseOrdersSegments({ filters: segments })
+        : initialFilters;
 
     return {
+      isRegistryPath,
       filters: embeddedClientId
         ? { ...parsed, clientId: embeddedClientId }
         : embedded
           ? { ...parsed, pharmacyId: embeddedPharmacyId ?? '' }
           : parsed,
 
-      pagination: segments
-        ? parseOrdersPaginationSegments({ filters: segments })
-        : initialPagination,
+      pagination:
+        isRegistryPath && segments
+          ? parseOrdersPaginationSegments({ filters: segments })
+          : initialPagination,
     };
   }, [
     embedded,
@@ -137,7 +139,7 @@ function OrdersPageContent({
     pathname,
   ]);
 
-  const filters = routeState.filters;
+  const { isRegistryPath, filters } = routeState;
   const { page, perPage } = routeState.pagination;
   const [resource, setResource] = useState(INITIAL_ORDERS_PAGE_RESOURCE_STATE);
   const [completedKey, setCompletedKey] = useState<string | null>(null);
@@ -171,7 +173,8 @@ function OrdersPageContent({
           ? buildEmbeddedOrdersPath(embeddedPharmacyId, nextFilters, pagination)
           : buildOrdersPath(nextFilters, pagination);
 
-    if (nextPath !== pathname) router.push(nextPath, { scroll: false });
+    if (isRegistryPath && nextPath !== pathname)
+      router.push(nextPath, { scroll: false });
   };
 
   const params = useMemo<PharmacyOrdersQueryParams>(
@@ -202,13 +205,23 @@ function OrdersPageContent({
   );
 
   const requestKey = JSON.stringify({ params, retryVersion });
-  const isLoading = (embedded && !embeddedReady) || requestKey !== completedKey;
+
+  const isEmbeddedRegistry = Boolean(
+    embedded || embeddedClientId || relatedProductId
+  );
+
+  const isLoading =
+    !isRegistryPath ||
+    (embedded && !embeddedReady) ||
+    requestKey !== completedKey;
+
   const isError = !isLoading && resource.status === 'error';
 
   useEffect(() => {
     const controller = new AbortController();
 
-    if (embedded && !embeddedReady) return () => controller.abort();
+    if (!isRegistryPath || (embedded && !embeddedReady))
+      return () => controller.abort();
 
     void getPharmacyOrders(params, { signal: controller.signal })
       .then((result: PharmacyOrdersResponse) => {
@@ -262,6 +275,7 @@ function OrdersPageContent({
     embeddedPharmacyId,
     embeddedClientId,
     embeddedReady,
+    isRegistryPath,
     filters,
     params,
     perPage,
@@ -277,7 +291,7 @@ function OrdersPageContent({
   )?.status;
 
   useEffect(() => {
-    if (!filters.pharmacyId || optionStatus) return;
+    if (!isRegistryPath || !filters.pharmacyId || optionStatus) return;
 
     const controller = new AbortController();
 
@@ -298,8 +312,9 @@ function OrdersPageContent({
             status: 'unavailable',
           });
       });
+
     return () => controller.abort();
-  }, [filters.pharmacyId, optionStatus]);
+  }, [isRegistryPath, filters.pharmacyId, optionStatus]);
 
   const pharmacyStatus =
     optionStatus ??
@@ -326,6 +341,8 @@ function OrdersPageContent({
     embedded || relatedProductId || embeddedClientId ? 'section' : 'main';
 
   const reload = () => setRetryVersion((value) => value + 1);
+
+  if (!isRegistryPath && !isEmbeddedRegistry) return null;
 
   return (
     <RootElement
@@ -501,10 +518,10 @@ function OrdersPageContent({
               onChange={(next) => navigate(filters, 1, next)}
             />
           </div>
-          {!isLoading && !isError ? (
+          {!isError ? (
             <CountLabel
-              shown={resource.orders.length}
-              total={resource.totalOrders}
+              shown={!isLoading && !isError ? resource.orders.length : 0}
+              total={!isLoading && !isError ? resource.totalOrders : 0}
               label="orders"
               fullWidthOnMobile
               className={css.countLabel}
@@ -517,10 +534,7 @@ function OrdersPageContent({
               size="md"
               disabled={!mayCreate}
               onClick={() =>
-                selectCurrentPharmacy(
-                  filters.pharmacyId,
-                  getPharmacyNewOrderPath(filters.pharmacyId)
-                )
+                router.push(getPharmacyNewOrderPath(filters.pharmacyId))
               }
             >
               <Plus size={18} aria-hidden="true" />
@@ -550,13 +564,6 @@ function OrdersPageContent({
             showPharmacy={Boolean(embeddedClientId) || !filters.pharmacyId}
             hideClient={Boolean(embeddedClientId)}
             productId={relatedProductId}
-            onOpenOrder={(order) => {
-              const target = getPharmacyOrderPath(order.id);
-
-              if (order.pharmacyId)
-                selectCurrentPharmacy(order.pharmacyId, target);
-              else router.push(target);
-            }}
           />
         )}
 

@@ -89,7 +89,10 @@ function ClientsTable({
         title: <TableHeaderTitle parts={['Client', 'name']} />,
 
         render: (client) => (
-          <TextActionButton href={clientHref(client)}>
+          <TextActionButton
+            className={css.breakableLink}
+            href={clientHref(client)}
+          >
             {getClientDisplayName(client)}
           </TextActionButton>
         ),

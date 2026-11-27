@@ -1010,19 +1010,11 @@ export function ActivityHistory({
             />
           </div>
 
-          {data || ((scopeRequestId || scopeOwnerId) && isLoading) ? (
+          {data || isLoading ? (
             <CountLabel
               className={css.countLabel}
-              shown={
-                (scopeRequestId || scopeOwnerId) && isLoading
-                  ? 0
-                  : (data?.items.length ?? 0)
-              }
-              total={
-                (scopeRequestId || scopeOwnerId) && isLoading
-                  ? 0
-                  : (data?.total ?? 0)
-              }
+              shown={isLoading ? 0 : (data?.items.length ?? 0)}
+              total={isLoading ? 0 : (data?.total ?? 0)}
               label="records"
             />
           ) : null}
@@ -1057,7 +1049,7 @@ export function ActivityHistory({
               items={data?.items ?? []}
               getItemKey={(item) => item.id}
               isLoading={isLoading}
-              minWidth={scopeOwnerId ? 960 : 950}
+              minWidth={960}
               ariaLabel={
                 scopePharmacyId
                   ? 'Pharmacy activity history'

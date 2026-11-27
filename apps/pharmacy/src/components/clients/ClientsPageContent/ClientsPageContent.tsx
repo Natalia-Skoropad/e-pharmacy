@@ -412,11 +412,11 @@ function ClientsPageContent({
             />
           </div>
 
-          {clientsStatus === 'success' ? (
+          {clientsStatus !== 'error' ? (
             <CountLabel
               className={css.countLabel}
-              shown={clients.length}
-              total={totalClients}
+              shown={clientsStatus === 'success' ? clients.length : 0}
+              total={clientsStatus === 'success' ? totalClients : 0}
               label="clients"
               fullWidthOnMobile
             />

@@ -81,3 +81,18 @@ test('admin private comment deletion treats the canonical 204 response as no con
 
   assert.doesNotMatch(browserApi, /parseApiEmptyResponse/);
 });
+
+//===================================================================
+
+test('private comments show zero counts during loading', async () => {
+  const source = await read('./AdminPrivateComments.tsx');
+
+  assert.match(source, /status === 'success' \|\| status === 'loading'/);
+
+  assert.match(
+    source,
+    /shown=\{status === 'success' \? data.items.length : 0\}/
+  );
+
+  assert.match(source, /total=\{status === 'success' \? data.total : 0\}/);
+});

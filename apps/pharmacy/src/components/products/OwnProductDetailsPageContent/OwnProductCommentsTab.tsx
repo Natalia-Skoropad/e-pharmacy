@@ -28,6 +28,7 @@ export function OwnProductCommentsTab({
 
   return (
     <EntityComments
+      showCountWhileLoading
       entityKey={`product:${productId}`}
       presentation="profile"
       title="Comments"

@@ -196,8 +196,7 @@ function AllProductsPageContent({
   // Fail closed until the real owner-wide pharmacy status summary is available.
   const [hasEligiblePharmacy, setHasEligiblePharmacy] = useState(false);
   const [isCheckingEligibility, setIsCheckingEligibility] = useState(true);
-
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -558,8 +557,8 @@ function AllProductsPageContent({
 
           <CountLabel
             className={css.countLabel}
-            shown={products.length}
-            total={totalProducts}
+            shown={isLoading || loadError ? 0 : products.length}
+            total={isLoading || loadError ? 0 : totalProducts}
             label="products"
             fullWidthOnMobile
           />
