@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import {
   Boxes,
+  ChartNoAxesCombined,
   Building2,
   ExternalLink,
   ClipboardList,
@@ -95,6 +96,7 @@ import { OwnedPharmacyEditableTab } from './OwnedPharmacyEditableTab';
 import { OwnedPharmacyActions } from './OwnedPharmacyActions';
 import { OwnedPharmacyHelp } from './OwnedPharmacyHelp';
 import { OwnedPharmacySectionReview } from './OwnedPharmacySectionReview';
+import { OwnedPharmacySalesChart } from './OwnedPharmacySalesChart';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
@@ -120,6 +122,11 @@ const TABS: TabItem<OwnedPharmacyDetailTab>[] = [
     icon: <MessageSquareText size={17} />,
   },
   { value: 'reviews', label: 'Reviews', icon: <Star size={17} /> },
+  {
+    value: 'statistics',
+    label: 'Statistics',
+    icon: <ChartNoAxesCombined size={17} />,
+  },
   { value: 'orders', label: 'Orders', icon: <ShoppingBag size={17} /> },
   { value: 'clients', label: 'Clients', icon: <UsersRound size={17} /> },
   { value: 'products', label: 'Products', icon: <Boxes size={17} /> },
@@ -147,6 +154,7 @@ const DESCRIPTIONS: Record<OwnedPharmacyDetailTab, string> = {
   reviews:
     'Pharmacy reviews will be available when the Reviews module is connected.',
 
+  statistics: 'Review successful sales by product category for this pharmacy.',
   orders: 'View and process orders belonging to this pharmacy only.',
   clients: 'View clients and order history for this pharmacy only.',
   products: 'Manage this pharmacy’s offers, stock and product availability.',
@@ -198,6 +206,7 @@ export function OwnedPharmacyDetailPageContent({
   initialOrderPagination?: OrdersPagination;
 }>) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const {
     selectedId,
@@ -274,7 +283,7 @@ export function OwnedPharmacyDetailPageContent({
 
   useEffect(() => {
     if (pharmacy?.name) dispatchPharmacyBreadcrumbLabel(pharmacy.name);
-  }, [pharmacy?.name, visibleTab]);
+  }, [pathname, pharmacy?.name, visibleTab]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -554,6 +563,11 @@ export function OwnedPharmacyDetailPageContent({
                 variant="loading"
                 title="Loading pharmacy details"
                 description="The pharmacy overview is being loaded."
+              />
+            ) : pharmacy && visibleTab === 'statistics' ? (
+              <OwnedPharmacySalesChart
+                pharmacyId={pharmacyId}
+                pharmacyStatus={pharmacy.status}
               />
             ) : detail && pharmacy && visibleTab === 'information' ? (
               <Information detail={detail} />

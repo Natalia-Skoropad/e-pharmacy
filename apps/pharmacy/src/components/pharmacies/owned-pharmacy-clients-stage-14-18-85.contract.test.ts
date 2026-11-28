@@ -57,7 +57,11 @@ test('nested Clients route keeps filters, search and paging within the selected 
     /router\.replace\(\s*buildClientsPath\(routeFilters, basePath/
   );
 
-  assert.match(page, /resetHref=\{basePath\}/);
+  assert.match(
+    page,
+    /resetHref=\{buildClientsPath\(\s*\{ \.\.\.DEFAULT_CLIENTS_FILTERS, pharmacyId: filters\.pharmacyId \},\s*basePath/
+  );
+
   assert.match(page, /embedded=\{embedded\}/);
 
   assert.match(
@@ -97,4 +101,36 @@ test('sales chart error uses shared resource state with retry', () => {
   assert.match(chart, /variant="error"/);
   assert.match(chart, /sideActionOnDesktop/);
   assert.match(chart, /onRetry=\{\(\) => setRetry/);
+});
+
+//===================================================================
+
+test('pharmacy sales chart belongs only to Statistics, before Orders', () => {
+  const page = read(
+    'components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.tsx'
+  );
+
+  const info = read(
+    'components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyInformationTab.tsx'
+  );
+
+  const chart = read(
+    'components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacySalesChart.tsx'
+  );
+
+  assert.ok(
+    page.indexOf("value: 'statistics'") < page.indexOf("value: 'orders'")
+  );
+
+  assert.match(
+    page,
+    /visibleTab === 'statistics'[\s\S]*?<OwnedPharmacySalesChart/
+  );
+
+  assert.doesNotMatch(info, /<OwnedPharmacySalesChart/);
+
+  assert.match(
+    chart,
+    /buildOwnedPharmacyDetailUrl\(pharmacyId, 'statistics'\)/
+  );
 });

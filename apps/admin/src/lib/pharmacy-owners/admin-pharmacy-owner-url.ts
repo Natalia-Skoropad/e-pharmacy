@@ -40,6 +40,7 @@ export type AdminPharmacyOwnersRouteResolution =
 
 export const ADMIN_PHARMACY_OWNER_DETAIL_TABS = [
   'personal',
+  'statistics',
   'pharmacies',
   'products',
   'product-requests',

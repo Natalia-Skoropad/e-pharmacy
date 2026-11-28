@@ -165,6 +165,17 @@ test('S10.6 owner detail, activity, sales and sessions preserve access and priva
   assert.match(activity, /scopeEntityId: ownerId/);
   assert.match(sales, /Pharmacy\.find\(\{ ownerId: ownerObjectId \}\)/);
   assert.match(sales, /getOrderSalesStatisticsForPharmaciesService/);
+
+  assert.match(
+    sales,
+    /query\.pharmacyId && !pharmacyIds\.includes\(query\.pharmacyId\)/
+  );
+
+  assert.match(
+    sales,
+    /query\.pharmacyId \? \[query\.pharmacyId\] : pharmacyIds/
+  );
+
   assert.match(sessions, /roleAtLogin: USER_ROLES\.PHARMACY/);
   assert.match(sessions, /\.limit\(200\)/);
 

@@ -1,35 +1,53 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-
-import {
-  Boxes,
-  FilePlus2,
-  LayoutDashboard,
-  PackageSearch,
-  ShoppingBag,
-  Users,
-} from 'lucide-react';
+import { LayoutDashboard, MessageCircleQuestion } from 'lucide-react';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { SearchableSelect } from '@e-pharmacy/ui/forms';
-import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
-
-import {
-  ProfileResourceState,
-  ProfileSectionHeader,
-} from '@e-pharmacy/ui/profile';
-
-import { SalesValueChart } from '@e-pharmacy/ui/charts';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+import { SalesPeriodFilters, SalesValueChart } from '@e-pharmacy/ui/charts';
 
 import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
+
+import { SalesChartFilterToolbar } from '@/components/statistics/SalesChartFilterToolbar';
+
+import {
+  DASHBOARD_SECTIONS,
+  DashboardStatisticsSection,
+} from './DashboardStatisticsSection';
 
 import css from './PharmacyDashboardPageContent.module.css';
 
 //===================================================================
 
-// Route/auth fallbacks never request private data. The resolved page owns
-// its requests and displays the same individual skeletons.
+// Public static placeholders: no private data or navigation before auth.
+const LOADING_RESOURCE = {
+  data: null,
+  isLoading: true,
+  error: false,
+  retry: () => undefined,
+};
+
+//===================================================================
+
+function PeriodSkeleton({ id }: Readonly<{ id: string }>) {
+  return (
+    <SalesChartFilterToolbar hasFilters={false} onReset={() => undefined}>
+      <SalesPeriodFilters
+        idPrefix={id}
+        year={String(new Date().getFullYear())}
+        month="all"
+        disabled
+        onYearChange={() => undefined}
+        onMonthChange={() => undefined}
+      />
+    </SalesChartFilterToolbar>
+  );
+}
+
+//===================================================================
+
 export function DashboardPageSkeleton() {
   const pathname = usePathname();
 
@@ -37,15 +55,12 @@ export function DashboardPageSkeleton() {
     pathname
   );
 
-  const blocks = [
-    { title: 'Clients statistics', icon: Users, count: 3 },
-    { title: 'Own product statistics', icon: Boxes, count: 4 },
+  const sections = [
+    DASHBOARD_SECTIONS.clients,
+    DASHBOARD_SECTIONS.ownProducts,
 
     ...(!filtered
-      ? [
-          { title: 'All product statistics', icon: PackageSearch, count: 4 },
-          { title: 'Product request statistics', icon: FilePlus2, count: 4 },
-        ]
+      ? [DASHBOARD_SECTIONS.allProducts, DASHBOARD_SECTIONS.requests]
       : []),
   ];
 
@@ -56,10 +71,17 @@ export function DashboardPageSkeleton() {
           title="Dashboard"
           icon={<LayoutDashboard size={23} aria-hidden="true" />}
         />
-
         <SearchableSelect
           id="dashboard-loading-pharmacy"
           label="Select pharmacy"
+          labelAccessory={
+            <MessageCircleQuestion
+              size={20}
+              strokeWidth={2.2}
+              className={css.loadingHelp}
+              aria-hidden="true"
+            />
+          }
           value=""
           options={[]}
           isOptionsLoading
@@ -68,22 +90,17 @@ export function DashboardPageSkeleton() {
         />
       </section>
 
-      <section className={css.section}>
-        <ProfileSectionHeader
-          title="Orders statistics"
-          icon={<ShoppingBag size={23} />}
-        />
-
-        <StatsLoadingSkeleton
-          count={4}
-          columns={4}
-          tabletColumns={2}
-          label="Loading order statistics"
-        />
-      </section>
+      <DashboardStatisticsSection
+        {...DASHBOARD_SECTIONS.orders}
+        resource={LOADING_RESOURCE}
+        filters={<PeriodSkeleton id="dashboard-loading-order" />}
+      >
+        {() => null}
+      </DashboardStatisticsSection>
 
       <SalesValueChart
         data={DEFAULT_ORDER_SALES_STATISTICS}
+        headerContent={<PeriodSkeleton id="dashboard-loading-sales" />}
         contentState={
           <ProfileResourceState
             variant="loading"
@@ -92,17 +109,15 @@ export function DashboardPageSkeleton() {
           />
         }
       />
-      {blocks.map(({ title, icon: Icon, count }) => (
-        <section className={css.section} key={title}>
-          <ProfileSectionHeader title={title} icon={<Icon size={23} />} />
 
-          <StatsLoadingSkeleton
-            count={count}
-            columns={count}
-            tabletColumns={2}
-            label={`Loading ${title.toLowerCase()}`}
-          />
-        </section>
+      {sections.map((section) => (
+        <DashboardStatisticsSection
+          key={section.id}
+          {...section}
+          resource={LOADING_RESOURCE}
+        >
+          {() => null}
+        </DashboardStatisticsSection>
       ))}
     </main>
   );

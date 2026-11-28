@@ -222,7 +222,7 @@ test('settlement and region survive canonical URL and server query round trips',
 //===================================================================
 
 test('pharmacy sales chart deep links round trip and removed request tab is invalid', () => {
-  const base = buildAdminPharmacyDetailUrl(PHARMACY_ID);
+  const base = buildAdminPharmacyDetailUrl(PHARMACY_ID, 'statistics');
 
   const route = resolveAdminPharmaciesRoute([
     PHARMACY_ID,
@@ -235,7 +235,18 @@ test('pharmacy sales chart deep links round trip and removed request tab is inva
   if (route.kind !== 'detail' || !route.salesPeriod)
     throw new Error('Missing sales period');
 
-  assert.equal(route.tab, 'information');
+  assert.equal(route.tab, 'statistics');
+
+  assert.deepEqual(
+    resolveAdminPharmaciesRoute([
+      PHARMACY_ID,
+      'statistics',
+      'year-2025',
+      'month-01',
+    ]),
+    route
+  );
+
   assert.deepEqual(route.salesPeriod, { year: '2025', month: '1' });
 
   assert.equal(
@@ -251,6 +262,8 @@ test('pharmacy sales chart deep links round trip and removed request tab is inva
     ['year-2025', 'year-2026'],
     ['year-2025', 'documents'],
     ['documents', 'month-01'],
+    ['statistics', `pharmacy-id-${PHARMACY_ID}`],
+    ['statistics', 'month-13'],
   ]) {
     assert.deepEqual(resolveAdminPharmaciesRoute([PHARMACY_ID, ...segments]), {
       kind: 'invalid',

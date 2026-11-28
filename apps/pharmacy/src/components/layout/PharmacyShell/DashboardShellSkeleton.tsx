@@ -1,7 +1,7 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, Maximize2, Menu } from 'lucide-react';
 import clsx from 'clsx';
 
 import { CabinetSidebar, CabinetTopBar } from '@e-pharmacy/ui/cabinet';
@@ -58,14 +58,26 @@ export function DashboardShellSkeleton() {
                 className={headerCss.topbar}
                 navigationToggle={
                   <span
-                    className={css.loadingHeaderAction}
+                    className={clsx(
+                      css.loadingHeaderAction,
+                      css.loadingHeaderMenu
+                    )}
                     aria-hidden="true"
-                  />
+                  >
+                    <Menu size={20} />
+                  </span>
                 }
                 actions={
                   <div className={headerCss.actionsGroup} aria-hidden="true">
                     <span className={headerCss.fullscreenDesktop}>
-                      <span className={css.loadingHeaderAction} />
+                      <span
+                        className={clsx(
+                          css.loadingHeaderAction,
+                          css.loadingHeaderFullscreen
+                        )}
+                      >
+                        <Maximize2 size={18} />
+                      </span>
                     </span>
                     <span className={headerCss.userDropdownDesktop}>
                       <span
@@ -73,7 +85,10 @@ export function DashboardShellSkeleton() {
                           css.loadingHeaderAction,
                           css.loadingHeaderUser
                         )}
-                      />
+                      >
+                        <span className={css.loadingHeaderAvatar} />
+                        <span className={css.loadingHeaderName} />
+                      </span>
                     </span>
                   </div>
                 }

@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import {
   Activity,
+  ChartNoAxesCombined,
   Building2,
   CircleHelp,
   CreditCard,
@@ -42,6 +43,12 @@ import { StatusPageLayout } from '@e-pharmacy/ui/status-pages';
 
 import { getAdminPharmacyDetail } from '@/lib/api/browser/admin-pharmacy-detail.api';
 import { dispatchAdminBreadcrumbLabel } from '@/lib/layout/breadcrumb-label-event';
+import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
+import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
+
+import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
+
+import { getAdminPublicPharmacyUrl } from '@/lib/pharmacies/public-pharmacy-link';
 
 import {
   buildAdminPharmacyDetailUrl,
@@ -50,11 +57,8 @@ import {
 
 import { canAdmin } from '@/lib/permissions/can-admin';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
-import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
+
 import { ADMIN_ROUTES } from '@/lib/routes';
-import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
-import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
-import { getAdminPublicPharmacyUrl } from '@/lib/pharmacies/public-pharmacy-link';
 
 import { PharmacyInformationTab } from './PharmacyInformationTab';
 import { PharmacyDataTab } from './PharmacyDataTab';
@@ -64,6 +68,7 @@ import { PharmacyModerationActions } from './PharmacyModerationActions';
 import { PharmacyDocumentsTab } from './PharmacyDocumentsTab';
 import { PharmacyCommentsTab } from './PharmacyCommentsTab';
 import { PharmacyActivityTab } from './PharmacyActivityTab';
+import { PharmacySalesChart } from './PharmacySalesChart';
 
 import css from './PharmacyDetailsPageContent.module.css';
 
@@ -121,6 +126,11 @@ const TAB_ITEMS: TabItem<AdminPharmacyDetailTab>[] = [
     icon: <MessageSquareText size={17} />,
   },
   { value: 'reviews', label: 'Reviews', icon: <Star size={17} /> },
+  {
+    value: 'statistics',
+    label: 'Statistics',
+    icon: <ChartNoAxesCombined size={17} />,
+  },
   { value: 'orders', label: 'Orders', icon: <ShoppingBag size={17} /> },
   { value: 'clients', label: 'Clients', icon: <UsersRound size={17} /> },
   { value: 'products', label: 'Products', icon: <Package size={17} /> },
@@ -148,6 +158,7 @@ const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
 
   reviews:
     'Pharmacy reviews will be available when the reviews module is ready.',
+  statistics: 'Review successful sales by product category for this pharmacy.',
   orders: 'Pharmacy orders will be available when the orders module is ready.',
 
   clients:
@@ -206,6 +217,7 @@ export function PharmacyDetailsPageContent({
   initialActivityState,
 }: PharmacyDetailsPageContentProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { access } = useAdminAuthorization();
   const canViewOwner = canAdmin(access, ADMIN_PERMISSIONS.pharmacyOwners.view);
   const canModerate = canAdmin(access, ADMIN_PERMISSIONS.pharmacies.moderate);
@@ -238,7 +250,7 @@ export function PharmacyDetailsPageContent({
     if (pharmacyName) {
       dispatchAdminBreadcrumbLabel(pharmacyName);
     }
-  }, [pharmacyName]);
+  }, [pathname, pharmacyName]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -533,6 +545,8 @@ export function PharmacyDetailsPageContent({
                 title="Loading pharmacy details"
                 description="The pharmacy overview is being loaded."
               />
+            ) : activeTab === 'statistics' && detail ? (
+              <PharmacySalesChart pharmacyId={pharmacyId} />
             ) : activeTab === 'information' && detail ? (
               <PharmacyInformationTab
                 detail={detail}

@@ -163,3 +163,38 @@ test('pharmacy Clients accepts nested filters and paging; product requests tab i
     kind: 'invalid',
   });
 });
+
+//===================================================================
+
+test('pharmacy statistics resolves canonical and legacy periods, but not another pharmacy', () => {
+  const segments = ['year-2025', 'month-01'];
+  const route = resolveOwnedPharmaciesRoute([ID, 'statistics', ...segments]);
+
+  assert.equal(route.kind, 'detail');
+
+  if (route.kind !== 'detail') throw new Error('Missing detail');
+
+  assert.equal(route.tab, 'statistics');
+  assert.deepEqual(route.salesSegments, segments);
+  assert.deepEqual(resolveOwnedPharmaciesRoute([ID, ...segments]), route);
+
+  assert.deepEqual(
+    resolveOwnedPharmaciesRoute([ID, 'information', ...segments]),
+    route
+  );
+
+  assert.equal(
+    buildOwnedPharmacyDetailUrl(ID, 'statistics'),
+    `/pharmacy/pharmacies/${ID}/statistics`
+  );
+
+  assert.equal(
+    resolveOwnedPharmaciesRoute([ID, 'statistics', `pharmacy-id-${ID}`]).kind,
+    'invalid'
+  );
+
+  assert.equal(
+    resolveOwnedPharmaciesRoute([ID, 'statistics', 'month-13']).kind,
+    'invalid'
+  );
+});

@@ -59,17 +59,17 @@ test('dashboard uses owner-wide data, narrows by explicit pharmacy and hides own
 
   assert.match(
     resources,
-    /getPharmacyOrders\(\{ \.\.\.ownerScope\(pharmacyId\)/
+    /getPharmacyOrders\(\s*\{\s*\.\.\.ownerScope\(pharmacyId\)/
   );
 
   assert.match(
     resources,
-    /getPharmacyClients\(\{ \.\.\.ownerScope\(pharmacyId\)/
+    /getPharmacyClients\(\s*\{\s*\.\.\.ownerScope\(pharmacyId\)/
   );
 
   assert.match(
     resources,
-    /getPharmacyOrderSalesStatistics\(\{ \.\.\.ownerScope\(pharmacyId\)/
+    /getPharmacyOrderSalesStatistics\(\s*\{\s*\.\.\.ownerScope\(pharmacyId\)/
   );
 
   assert.match(resources, /getOwnerOwnProducts\(/);
@@ -81,7 +81,7 @@ test('dashboard uses owner-wide data, narrows by explicit pharmacy and hides own
 
   assert.match(
     selector,
-    /\['dashboard', 'clients', 'client-sales'\]\.includes\(statisticsContext\)/
+    /\['dashboard', 'clients', 'client-sales'\]\.includes\(\s*statisticsContext\s*\)/
   );
 });
 
@@ -105,5 +105,32 @@ test('dashboard outer fallbacks preserve cabinet geometry without mounting priva
   assert.doesNotMatch(
     skeleton,
     /useAuth|usePharmacySelection|getOwnedPharmacyStatistics/
+  );
+});
+
+//===================================================================
+
+test('dashboard fallback preserves descriptions, action slots, period filters and order amount skeletons', async () => {
+  const [skeleton, shell, styles, section, page] = await Promise.all([
+    read('./PharmacyDashboardPageContent/DashboardPageSkeleton.tsx'),
+    read('../layout/PharmacyShell/DashboardShellSkeleton.tsx'),
+    read('../layout/PharmacyShell/PharmacyShell.module.css'),
+    read('./PharmacyDashboardPageContent/DashboardStatisticsSection.tsx'),
+    read('./PharmacyDashboardPageContent/PharmacyDashboardPageContent.tsx'),
+  ]);
+
+  assert.match(skeleton, /labelAccessory=/);
+  assert.match(skeleton, /<SalesPeriodFilters/);
+  assert.match(skeleton, /headerContent=\{<PeriodSkeleton/);
+  assert.match(skeleton, /\.\.\.DASHBOARD_SECTIONS\.orders/);
+  assert.match(section, /description=\{description\}/);
+  assert.match(section, /metaCount=\{metaCount\}/);
+  assert.match(section, /metaCount: 4/);
+  assert.match(page, /\.\.\.DASHBOARD_SECTIONS\.orders/);
+  assert.match(shell, /loadingHeaderAvatar/);
+
+  assert.match(
+    styles,
+    /@media \(min-width: 1440px\)\s*\{\s*\.loadingHeaderMenu\s*\{\s*display: none/
   );
 });

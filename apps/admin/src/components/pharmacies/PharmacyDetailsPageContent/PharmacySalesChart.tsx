@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import type { OrderSalesStatistics } from '@e-pharmacy/types/orders';
@@ -15,13 +15,21 @@ import {
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { getAdminPharmacySalesStatistics } from '@/lib/api/browser/admin-pharmacy-detail.api';
-import { getAdminPharmacyOwnerSalesStatistics } from '@/lib/api/browser/admin-pharmacy-owners.api';
+
+import {
+  getAdminPharmacyOwnerPharmacies,
+  getAdminPharmacyOwnerSalesStatistics,
+} from '@/lib/api/browser/admin-pharmacy-owners.api';
 
 import {
   buildSalesChartPath,
   getSalesChartYear,
   parseSalesChartSegments,
 } from '@/lib/pharmacy-owners/owner-sales-chart-paths';
+
+import { PharmacySearch } from '@/components/pharmacies/PharmacySearch/PharmacySearch';
+
+import css from './PharmacyDetailsPageContent.module.css';
 
 //===================================================================
 
@@ -33,7 +41,7 @@ type SalesSnapshot = Readonly<{
 
 //===================================================================
 
-/** Only the active Pharmacy information tab mounts this chart. */
+/** Only the active Statistics tab mounts this chart. */
 export function PharmacySalesChart({
   pharmacyId,
   ownerId,
@@ -42,31 +50,52 @@ export function PharmacySalesChart({
   const router = useRouter();
 
   const base = ownerId
-    ? `/admin/pharmacy-owners/${ownerId}`
-    : `/admin/pharmacies/${pharmacyId}`;
+    ? `/admin/pharmacy-owners/${ownerId}/statistics`
+    : `/admin/pharmacies/${pharmacyId}/statistics`;
 
   const segments = pathname.startsWith(`${base}/`)
-    ? pathname
-        .slice(base.length + 1)
-        .split('/')
-        .filter((part) => /^(year|month)-/.test(part))
+    ? pathname.slice(base.length + 1).split('/')
     : [];
 
-  const period = parseSalesChartSegments(segments);
+  const period = parseSalesChartSegments(segments, {
+    allowPharmacy: Boolean(ownerId),
+  });
+
   const year = getSalesChartYear(period);
   const month = period.month;
 
   const updatePeriod = (nextYear: string, nextMonth: SalesPeriodMonth) => {
     router.push(
-      buildSalesChartPath(base, { year: nextYear, month: nextMonth }),
+      buildSalesChartPath(
+        base,
+        { ...period, year: nextYear, month: nextMonth },
+        { allowPharmacy: Boolean(ownerId) }
+      ),
       { scroll: false }
     );
   };
 
+  const selectedPharmacyId = period.pharmacyId;
+
+  const loadOwnerPharmacyOptions = useCallback(
+    async (query: string, signal: AbortSignal, page = 1) => {
+      if (!ownerId) return [];
+
+      const result = await getAdminPharmacyOwnerPharmacies(
+        ownerId,
+        { ...(query ? { search: query } : {}), page, perPage: 20 },
+        { signal }
+      );
+
+      return result.items;
+    },
+    [ownerId]
+  );
+
   const [retry, setRetry] = useState(0);
   const [snapshot, setSnapshot] = useState<SalesSnapshot | null>(null);
 
-  const key = `${ownerId ? `owner:${ownerId}` : `pharmacy:${pharmacyId}`}:${year}:${month}:${retry}`;
+  const key = `${ownerId ? `owner:${ownerId}` : `pharmacy:${pharmacyId}`}:${selectedPharmacyId ?? 'all'}:${year}:${month}:${retry}`;
   const current = snapshot?.key === key ? snapshot : null;
 
   useEffect(() => {
@@ -76,7 +105,10 @@ export function PharmacySalesChart({
       ownerId
         ? getAdminPharmacyOwnerSalesStatistics(
             ownerId,
-            getSalesPeriodDateRange(year, month),
+            {
+              ...getSalesPeriodDateRange(year, month),
+              pharmacyId: selectedPharmacyId,
+            },
             { signal: controller.signal }
           )
         : getAdminPharmacySalesStatistics(
@@ -98,7 +130,7 @@ export function PharmacySalesChart({
       });
 
     return () => controller.abort();
-  }, [pharmacyId, ownerId, year, month, retry, key]);
+  }, [pharmacyId, ownerId, selectedPharmacyId, year, month, retry, key]);
 
   const contentState = !current ? (
     <ProfileResourceState
@@ -111,36 +143,59 @@ export function PharmacySalesChart({
       variant="error"
       title="Sales statistics could not be loaded"
       description="The chart is temporarily unavailable. Please try again."
-      retryLabel="Retry sales statistics"
+      retryLabel="Try again"
+      sideActionOnDesktop
       onRetry={() => setRetry((v) => v + 1)}
     />
   ) : null;
 
   return (
-    <SalesValueChart
-      data={
-        current?.data ?? {
-          currency: '₴',
-          groupBy: 'month',
-          categories: [],
-          points: [],
-        }
-      }
-      contentState={contentState}
-      headerContent={
-        <SalesPeriodFilters
-          idPrefix={ownerId ? 'admin-owner-sales' : 'admin-pharmacy-sales'}
-          year={year}
-          month={month}
-          onYearChange={(value) => updatePeriod(value, month)}
-          onMonthChange={(value) => updatePeriod(year, value)}
-          onReset={
-            period.year || period.month !== 'all'
-              ? () => router.push(base, { scroll: false })
-              : undefined
+    <div className={css.salesChartStack}>
+      {ownerId ? (
+        <PharmacySearch
+          id="owner-statistics-pharmacy"
+          label="Select pharmacy"
+          ownerId={ownerId}
+          loadOptions={loadOwnerPharmacyOptions}
+          statisticsScope
+          value={selectedPharmacyId ?? ''}
+          onChange={(id) =>
+            router.push(
+              buildSalesChartPath(
+                base,
+                { ...period, pharmacyId: id },
+                { allowPharmacy: true }
+              ),
+              { scroll: false }
+            )
           }
         />
-      }
-    />
+      ) : null}
+      <SalesValueChart
+        data={
+          current?.data ?? {
+            currency: '₴',
+            groupBy: 'month',
+            categories: [],
+            points: [],
+          }
+        }
+        contentState={contentState}
+        headerContent={
+          <SalesPeriodFilters
+            idPrefix={ownerId ? 'admin-owner-sales' : 'admin-pharmacy-sales'}
+            year={year}
+            month={month}
+            onYearChange={(value) => updatePeriod(value, month)}
+            onMonthChange={(value) => updatePeriod(year, value)}
+            onReset={
+              period.year || period.month !== 'all' || selectedPharmacyId
+                ? () => router.push(base, { scroll: false })
+                : undefined
+            }
+          />
+        }
+      />
+    </div>
   );
 }

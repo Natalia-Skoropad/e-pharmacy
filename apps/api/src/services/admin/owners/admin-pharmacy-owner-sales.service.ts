@@ -31,8 +31,16 @@ export async function getAdminPharmacyOwnerSalesStatisticsService(
     .select('_id')
     .lean<Array<{ _id: Types.ObjectId }>>();
 
+  const pharmacyIds = pharmacies.map((item) => String(item._id));
+
+  if (query.pharmacyId && !pharmacyIds.includes(query.pharmacyId))
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Pharmacy was not found for this owner.'
+    );
+
   return getOrderSalesStatisticsForPharmaciesService(
-    pharmacies.map((item) => String(item._id)),
+    query.pharmacyId ? [query.pharmacyId] : pharmacyIds,
     query
   );
 }

@@ -273,3 +273,27 @@ test('client detail sub-tabs use the owner client as a clickable parent', () => 
     );
   }
 });
+
+//===================================================================
+
+test('pharmacy statistics breadcrumbs exclude period filter segments', () => {
+  const base = `/pharmacy/pharmacies/${ENTITY_ID}`;
+
+  for (const suffix of [
+    'statistics',
+    'statistics/year-2025/month-01',
+    'year-2025/month-01',
+  ]) {
+    assert.deepEqual(
+      getPharmacyBreadcrumbsByPathname(
+        `${base}/${suffix}`,
+        'Care Pharmacy Lviv'
+      ),
+      [
+        { label: 'Pharmacies', href: '/pharmacy/pharmacies' },
+        { label: 'Care Pharmacy Lviv', href: base },
+        { label: 'Statistics' },
+      ]
+    );
+  }
+});

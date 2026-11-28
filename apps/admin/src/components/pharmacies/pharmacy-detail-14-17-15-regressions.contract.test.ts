@@ -93,11 +93,11 @@ test('corrections use existing moderation and reactivation modal tones', () => {
 
   assert.match(
     actions,
-    /action.option.action === 'request_corrections' && detail.status === 'on_moderation'\s*\? 'moderation'/
+    /action.option.action === 'request_corrections' &&\s*detail.status === 'on_moderation'\s*\? 'moderation'/
   );
 
   assert.match(
     actions,
-    /action.option.action === 'request_corrections' && detail.status === 'on_reactivation'\s*\? 'reactivation'/
+    /action.option.action === 'request_corrections' &&\s*detail.status === 'on_reactivation'\s*\? 'reactivation'/
   );
 });

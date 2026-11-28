@@ -77,14 +77,22 @@ export default async function AdminPharmacyOwnersFilteredPage({
 
   if (
     /^[a-f0-9]{24}$/i.test(ownerId) &&
-    /^(year|month)-/.test(filters[0] ?? '')
+    (filters[0] === 'statistics' || /^(year|month)-/.test(filters[0] ?? ''))
   ) {
     const base = `/admin/pharmacy-owners/${ownerId}`;
 
     let canonical: string;
 
     try {
-      canonical = buildSalesChartPath(base, parseSalesChartSegments(filters));
+      canonical = buildSalesChartPath(
+        `${base}/statistics`,
+
+        parseSalesChartSegments(
+          filters[0] === 'statistics' ? filters.slice(1) : filters,
+          { allowPharmacy: true }
+        ),
+        { allowPharmacy: true }
+      );
     } catch {
       notFound();
     }
@@ -95,7 +103,7 @@ export default async function AdminPharmacyOwnersFilteredPage({
       <AdminPermissionGate permission={ADMIN_PERMISSIONS.pharmacyOwners.view}>
         <PharmacyOwnerDetailsPageContent
           ownerId={ownerId}
-          initialState={{ tab: 'personal' }}
+          initialState={{ tab: 'statistics' }}
           initialPharmaciesState={parseAdminPharmacyOwnerPharmaciesSearchParams(
             query
           )}

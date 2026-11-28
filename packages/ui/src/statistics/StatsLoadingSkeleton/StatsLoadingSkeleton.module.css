@@ -69,6 +69,11 @@
   margin-top: auto;
 }
 
+.meta {
+  width: min(45%, 108px);
+  height: 20px;
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;

@@ -23,6 +23,8 @@ import { getAdminPharmacyOptions } from '@/lib/api/browser/admin-pharmacy-regist
 type PharmacySearchProps = Readonly<{
   value: string;
   ownerId?: string;
+  label?: string;
+  statisticsScope?: boolean;
   disabled?: boolean;
   onChange: (pharmacyId: string) => void;
 
@@ -77,6 +79,8 @@ function toOption(
 export function PharmacySearch({
   value,
   ownerId,
+  label = 'Pharmacy search',
+  statisticsScope = false,
   disabled = false,
   onChange,
   loadOptions,
@@ -114,6 +118,7 @@ export function PharmacySearch({
             {
               ...(requestQuery ? { search: requestQuery } : {}),
               ...(ownerId ? { ownerId } : {}),
+
               limit: 20,
               page,
             },
@@ -172,7 +177,7 @@ export function PharmacySearch({
       loadOptions
         ? loadOptions(value, controller.signal).then((items) => ({ items }))
         : getAdminPharmacyOptions(
-            { search: value, limit: 20 },
+            { search: value, limit: 20, ...(ownerId ? { ownerId } : {}) },
             { signal: controller.signal }
           )
     )
@@ -189,7 +194,7 @@ export function PharmacySearch({
       });
 
     return () => controller.abort();
-  }, [loadOptions, selected?.value, value]);
+  }, [loadOptions, ownerId, selected?.value, value]);
 
   const currentSuggestions = suggestions?.query === debouncedQuery;
 
@@ -221,12 +226,15 @@ export function PharmacySearch({
   return (
     <SearchableSelect
       id={id}
-      label="Pharmacy search"
+      label={label}
       labelAccessory={
         <InfoTooltip
-          label="Pharmacy search help"
-          title="Pharmacy search"
+          label={`${label} help`}
+          title={label}
           icon={<Building2 size={20} aria-hidden="true" />}
+          escapeOverflow
+          preferTopLayer
+          scrollable
           items={[
             {
               title: 'Search fields',
@@ -234,6 +242,17 @@ export function PharmacySearch({
                 'Find a pharmacy by ID, name, email, phone, street address, settlement, or region.',
               icon: <Search size={17} aria-hidden="true" />,
             },
+
+            ...(statisticsScope
+              ? [
+                  {
+                    title: 'Statistics scope',
+                    description:
+                      'All pharmacies combines successful sales across this owner’s pharmacies. Select one pharmacy to review its sales only.',
+                    icon: <Building2 size={17} aria-hidden="true" />,
+                  },
+                ]
+              : []),
           ]}
         />
       }

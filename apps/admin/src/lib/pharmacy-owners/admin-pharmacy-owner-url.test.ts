@@ -257,3 +257,38 @@ test('scoped request filter URL excludes any separately supplied owner ID', () =
     base
   );
 });
+
+//===================================================================
+
+test('owner statistics supports owner-only pharmacy and date segments, without allowing a pharmacy filter in single-pharmacy charts', () => {
+  const base = buildAdminPharmacyOwnerDetailUrl(OWNER_ID, {
+    tab: 'statistics',
+  });
+
+  const segments = [`pharmacy-id-${OWNER_ID}`, 'year-2025', 'month-01'];
+  const period = parseSalesChartSegments(segments, { allowPharmacy: true });
+
+  assert.equal(period.pharmacyId, OWNER_ID);
+
+  assert.equal(
+    buildSalesChartPath(base, period, { allowPharmacy: true }),
+    `${base}/${segments.join('/')}`
+  );
+
+  assert.equal(
+    buildSalesChartPath(base, parseSalesChartSegments([]), {
+      allowPharmacy: true,
+    }),
+    base
+  );
+
+  assert.throws(() => parseSalesChartSegments(segments));
+
+  assert.throws(() =>
+    parseSalesChartSegments([segments[0], segments[0]], { allowPharmacy: true })
+  );
+
+  assert.throws(() =>
+    parseSalesChartSegments(['pharmacy-id-invalid'], { allowPharmacy: true })
+  );
+});

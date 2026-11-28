@@ -79,7 +79,7 @@ export default async function OwnedPharmaciesRoute({
         : undefined;
 
     const canonical =
-      route.tab === 'information' && route.salesSegments.length
+      route.tab === 'statistics' && route.salesSegments.length
         ? buildSalesChartPath(
             base,
             parseSalesChartSegments(route.salesSegments)

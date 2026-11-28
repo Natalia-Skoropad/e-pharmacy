@@ -17,7 +17,8 @@ import type { HttpError } from '../../types/http/errors';
 
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
-import { createManagerOrderService } from '../orders/order-manager-orders.service';
+
+import { getAdminPharmacyOwnerSalesStatisticsService } from '../admin/owners/admin-pharmacy-owner-sales.service';
 
 import {
   getOrdersService,
@@ -26,6 +27,7 @@ import {
 
 import { updateOrderStatusService } from '../orders/order-mutations.service';
 import { getOrderSalesStatisticsService } from '../orders/order-sales-statistics.service';
+import { createManagerOrderService } from '../orders/order-manager-orders.service';
 
 import {
   getClientsService,
@@ -492,6 +494,35 @@ test(
 
       assert.equal(await salesTotal(pharmacyA), 100);
       assert.equal(await salesTotal(pharmacyB), 400);
+
+      const ownerSalesTotal = async (pharmacyId?: string) => {
+        const result = await getAdminPharmacyOwnerSalesStatisticsService(
+          owner,
+          {
+            ...salesQuery,
+            pharmacyId,
+          }
+        );
+
+        return result.points.reduce(
+          (sum, point) =>
+            sum +
+            Object.values(point.values).reduce(
+              (subtotal, value) => subtotal + (value?.amount ?? 0),
+              0
+            ),
+          0
+        );
+      };
+
+      assert.equal(await ownerSalesTotal(), 500);
+      assert.equal(await ownerSalesTotal(pharmacyA.toHexString()), 100);
+      assert.equal(await ownerSalesTotal(pharmacyB.toHexString()), 400);
+
+      await expectStatus(
+        () => ownerSalesTotal(foreignPharmacy.toHexString()),
+        404
+      );
 
       const requestForm = (article: string) => ({
         status: 'new' as const,

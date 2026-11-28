@@ -22,7 +22,6 @@ import {
 } from '@/lib/api/browser/owned-pharmacy-editor.api';
 
 import { show, DateValue, Field, Photo, Contact } from './detail-fields';
-import { OwnedPharmacySalesChart } from './OwnedPharmacySalesChart';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
@@ -259,11 +258,6 @@ export function Information({
           </p>
         )}
       </section>
-
-      <OwnedPharmacySalesChart
-        pharmacyId={pharmacy.id}
-        pharmacyStatus={pharmacy.status}
-      />
     </div>
   );
 }

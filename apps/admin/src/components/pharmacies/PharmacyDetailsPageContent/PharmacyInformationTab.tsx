@@ -1,7 +1,6 @@
 'use client';
 
 import type { ReactNode } from 'react';
-
 import { Clock3, Mail, Phone, UserRoundCog } from 'lucide-react';
 
 import {
@@ -30,8 +29,6 @@ import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
-
-import { PharmacySalesChart } from './PharmacySalesChart';
 
 import css from './PharmacyInformationTab.module.css';
 
@@ -298,8 +295,6 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
           <ScheduleValue value={display(current.workingHours)} />
         </section>
       </div>
-
-      <PharmacySalesChart pharmacyId={detail.id} />
     </div>
   );
 }

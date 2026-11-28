@@ -26,3 +26,8 @@
     width: auto;
   }
 }
+
+.loadingHelp {
+  color: var(--color-info, #2563eb);
+  flex-shrink: 0;
+}

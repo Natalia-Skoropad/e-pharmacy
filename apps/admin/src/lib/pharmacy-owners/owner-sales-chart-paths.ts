@@ -1,3 +1,4 @@
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 import type { SalesPeriodMonth } from '@e-pharmacy/types/primitives';
 
 //===================================================================
@@ -7,6 +8,7 @@ import type { SalesPeriodMonth } from '@e-pharmacy/types/primitives';
 export type SalesChartRouteState = Readonly<{
   year: string;
   month: SalesPeriodMonth;
+  pharmacyId?: string;
 }>;
 
 export const DEFAULT_SALES_CHART_ROUTE: SalesChartRouteState = {
@@ -28,15 +30,24 @@ export function getSalesChartYear(state: SalesChartRouteState): string {
 //===================================================================
 
 export function parseSalesChartSegments(
-  segments: readonly string[]
+  segments: readonly string[],
+  options: { allowPharmacy?: boolean } = {}
 ): SalesChartRouteState {
+  let pharmacyId = '';
   let year = '';
   let month: SalesPeriodMonth = 'all';
 
   const seen = new Set<string>();
 
   for (const segment of segments) {
-    if (segment.startsWith('year-')) {
+    if (segment.startsWith('pharmacy-id-')) {
+      const id = segment.slice('pharmacy-id-'.length);
+
+      if (!options.allowPharmacy || pharmacyId || !isValidObjectId(id))
+        throw new TypeError('Invalid pharmacy filter');
+
+      pharmacyId = id.toLowerCase();
+    } else if (segment.startsWith('year-')) {
       if (seen.has('year')) throw new TypeError('Duplicate year filter');
 
       const rawYear = segment.slice('year-'.length);
@@ -63,16 +74,24 @@ export function parseSalesChartSegments(
     }
   }
 
-  return { year, month };
+  return { year, month, ...(pharmacyId ? { pharmacyId } : {}) };
 }
 
 //===================================================================
 
 export function buildSalesChartPath(
   base: string,
-  state: SalesChartRouteState
+  state: SalesChartRouteState,
+  options: { allowPharmacy?: boolean } = {}
 ): string {
   const segments: string[] = [];
+
+  if (state.pharmacyId) {
+    if (!options.allowPharmacy || !isValidObjectId(state.pharmacyId))
+      throw new TypeError('Invalid pharmacy filter');
+
+    segments.push(`pharmacy-id-${state.pharmacyId.toLowerCase()}`);
+  }
 
   const year =
     state.year || (state.month !== 'all' ? getSalesChartYear(state) : '');

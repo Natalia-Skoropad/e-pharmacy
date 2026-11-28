@@ -50,6 +50,7 @@ export const ADMIN_PHARMACY_DETAIL_TABS = [
   'documents',
   'comments',
   'reviews',
+  'statistics',
   'orders',
   'clients',
   'products',
@@ -294,13 +295,18 @@ export function resolveAdminPharmaciesRoute(
   if (isValidObjectId(segments[0])) {
     const tab = segments[1] ?? 'information';
 
-    if (/^(year|month)-/.test(tab)) {
+    if (
+      (tab === 'statistics' && segments.length > 2) ||
+      /^(year|month)-/.test(tab)
+    ) {
       try {
         return {
           kind: 'detail',
           pharmacyId: segments[0].toLowerCase(),
-          tab: 'information',
-          salesPeriod: parseSalesChartSegments(segments.slice(1)),
+          tab: 'statistics',
+          salesPeriod: parseSalesChartSegments(
+            segments.slice(tab === 'statistics' ? 2 : 1)
+          ),
         };
       } catch {
         return { kind: 'invalid' };

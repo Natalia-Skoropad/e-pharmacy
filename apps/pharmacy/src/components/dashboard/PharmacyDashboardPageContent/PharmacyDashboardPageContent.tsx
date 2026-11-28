@@ -2,15 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-import {
-  Boxes,
-  FilePlus2,
-  LayoutDashboard,
-  PackageSearch,
-  ShoppingBag,
-  Users,
-} from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
@@ -32,6 +24,7 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 import { buildOrdersPath } from '@/lib/orders/order-paths';
 
 import { DEFAULT_ORDERS_FILTERS } from '@/lib/orders/orders-filters';
+
 import {
   buildClientsPath,
   DEFAULT_CLIENTS_FILTERS,
@@ -57,7 +50,11 @@ import {
   useDashboardResource,
 } from './dashboard-resources';
 
-import { DashboardStatisticsSection } from './DashboardStatisticsSection';
+import {
+  DASHBOARD_SECTIONS,
+  DashboardStatisticsSection,
+} from './DashboardStatisticsSection';
+
 import { DashboardSalesChart } from './DashboardSalesChart';
 
 import css from './PharmacyDashboardPageContent.module.css';
@@ -71,12 +68,8 @@ function GlobalCatalogStatistics() {
   return (
     <>
       <DashboardStatisticsSection
-        id="all-products-stats-title"
-        title="All product statistics"
-        description="Global catalog products and their availability in your pharmacies."
-        icon={PackageSearch}
+        {...DASHBOARD_SECTIONS.allProducts}
         href={PHARMACY_ROUTES.ALL_PRODUCTS}
-        actionLabel="View all products"
         resource={allProducts}
       >
         {(counts) => (
@@ -99,12 +92,8 @@ function GlobalCatalogStatistics() {
       </DashboardStatisticsSection>
 
       <DashboardStatisticsSection
-        id="requests-stats-title"
-        title="Product request statistics"
-        description="Product requests created by your owner account."
-        icon={FilePlus2}
+        {...DASHBOARD_SECTIONS.requests}
         href={PHARMACY_ROUTES.PRODUCT_REQUESTS}
-        actionLabel="View requests"
         resource={requests}
       >
         {(counts) => (
@@ -139,12 +128,8 @@ function DashboardOrders({ pharmacyId }: Readonly<{ pharmacyId: string }>) {
 
   return (
     <DashboardStatisticsSection
-      id="orders-stats-title"
-      title="Orders statistics"
-      description="Counts and amounts for the selected period and pharmacy scope."
-      icon={ShoppingBag}
+      {...DASHBOARD_SECTIONS.orders}
       href={buildOrdersPath(filters)}
-      actionLabel="View orders"
       resource={orders}
       filters={
         <SalesChartFilterToolbar
@@ -215,14 +200,9 @@ function PharmacyDashboardPageContent({
       <DashboardSalesChart pharmacyId={pharmacyId} />
 
       <DashboardStatisticsSection
-        id="clients-stats-title"
-        title="Clients statistics"
-        description="Clients associated with the selected pharmacy scope."
-        icon={Users}
+        {...DASHBOARD_SECTIONS.clients}
         href={buildClientsPath(clientsFilters)}
-        actionLabel="View clients"
         resource={clients}
-        count={3}
       >
         {(counts) => (
           <ClientStatistics
@@ -238,12 +218,8 @@ function PharmacyDashboardPageContent({
       </DashboardStatisticsSection>
 
       <DashboardStatisticsSection
-        id="own-products-stats-title"
-        title="Own product statistics"
-        description="Stock, reservations and availability across the selected pharmacy scope."
-        icon={Boxes}
+        {...DASHBOARD_SECTIONS.ownProducts}
         href={buildOwnProductsPath(productFilters)}
-        actionLabel="View own products"
         resource={products}
       >
         {(counts) => (

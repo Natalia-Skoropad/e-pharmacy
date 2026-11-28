@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   BadgeCheck,
   Ban,
+  ChartNoAxesCombined,
   Building2,
   CircleCheckBig,
   CirclePlus,
@@ -327,6 +328,11 @@ function PharmacyOwnerDetailsPageContent({
       value: 'personal',
       label: 'Personal info',
       icon: <UserRound size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'statistics',
+      label: 'Statistics',
+      icon: <ChartNoAxesCombined size={17} aria-hidden="true" />,
     },
     {
       value: 'pharmacies',
@@ -782,8 +788,24 @@ function PharmacyOwnerDetailsPageContent({
                   </section>
                 </div>
               )}
-              {detail ? <PharmacySalesChart ownerId={ownerId} /> : null}
             </div>
+          ) : activeTab === 'statistics' ? (
+            <section className={css.personalTabStack}>
+              <ProfileSectionHeader
+                title="Statistics"
+                icon={<ChartNoAxesCombined size={23} />}
+                description="Review successful sales for all pharmacies of this owner or one selected pharmacy."
+              />
+              {detail && !isLoading ? (
+                <PharmacySalesChart ownerId={ownerId} />
+              ) : (
+                <ProfileResourceState
+                  variant="loading"
+                  title="Loading owner details"
+                  description="The pharmacy owner overview is being loaded."
+                />
+              )}
+            </section>
           ) : activeTab === 'pharmacies' ? (
             <LinkedPharmaciesTab
               ownerId={ownerId}

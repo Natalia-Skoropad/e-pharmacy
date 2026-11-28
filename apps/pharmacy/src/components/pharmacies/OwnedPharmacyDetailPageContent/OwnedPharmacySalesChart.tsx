@@ -58,7 +58,7 @@ async function getOwnedPharmacySales(
 
 //===================================================================
 
-/** Pharmacy-specific sales chart, mounted only on the information tab. */
+/** Pharmacy-specific sales chart, mounted only on the Statistics tab. */
 export function OwnedPharmacySalesChart({
   pharmacyId,
   pharmacyStatus,
@@ -68,13 +68,10 @@ export function OwnedPharmacySalesChart({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const base = buildOwnedPharmacyDetailUrl(pharmacyId);
+  const base = buildOwnedPharmacyDetailUrl(pharmacyId, 'statistics');
 
   const segments = pathname.startsWith(`${base}/`)
-    ? pathname
-        .slice(base.length + 1)
-        .split('/')
-        .filter((item) => item !== 'information')
+    ? pathname.slice(base.length + 1).split('/')
     : [];
 
   const period = parseSalesChartSegments(segments);

@@ -248,6 +248,7 @@ export function getPharmacyBreadcrumbsByPathname(
       documents: 'Documents',
       comments: 'Comments',
       reviews: 'Reviews',
+      statistics: 'Statistics',
       orders: 'Orders',
       clients: 'Clients',
       products: 'Products',
@@ -260,11 +261,15 @@ export function getPharmacyBreadcrumbsByPathname(
         href: `${PHARMACY_ROUTES.PHARMACIES}/${pharmacyId}`,
       };
 
-      return tab && tabNames[tab]
+      const tabLabel = /^(year|month)-/.test(tab ?? '')
+        ? 'Statistics'
+        : tabNames[tab];
+
+      return tabLabel
         ? [
             { label: 'Pharmacies', href: PHARMACY_ROUTES.PHARMACIES },
             detail,
-            { label: tabNames[tab] },
+            { label: tabLabel },
           ]
         : getPharmacyBreadcrumbs(
             { label: detail.label },

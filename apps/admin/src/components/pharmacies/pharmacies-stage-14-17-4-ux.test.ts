@@ -96,10 +96,19 @@ test('14.17.4: published identity, copy controls, owner link, dates and chart ar
   );
 
   assert.match(info, /className=\{css\.ownerIdRow\}/);
-  assert.match(info, /<PharmacySalesChart pharmacyId=\{detail\.id\}/);
-
+  assert.doesNotMatch(info, /<PharmacySalesChart/);
   assert.doesNotMatch(info, /Published data \/ Submitted changes/);
-  assert.match(info, /<PharmacySalesChart/);
+
+  const page = read(
+    './PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'
+  );
+
+  assert.match(page, /activeTab === 'statistics' && detail/);
+  assert.match(page, /<PharmacySalesChart pharmacyId=\{pharmacyId\}/);
+
+  assert.ok(
+    page.indexOf("value: 'statistics'") < page.indexOf("value: 'orders'")
+  );
 });
 
 //===================================================================

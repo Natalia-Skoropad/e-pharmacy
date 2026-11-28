@@ -18,6 +18,7 @@ export type StatsLoadingSkeletonProps = Readonly<{
   tabletColumns?: number;
   label?: string;
   className?: string;
+  metaCount?: number;
 }>;
 
 //===================================================================
@@ -28,6 +29,7 @@ export function StatsLoadingSkeleton({
   tabletColumns = 2,
   label = 'Loading statistics',
   className,
+  metaCount = 0,
 }: StatsLoadingSkeletonProps) {
   const safeCount = Math.max(1, Math.min(12, Math.trunc(count)));
 
@@ -54,6 +56,9 @@ export function StatsLoadingSkeleton({
             </div>
 
             <span className={clsx(css.block, css.value)} />
+            {index < metaCount ? (
+              <span className={clsx(css.block, css.meta)} />
+            ) : null}
           </article>
         ))}
       </div>

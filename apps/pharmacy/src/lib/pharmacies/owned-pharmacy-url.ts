@@ -66,6 +66,7 @@ export const OWNED_PHARMACY_DETAIL_TABS = [
   'documents',
   'comments',
   'reviews',
+  'statistics',
   'orders',
   'clients',
   'products',
@@ -305,12 +306,14 @@ export function resolveOwnedPharmaciesRoute(
   if (!segments?.length) return { kind: 'list', filters: [] };
 
   if (isValidObjectId(segments[0])) {
-    // The information tab is the default route; chart filters follow the ID
-    // directly rather than introducing a redundant /information segment.
+    // Legacy chart links resolve to the dedicated Statistics tab.
     const inlineSales =
       segments[1]?.startsWith('year-') || segments[1]?.startsWith('month-');
 
-    const tab = inlineSales ? 'information' : (segments[1] ?? 'information');
+    const tab =
+      inlineSales || (segments[1] === 'information' && segments.length > 2)
+        ? 'statistics'
+        : (segments[1] ?? 'information');
 
     if (!OWNED_PHARMACY_DETAIL_TABS.includes(tab as OwnedPharmacyDetailTab)) {
       return { kind: 'invalid' };
@@ -318,7 +321,7 @@ export function resolveOwnedPharmaciesRoute(
 
     const tail = segments.slice(inlineSales ? 1 : 2);
 
-    if (tab === 'information' && tail.length) {
+    if (tab === 'statistics' && tail.length) {
       try {
         parseSalesChartSegments(tail);
       } catch {
@@ -358,7 +361,7 @@ export function resolveOwnedPharmaciesRoute(
       clientSegments: tab === 'clients' ? tail : [],
       orderSegments: tab === 'orders' ? tail : [],
       productSegments: tab === 'products' ? tail : [],
-      salesSegments: tab === 'information' ? tail : [],
+      salesSegments: tab === 'statistics' ? tail : [],
     };
   }
 

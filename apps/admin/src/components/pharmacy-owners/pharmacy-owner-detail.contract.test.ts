@@ -140,3 +140,29 @@ test('order cancellation reuses the shared reason modal styles and behavior', ()
   assert.match(sharedModal, /tone === 'danger'/);
   assert.match(sharedModal, /requestError/);
 });
+
+//===================================================================
+
+test('owner sales chart is lazy and owner-scoped on the new Statistics tab', () => {
+  const page = read(
+    './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.tsx'
+  );
+
+  const chart = read(
+    '../pharmacies/PharmacyDetailsPageContent/PharmacySalesChart.tsx'
+  );
+
+  assert.ok(
+    page.indexOf("value: 'statistics'") < page.indexOf("value: 'pharmacies'")
+  );
+
+  assert.match(
+    page,
+    /activeTab === 'statistics'[\s\S]*?<PharmacySalesChart ownerId=\{ownerId\}/
+  );
+
+  assert.match(chart, /getAdminPharmacyOwnerPharmacies\(\s*ownerId,/);
+  assert.match(chart, /pharmacyId: selectedPharmacyId/);
+  assert.match(chart, /label="Select pharmacy"/);
+  assert.match(chart, /router\.push\(base, \{ scroll: false \}\)/);
+});

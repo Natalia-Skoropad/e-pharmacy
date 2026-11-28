@@ -187,7 +187,20 @@ test('owner product tabs and sales filters retain canonical breadcrumbs', () => 
     getAdminBreadcrumbsByPathname(`${base}/year-2025/month-02`, 'Owner'),
     [
       { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
-      { label: 'Owner' },
+      { label: 'Owner', href: base },
+      { label: 'Statistics' },
+    ]
+  );
+
+  assert.deepEqual(
+    getAdminBreadcrumbsByPathname(
+      `${base}/statistics/year-2025/month-02`,
+      'Owner'
+    ),
+    [
+      { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
+      { label: 'Owner', href: base },
+      { label: 'Statistics' },
     ]
   );
 });

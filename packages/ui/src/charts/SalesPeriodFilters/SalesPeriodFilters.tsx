@@ -26,6 +26,7 @@ type SalesPeriodFiltersProps = Readonly<{
   yearsBack?: number;
   showAppliedPeriod?: boolean;
   onReset?: () => void;
+  disabled?: boolean;
 }>;
 
 //===================================================================
@@ -92,6 +93,7 @@ function SalesPeriodFilters({
   yearsBack = 2,
   showAppliedPeriod = false,
   onReset,
+  disabled = false,
 }: SalesPeriodFiltersProps) {
   const yearOptions = Array.from({ length: yearsBack + 1 }, (_, index) => {
     const optionYear = CURRENT_YEAR - index;
@@ -109,6 +111,7 @@ function SalesPeriodFilters({
         id={`${idPrefix}-year`}
         label="Year"
         value={year}
+        disabled={disabled}
         isActive={year !== String(CURRENT_YEAR)}
         options={yearOptions}
         escapeOverflow
@@ -119,6 +122,7 @@ function SalesPeriodFilters({
         id={`${idPrefix}-month`}
         label="Month"
         value={month}
+        disabled={disabled}
         isActive={month !== 'all'}
         options={MONTH_OPTIONS}
         escapeOverflow
@@ -133,6 +137,7 @@ function SalesPeriodFilters({
           className={css.resetButton}
           iconLeft={<RotateCcw size={17} aria-hidden="true" />}
           onClick={onReset}
+          disabled={disabled}
         >
           Reset filters
         </Button>

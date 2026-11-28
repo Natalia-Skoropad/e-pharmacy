@@ -182,5 +182,5 @@ test('detail requests are keyed and state updates stay asynchronous', async () =
   );
 
   assert.match(content, /const pharmacyName = detail\?\.current\.name;/);
-  assert.match(content, /\}, \[pharmacyName\]\);/);
+  assert.match(content, /\}, \[pathname, pharmacyName\]\);/);
 });
