@@ -1,5 +1,8 @@
 import { Types } from 'mongoose';
 
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { httpError } from '../../utils/http/httpError';
+
 import { Order } from '../../models/orders/order.model';
 import type { OrderSalesStatisticsQuery } from '../../schemas/orders/order.schema';
 import { getOrderSalesStatisticsForPharmaciesService } from '../orders/order-sales-statistics.service';
@@ -10,15 +13,36 @@ import { getClientByIdService } from './client-registry.service';
 //===============================================================
 
 /** Resolve the persisted owner scope first; never use the selected pharmacy. */
-async function getClientAnalyticsScope(userId: string, clientId: string) {
+async function getClientAnalyticsScope(
+  userId: string,
+  clientId: string,
+  selectedPharmacyId?: string
+) {
   const { client } = await getClientByIdService(userId, clientId, true);
   const ownedIds = await getOwnedClientPharmacyIds(userId);
+
+  if (
+    selectedPharmacyId &&
+    !ownedIds.some((id) => String(id) === selectedPharmacyId.toLowerCase())
+  ) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Pharmacy does not belong to this owner.'
+    );
+  }
 
   const pharmacyIds = client.isDefault
     ? ownedIds.filter((id) => String(id) === client.pharmacyId)
     : ownedIds;
 
-  return { clientObjectId: new Types.ObjectId(clientId), pharmacyIds };
+  return {
+    clientObjectId: new Types.ObjectId(clientId),
+
+    pharmacyIds: pharmacyIds.filter(
+      (id) =>
+        !selectedPharmacyId || String(id) === selectedPharmacyId.toLowerCase()
+    ),
+  };
 }
 
 //===============================================================
@@ -78,7 +102,11 @@ export async function getClientSalesStatisticsService(
   clientId: string,
   query: OrderSalesStatisticsQuery
 ) {
-  const { pharmacyIds } = await getClientAnalyticsScope(userId, clientId);
+  const { pharmacyIds } = await getClientAnalyticsScope(
+    userId,
+    clientId,
+    query.pharmacyId
+  );
 
   return getOrderSalesStatisticsForPharmaciesService(
     pharmacyIds.map(String),

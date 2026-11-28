@@ -227,6 +227,44 @@ test(
       });
 
       assert.equal(options.items.length, 0);
+      assert.equal(options.hasMore, false);
+
+      const optionsPage1 = await listOwnedPharmacyOptionsService(
+        String(owner),
+        {
+          scope: 'owner',
+          limit: 1,
+          page: 1,
+        }
+      );
+
+      const optionsPage2 = await listOwnedPharmacyOptionsService(
+        String(owner),
+        {
+          scope: 'owner',
+          limit: 1,
+          page: 2,
+        }
+      );
+
+      assert.equal(optionsPage1.hasMore, true);
+      assert.equal(optionsPage2.hasMore, false);
+
+      assert.deepEqual(
+        new Set(
+          [...optionsPage1.items, ...optionsPage2.items].map((item) => item.id)
+        ),
+
+        new Set([String(first), String(second)])
+      );
+
+      const managerOwnerOptions = await listOwnedPharmacyOptionsService(
+        String(manager),
+        { scope: 'owner', limit: 20, page: 1 }
+      );
+
+      assert.deepEqual(managerOwnerOptions.items, []);
+      assert.equal(managerOwnerOptions.hasMore, false);
 
       const detail = await getOwnedPharmacyDetailService(
         String(owner),

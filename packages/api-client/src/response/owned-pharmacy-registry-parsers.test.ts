@@ -87,6 +87,15 @@ test('owned pharmacy options and totals retain only scope-safe fields', () => {
     'membershipRole',
   ]);
 
+  assert.equal(
+    parseOwnedPharmacyOptionsResponse({ items: [], hasMore: true }).hasMore,
+    true
+  );
+
+  assert.throws(() =>
+    parseOwnedPharmacyOptionsResponse({ items: [], hasMore: 'true' })
+  );
+
   const totals = parseOwnedPharmacyStatistics({
     all: 2,
     new: 1,

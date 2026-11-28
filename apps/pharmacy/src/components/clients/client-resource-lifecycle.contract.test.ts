@@ -278,7 +278,8 @@ test('client resources expose explicit local retry controls without clearing las
   ]);
 
   assert.match(listSource, /const \[retryVersion, setRetryVersion\]/);
-  assert.match(listSource, /Retry clients/);
+  assert.match(listSource, /title="Clients could not be loaded"/);
+  assert.match(listSource, /retryLabel="Try again"/);
   assert.match(listSource, /retryVersion/);
 
   const [orderStats, productTab] = await Promise.all([

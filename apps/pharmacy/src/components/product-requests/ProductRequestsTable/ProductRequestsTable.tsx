@@ -57,10 +57,12 @@ function ProductRequestsTable({
         key: 'createdAt',
         title: <TableHeaderTitle parts={['Created', 'date']} />,
         render: (request) => <TableDateTime value={request.createdAt} />,
+        width: '60px',
       },
       {
         key: 'requestNumber',
         title: <TableHeaderTitle parts={['Request', 'number']} />,
+        width: '80px',
 
         render: (request) => (
           <TextActionButton href={getPharmacyRequestPath(request.id)}>
@@ -134,6 +136,7 @@ function ProductRequestsTable({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Request', 'status']} />,
+        width: '100px',
 
         render: (request) => (
           <span className={css.statusCell}>

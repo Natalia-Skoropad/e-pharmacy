@@ -413,6 +413,7 @@ export function OwnProductStockMovementTab({
                   productError ??
                   'Could not load the reserved order values. Try again.'
                 }
+                sideActionOnDesktop
                 retryLabel="Try again"
                 onRetry={onRetryProduct}
               />
@@ -474,7 +475,8 @@ export function OwnProductStockMovementTab({
                     variant="error"
                     title="Stock movement could not be loaded"
                     description="Stock movement history is temporarily unavailable."
-                    retryLabel="Retry stock movement"
+                    sideActionOnDesktop
+                    retryLabel="Try again"
                     onRetry={() => setStockRetry((value) => value + 1)}
                   />
                 ) : (

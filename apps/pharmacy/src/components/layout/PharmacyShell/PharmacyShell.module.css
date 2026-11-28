@@ -13,6 +13,23 @@
   min-width: 0;
 }
 
+.workspace {
+  min-width: 0;
+}
+
+.loadingHeaderAction {
+  display: block;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--color-white-alpha-48);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-white-alpha-22);
+}
+
+.loadingHeaderUser {
+  width: 120px;
+}
+
 .content {
   width: 100%;
   min-width: 0;

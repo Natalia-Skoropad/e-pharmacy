@@ -569,7 +569,7 @@ function AllProductsPageContent({
             variant="error"
             title="Products are temporarily unavailable"
             description={loadError}
-            retryLabel="Retry products"
+            retryLabel="Try again"
             sideActionOnDesktop
             onRetry={() => setRefreshVersion((version) => version + 1)}
           />

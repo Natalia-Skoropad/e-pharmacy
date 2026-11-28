@@ -81,11 +81,12 @@ function OrdersTable({
         key: 'orderDate',
         title: <TableHeaderTitle parts={['Order', 'date']} />,
         render: (order) => <TableDateTime value={order.orderDate} />,
+        width: '60px',
       },
       {
         key: 'orderNumber',
         title: <TableHeaderTitle parts={['Order', 'number']} />,
-        width: '110px',
+        width: '130px',
 
         render: (order) => (
           <TextActionButton href={getPharmacyOrderPath(order.id)}>
@@ -99,6 +100,7 @@ function OrdersTable({
             {
               key: 'pharmacy',
               title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
+              width: '120px',
 
               render: (order: PharmacyOrderRow) => (
                 <span style={{ overflowWrap: 'anywhere' }}>
@@ -132,7 +134,7 @@ function OrdersTable({
       {
         key: 'client',
         title: <TableHeaderTitle parts={['Client', 'name']} />,
-
+        width: '110px',
         render: (order) => (
           <span style={{ overflowWrap: 'anywhere' }}>
             {order.clientId ? (

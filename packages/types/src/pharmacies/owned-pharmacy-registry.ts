@@ -59,6 +59,7 @@ export type OwnedPharmacyOption = Readonly<{
 
 export type OwnedPharmacyOptionsResponse = Readonly<{
   items: readonly OwnedPharmacyOption[];
+  hasMore?: boolean;
 }>;
 
 export type OwnedPharmacyDetailResponse = Readonly<{

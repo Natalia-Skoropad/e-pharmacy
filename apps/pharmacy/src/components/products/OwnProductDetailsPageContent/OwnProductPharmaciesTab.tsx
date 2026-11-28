@@ -358,6 +358,7 @@ export function OwnProductPharmaciesTab({
               variant="error"
               title="Product pharmacies could not be loaded"
               description="Please try loading the pharmacies again."
+              sideActionOnDesktop
               retryLabel="Try again"
               onRetry={() => {
                 onRetryProduct();

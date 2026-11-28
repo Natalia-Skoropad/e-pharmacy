@@ -377,6 +377,7 @@ export function OwnedPharmaciesPageContent({
       {
         key: 'id',
         title: <TableHeaderTitle parts={['Pharmacy', 'ID']} />,
+        width: '80px',
 
         render: (pharmacy) => (
           <TextActionButton

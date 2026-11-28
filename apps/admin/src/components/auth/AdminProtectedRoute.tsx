@@ -1,10 +1,13 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { RoleProtectedRoute } from '@e-pharmacy/auth/next';
 import { useAuth } from '@e-pharmacy/auth/react';
+
 import { ErrorPage, PageLoader } from '@e-pharmacy/ui/status-pages';
+import { ProfilePageSkeleton } from '@e-pharmacy/ui/profile';
 
 import { ADMIN_ROUTES } from '@/lib/routes';
 import { canAccessAdminPrivateRoutes } from '@/lib/auth/admin-route-access';
@@ -72,6 +75,7 @@ function ConfigurationErrorState({
 
 export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   const { user } = useAuth();
+  const pathname = usePathname();
 
   const clientDestination =
     user?.role === 'client' && user.status === 'active'
@@ -104,7 +108,13 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
       loginPath={ADMIN_ROUTES.LOGIN}
       forbiddenPath={forbiddenPath}
       resolveExternalRedirect={resolveTrustedAdminExternalRedirect}
-      loadingFallback={<PageLoader label="Checking admin access..." />}
+      loadingFallback={
+        pathname === ADMIN_ROUTES.PROFILE ? (
+          <ProfilePageSkeleton label="Loading admin profile" />
+        ) : (
+          <PageLoader label="Checking admin access..." />
+        )
+      }
       authUnavailableFallback={<AuthUnavailableState />}
       redirectingFallback={<PageLoader label="Redirecting to login..." />}
       forbiddenFallback={

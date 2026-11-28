@@ -1025,23 +1025,21 @@ export function ActivityHistory({
             variant="error"
             title="Activity history is unavailable"
             description={listError}
+            sideActionOnDesktop
             retryLabel="Try again"
             onRetry={retryList}
           />
         ) : (
           <>
             {listError && data ? (
-              <div className={css.inlineError} role="alert">
-                <span>{listError}</span>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={retryList}
-                >
-                  Retry
-                </Button>
-              </div>
+              <ProfileResourceState
+                variant="error"
+                title="Activity history could not be refreshed"
+                description={listError}
+                retryLabel="Try again"
+                sideActionOnDesktop
+                onRetry={retryList}
+              />
             ) : null}
 
             <DataTable

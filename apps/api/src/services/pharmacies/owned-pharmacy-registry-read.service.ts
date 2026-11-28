@@ -471,14 +471,17 @@ export async function listOwnedPharmacyOptionsService(
   const userId = await assertRegistryUser(actorUserId);
 
   const options = await Pharmacy.aggregate<RegistryOption>([
-    ...membershipStages(userId),
+    ...(query.scope === 'owner'
+      ? [{ $match: { ownerId: userId } }]
+      : membershipStages(userId)),
 
     ...(query.search
       ? [{ $match: { $or: searchConditions(query.search) } }]
       : []),
 
     { $sort: { name: 1, _id: 1 } },
-    { $limit: query.limit },
+    { $skip: ((query.page ?? 1) - 1) * query.limit },
+    { $limit: query.limit + 1 },
 
     {
       $project: {
@@ -498,7 +501,9 @@ export async function listOwnedPharmacyOptionsService(
   ]);
 
   return {
-    items: options.map((item) => ({
+    hasMore: options.length > query.limit,
+
+    items: options.slice(0, query.limit).map((item) => ({
       id: item.id,
       name: item.name,
       status: item.status,

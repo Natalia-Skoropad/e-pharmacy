@@ -162,10 +162,26 @@ const dashboardSource = await readFile(
   'utf8'
 );
 
-assert.match(
-  dashboardSource,
-  /Promise\.allSettled\s*\(/,
-  'Dashboard resources must keep independent failure boundaries via Promise.allSettled.'
+const dashboardResourcesSource = await readFile(
+  path.join(
+    root,
+    'apps/pharmacy/src/components/dashboard/PharmacyDashboardPageContent/dashboard-resources.ts'
+  ),
+  'utf8'
+);
+
+assert.match(dashboardResourcesSource, /function useDashboardResource/);
+assert.match(dashboardResourcesSource, /snapshot\?\.key === key/);
+assert.match(dashboardResourcesSource, /controller\.abort\(\)/);
+assert.match(dashboardResourcesSource, /\.catch\(/);
+assert.match(dashboardSource, /useDashboardResource\(loadClients/);
+assert.match(dashboardSource, /useDashboardResource\(loadOwnProducts/);
+assert.match(dashboardSource, /useDashboardResource\(loadOrders/);
+
+assert.doesNotMatch(
+  dashboardResourcesSource,
+  /Promise\.all\s*\(/,
+  'Dashboard resources must retain independent request and failure boundaries.'
 );
 
 assert.doesNotMatch(

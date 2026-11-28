@@ -181,16 +181,16 @@ test('product management list failures expose explicit retry generations', async
 
   assert.match(allProducts, /title="Product statistics could not be loaded"/);
   assert.match(allProducts, /onRetry=\{reloadStatistics\}/);
-  assert.match(allProducts, /Retry products/);
+  assert.match(allProducts, /retryLabel="Try again"/);
   assert.match(allProducts, /setRefreshVersion/);
 
-  assert.match(ownProducts, /Retry own products/);
+  assert.match(ownProducts, /retryLabel="Try again"/);
   assert.match(ownProducts, /setRefreshVersion/);
 
   assert.match(productRequests, /const \[retryVersion, setRetryVersion\]/);
   assert.match(productRequests, /onRetry=\{reloadStatistics\}/);
   assert.match(productRequests, /StatsLoadingSkeleton/);
-  assert.match(productRequests, /Retry product requests/);
+  assert.match(productRequests, /title="Product requests could not be loaded"/);
 });
 
 //===================================================================
@@ -259,6 +259,6 @@ test('successful product mutations update local rows and retain the current refr
   assert.match(ownProductsMutation, /applyRemovedOwnProductStatistics/);
   assert.doesNotMatch(ownProductsMutation, /setRefreshVersion/);
 
-  assert.match(allProducts, /Retry products/);
-  assert.match(ownProducts, /Retry own products/);
+  assert.match(allProducts, /retryLabel="Try again"/);
+  assert.match(ownProducts, /retryLabel="Try again"/);
 });

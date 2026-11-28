@@ -3,13 +3,11 @@ import css from './Profile.module.css';
 //===================================================================
 
 // Keep the identity card, tabs and form footprint while the profile resolves.
-export function ProfilePageSkeleton() {
+export function ProfilePageSkeleton({
+  label = 'Loading owner profile',
+}: Readonly<{ label?: string }> = {}) {
   return (
-    <main
-      className={css.tabsLayout}
-      aria-label="Loading owner profile"
-      aria-busy="true"
-    >
+    <main className={css.tabsLayout} aria-label={label} aria-busy="true">
       <aside className={css.tabsSidebar} aria-hidden="true">
         <div className={css.profileSkeletonPhotoRow}>
           <span

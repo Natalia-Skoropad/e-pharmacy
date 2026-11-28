@@ -14,6 +14,8 @@ import {
   getSharedLoginUrlForCurrentPharmacyPage,
 } from '@/lib/auth/shared-auth';
 
+import { DashboardShellSkeleton } from '@/components/layout/PharmacyShell/DashboardShellSkeleton';
+
 //===================================================================
 
 type PharmacyProtectedRouteProps = Readonly<{
@@ -58,9 +60,11 @@ export function PharmacyProtectedRoute({
     if (!isAuthenticated) {
       const hash = typeof window === 'undefined' ? '' : window.location.hash;
       const currentPath = `${pathname}${queryString ? `?${queryString}` : ''}${hash}`;
+
       window.location.assign(
         getSharedLoginUrlForCurrentPharmacyPage(currentPath)
       );
+
       return;
     }
 
@@ -90,7 +94,11 @@ export function PharmacyProtectedRoute({
   ]);
 
   if (isBootstrapping) {
-    return <PageLoader label="Checking pharmacy access..." />;
+    return /^\/pharmacy\/dashboard(?:\/|$)/.test(pathname) ? (
+      <DashboardShellSkeleton />
+    ) : (
+      <PageLoader label="Checking pharmacy access..." />
+    );
   }
 
   if (isUnavailable) {

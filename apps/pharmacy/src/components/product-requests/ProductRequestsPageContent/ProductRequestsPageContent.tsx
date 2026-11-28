@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { FilePlus2, Plus } from 'lucide-react';
 
-import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { LinkButton, PaginationView } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
-import { StatsLoadingSkeleton, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
 import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
@@ -427,42 +427,35 @@ function ProductRequestsPageContent({
         </div>
 
         {loadError ? (
-          <div role="alert">
-            <StatusBanner
-              tone="danger"
-              title="Product requests are temporarily unavailable"
-              message={loadError}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => setRetryVersion((version) => version + 1)}
-            >
-              Retry product requests
-            </Button>
-          </div>
-        ) : null}
-
-        <ProductRequestsTable
-          requests={requests}
-          categoryDirectory={categoryDirectory}
-          isLoading={isLoading}
-          emptyMessage={
-            loadError
-              ? 'Product requests are temporarily unavailable.'
-              : hasActiveFilters
+          <ProfileResourceState
+            variant="error"
+            title="Product requests could not be loaded"
+            description={loadError}
+            retryLabel="Try again"
+            sideActionOnDesktop
+            onRetry={() => setRetryVersion((version) => version + 1)}
+          />
+        ) : (
+          <ProductRequestsTable
+            requests={requests}
+            categoryDirectory={categoryDirectory}
+            isLoading={isLoading}
+            emptyMessage={
+              hasActiveFilters
                 ? 'No requests found for the selected filters.'
                 : 'You have no product creation requests yet.'
-          }
-        />
+            }
+          />
+        )}
 
-        <PaginationView
-          currentPage={currentPage}
-          totalPages={totalPages}
-          ariaLabel="Product requests pagination"
-          onPageChange={setCurrentPage}
-        />
+        {!loadError ? (
+          <PaginationView
+            currentPage={currentPage}
+            totalPages={totalPages}
+            ariaLabel="Product requests pagination"
+            onPageChange={setCurrentPage}
+          />
+        ) : null}
       </section>
 
       {isFiltersOpen ? (

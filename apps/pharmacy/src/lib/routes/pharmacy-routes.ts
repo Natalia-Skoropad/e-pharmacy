@@ -91,12 +91,17 @@ export function matchPharmacyRoute(pathname: string): PharmacyRouteMatch {
 
   if (
     normalizedPathname === PHARMACY_ROUTES.ROOT ||
-    normalizedPathname === PHARMACY_ROUTES.DASHBOARD
+    normalizedPathname === PHARMACY_ROUTES.DASHBOARD ||
+    /^\/pharmacy\/dashboard\/pharmacy-id-[a-f0-9]{24}$/i.test(
+      normalizedPathname
+    )
   ) {
     return {
       family: 'dashboard',
       basePath: PHARMACY_ROUTES.DASHBOARD,
-      segments: [],
+
+      segments:
+        getRouteSegments(normalizedPathname, PHARMACY_ROUTES.DASHBOARD) ?? [],
     };
   }
 
@@ -107,6 +112,7 @@ export function matchPharmacyRoute(pathname: string): PharmacyRouteMatch {
     return {
       family: 'profile',
       basePath: PHARMACY_ROUTES.PROFILE,
+
       segments:
         getRouteSegments(normalizedPathname, PHARMACY_ROUTES.PROFILE) ?? [],
     };

@@ -224,7 +224,14 @@ export function parseOwnedPharmacyOptionsResponse(
   if (!Array.isArray(response.items))
     throw new TypeError('Invalid pharmacy options.');
 
+  if (response.hasMore !== undefined && typeof response.hasMore !== 'boolean')
+    throw new TypeError('Invalid pharmacy options pagination.');
+
   return {
+    ...(typeof response.hasMore === 'boolean'
+      ? { hasMore: response.hasMore }
+      : {}),
+
     items: response.items.map((entry: unknown): OwnedPharmacyOption => {
       const row = record(entry);
       const base = parseAdminPharmacyOption(entry);

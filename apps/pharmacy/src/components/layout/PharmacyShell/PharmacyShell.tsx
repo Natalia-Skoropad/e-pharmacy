@@ -20,6 +20,7 @@ import {
 import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';
 import { PharmacyHeader } from '@/components/layout/PharmacyHeader';
 import { PharmacySidebar } from '@/components/layout/PharmacySidebar';
+import { DashboardShellSkeleton } from '@/components/layout/PharmacyShell/DashboardShellSkeleton';
 
 import { PharmacyCabinetBoundary } from './PharmacyCabinetBoundary';
 
@@ -136,8 +137,19 @@ function PharmacyShellWorkspace({ children }: PharmacyShellProps) {
 //===================================================================
 
 export function PharmacyShell({ children }: PharmacyShellProps) {
+  const pathname = usePathname();
+  const dashboard = /^\/pharmacy\/dashboard(?:\/|$)/.test(pathname);
+
   return (
-    <Suspense fallback={<PageLoader label="Loading pharmacy cabinet..." />}>
+    <Suspense
+      fallback={
+        dashboard ? (
+          <DashboardShellSkeleton />
+        ) : (
+          <PageLoader label="Loading pharmacy cabinet..." />
+        )
+      }
+    >
       <PharmacyShellContent>{children}</PharmacyShellContent>
     </Suspense>
   );

@@ -196,6 +196,7 @@ export function PharmacySelectionProvider({
   // the legacy pharmacyId query. Preserve unrelated query parameters.
   useEffect(() => {
     if (
+      !/^\/pharmacy\/dashboard(?:\/|$)/.test(pathname) &&
       !pathname.startsWith('/pharmacy/all-products') &&
       !pathname.startsWith('/pharmacy/product-requests') &&
       !isOwnerOrdersListPath(pathname) &&

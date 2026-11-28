@@ -21,6 +21,8 @@ const search = optionalTrimmedTextSchema({
   maxMessage: 'Search must be at most 120 characters.',
 });
 
+//===============================================================
+
 const status = optionalSchema(
   z.enum([
     PHARMACY_STATUSES.NEW,
@@ -31,6 +33,8 @@ const status = optionalSchema(
     PHARMACY_STATUSES.BLOCKED,
   ])
 );
+
+//===============================================================
 
 const perPage = z.coerce
   .number()
@@ -77,6 +81,8 @@ export const ownedPharmacyRegistryOptionsQuerySchema = z
   .object({
     search,
     limit: z.coerce.number().int().min(1).max(20).default(10),
+    page: z.coerce.number().int().min(1).max(10000).optional(),
+    scope: z.literal('owner').optional(),
   })
 
   .strict();

@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Building2, Search } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
-import type { OwnedPharmacyOption } from '@e-pharmacy/types/pharmacies';
+
+import type {
+  OwnedPharmacyOption,
+  OwnedPharmacyOptionsResponse,
+} from '@e-pharmacy/types/pharmacies';
 
 import { formatInitials } from '@e-pharmacy/ui/data-display';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
@@ -34,7 +38,14 @@ type OwnedPharmacySearchProps = Readonly<{
   id?: string;
   label?: string;
   explainStatistics?: boolean;
-  statisticsContext?: 'products' | 'orders';
+
+  statisticsContext?:
+    | 'products'
+    | 'orders'
+    | 'dashboard'
+    | 'clients'
+    | 'client-sales';
+
   isOptionsLoading?: boolean;
 }>;
 
@@ -91,10 +102,26 @@ export function OwnedPharmacySearch({
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
 
+  const scope = ['dashboard', 'clients', 'client-sales'].includes(
+    statisticsContext
+  )
+    ? ('owner' as const)
+    : undefined;
+
+  const moreController = useRef<AbortController | null>(null);
+
+  const [moreState, setMoreState] = useState<{
+    query: string;
+    loading: boolean;
+    error: boolean;
+  } | null>(null);
+
   const [suggestions, setSuggestions] = useState<Readonly<{
     query: string;
     items: readonly OwnedPharmacyOption[];
     unavailable: boolean;
+    page: number;
+    hasMore: boolean;
   }> | null>(null);
 
   const [selected, setSelected] = useState<Readonly<{
@@ -106,13 +133,18 @@ export function OwnedPharmacySearch({
     const controller = new AbortController();
     const requestQuery = debouncedQuery;
 
+    moreController.current?.abort();
+    moreController.current = null;
+
     void (
       loadOptions
-        ? loadOptions(requestQuery, controller.signal).then((items) => ({
-            items,
-          }))
+        ? loadOptions(requestQuery, controller.signal).then(
+            (items): OwnedPharmacyOptionsResponse => ({
+              items,
+            })
+          )
         : getOwnedPharmacyOptions(
-            { search: requestQuery, limit: 20 },
+            { search: requestQuery, limit: 20, page: 1, scope },
             { signal: controller.signal }
           )
     )
@@ -122,16 +154,28 @@ export function OwnedPharmacySearch({
             query: requestQuery,
             items: result.items,
             unavailable: false,
+            page: 1,
+            hasMore: Boolean(result.hasMore),
           });
       })
 
       .catch(() => {
         if (!controller.signal.aborted)
-          setSuggestions({ query: requestQuery, items: [], unavailable: true });
+          setSuggestions({
+            query: requestQuery,
+            items: [],
+            unavailable: true,
+            page: 0,
+            hasMore: false,
+          });
       });
 
-    return () => controller.abort();
-  }, [debouncedQuery, loadOptions]);
+    return () => {
+      controller.abort();
+      moreController.current?.abort();
+      moreController.current = null;
+    };
+  }, [debouncedQuery, loadOptions, scope]);
 
   // A deep link can select a pharmacy outside the first 20 suggestions.
   useEffect(() => {
@@ -143,7 +187,7 @@ export function OwnedPharmacySearch({
       loadOptions
         ? loadOptions(value, controller.signal).then((items) => ({ items }))
         : getOwnedPharmacyOptions(
-            { search: value, limit: 20 },
+            { search: value, limit: 20, scope },
             { signal: controller.signal }
           )
     )
@@ -160,9 +204,63 @@ export function OwnedPharmacySearch({
       });
 
     return () => controller.abort();
-  }, [loadOptions, selected?.value, value]);
+  }, [loadOptions, selected?.value, value, scope]);
 
-  const currentSuggestions = suggestions?.query === debouncedQuery;
+  const currentSuggestions =
+    suggestions?.query === debouncedQuery && query.trim() === debouncedQuery;
+
+  const currentMore = moreState?.query === debouncedQuery ? moreState : null;
+
+  async function loadMore() {
+    if (
+      loadOptions ||
+      !currentSuggestions ||
+      !suggestions ||
+      moreController.current
+    )
+      return;
+    if (!suggestions.hasMore && !suggestions.unavailable) return;
+
+    const controller = new AbortController();
+
+    moreController.current = controller;
+
+    const requestQuery = debouncedQuery;
+    const page = suggestions.unavailable ? 1 : suggestions.page + 1;
+
+    setMoreState({ query: requestQuery, loading: true, error: false });
+
+    try {
+      const result = await getOwnedPharmacyOptions(
+        { search: requestQuery, limit: 20, page, scope },
+        { signal: controller.signal }
+      );
+
+      if (controller.signal.aborted) return;
+
+      setSuggestions((previous) => {
+        if (previous?.query !== requestQuery) return previous;
+
+        const combined =
+          page === 1 ? result.items : [...previous.items, ...result.items];
+
+        return {
+          query: requestQuery,
+          items: [...new Map(combined.map((item) => [item.id, item])).values()],
+          page,
+          hasMore: Boolean(result.hasMore),
+          unavailable: false,
+        };
+      });
+
+      setMoreState({ query: requestQuery, loading: false, error: false });
+    } catch {
+      if (!controller.signal.aborted)
+        setMoreState({ query: requestQuery, loading: false, error: true });
+    } finally {
+      if (moreController.current === controller) moreController.current = null;
+    }
+  }
 
   const items = useMemo(
     () => (currentSuggestions ? (suggestions?.items ?? []) : []),
@@ -212,11 +310,17 @@ export function OwnedPharmacySearch({
             ...(explainStatistics
               ? [
                   {
-                    title: 'Statistics and products',
+                    title: 'Statistics scope',
                     description:
-                      statisticsContext === 'orders'
-                        ? 'All pharmacies combines the orders and order statistics from every pharmacy you own. Select a pharmacy to see only its orders and statistics.'
-                        : 'All pharmacies combines the stock, reservations and products of every pharmacy you own. Select a specific pharmacy to see statistics and inventory for that pharmacy only.',
+                      statisticsContext === 'dashboard'
+                        ? 'All pharmacies shows owner-wide orders, sales, clients, stock, catalog and request statistics. Select a pharmacy to see only its orders, sales, clients and own products.'
+                        : statisticsContext === 'clients'
+                          ? 'All pharmacies shows clients who ordered from any of your pharmacies. Select a pharmacy to see its clients and statistics.'
+                          : statisticsContext === 'client-sales'
+                            ? 'Select a pharmacy to view this client’s successful sales in that pharmacy, or all pharmacies combined.'
+                            : statisticsContext === 'orders'
+                              ? 'All pharmacies combines the orders and order statistics from every pharmacy you own. Select a pharmacy to see only its orders and statistics.'
+                              : 'All pharmacies combines the stock, reservations and products of every pharmacy you own. Select a specific pharmacy to see statistics and inventory for that pharmacy only.',
                     icon: <Building2 size={17} aria-hidden="true" />,
                   },
                 ]
@@ -243,7 +347,28 @@ export function OwnedPharmacySearch({
       disabled={disabled}
       maxLength={120}
       sanitizeQuery={sanitizeSearch}
-      onQueryChange={setQuery}
+      hasMoreOptions={Boolean(
+        !loadOptions && currentSuggestions && suggestions?.hasMore
+      )}
+      isLoadingMore={Boolean(currentSuggestions && currentMore?.loading)}
+      loadMoreError={
+        !loadOptions &&
+        currentSuggestions &&
+        !currentMore?.loading &&
+        (currentMore?.error || suggestions?.unavailable)
+          ? 'Suggestions are temporarily unavailable.'
+          : undefined
+      }
+      onLoadMore={loadOptions ? undefined : () => void loadMore()}
+      onQueryChange={(nextQuery) => {
+        if (nextQuery.trim() !== query.trim()) {
+          moreController.current?.abort();
+          moreController.current = null;
+          setMoreState(null);
+        }
+
+        setQuery(nextQuery);
+      }}
       onChange={(nextValue) => {
         if (!nextValue) {
           setSelected(null);

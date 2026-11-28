@@ -152,7 +152,13 @@ export async function getOwnedPharmacyLocationRows(
 //===================================================================
 
 export async function getOwnedPharmacyOptions(
-  params: Readonly<{ search?: string; limit?: number }> = {},
+  params: Readonly<{
+    search?: string;
+    limit?: number;
+    page?: number;
+    scope?: 'owner';
+  }> = {},
+
   options?: BrowserReadRequestOptions
 ): Promise<OwnedPharmacyOptionsResponse> {
   const path = appendQueryParams(

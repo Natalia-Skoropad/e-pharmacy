@@ -5,6 +5,7 @@ import {
 } from '@/lib/seo/server';
 
 import { ROUTES } from '@/lib/routes';
+
 import { ProfilePageContent } from '@/components/profile';
 
 //===================================================================

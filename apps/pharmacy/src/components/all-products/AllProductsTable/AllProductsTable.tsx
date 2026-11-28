@@ -105,6 +105,7 @@ function AllProductsTable({
       {
         key: 'createdAt',
         title: <TableHeaderTitle parts={['Created', 'date']} />,
+        width: '60px',
 
         render: (product) =>
           product.createdAt ? <TableDateTime value={product.createdAt} /> : '—',
@@ -124,7 +125,7 @@ function AllProductsTable({
       {
         key: 'productId',
         title: <TableHeaderTitle parts={['Product', 'ID']} />,
-        width: '126px',
+        width: '80px',
 
         render: (product) => (
           <TextActionButton
@@ -161,6 +162,7 @@ function AllProductsTable({
       {
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
+        width: '130px',
         render: (product) => renderCategory(product, categoryDirectory),
       },
       {

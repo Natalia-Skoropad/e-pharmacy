@@ -59,3 +59,12 @@ test('profile breadcrumbs follow tab and empty states use shared icon cards', ()
   assert.match(profile, /icon=\{<Building2 size=\{24\}/);
   assert.match(profileState, /iconLeft=\{<RotateCcw/);
 });
+
+//===================================================================
+
+test('failed order requests show shared retry state rather than a successful empty table', () => {
+  assert.match(profile, /setOrdersLoadError\(true\)/);
+  assert.match(profile, /ordersLoadError && !isOrdersLoading/);
+  assert.match(profile, /title="Orders could not be loaded"/);
+  assert.match(profile, /setOrdersRetry\(\(value\) => value \+ 1\)/);
+});

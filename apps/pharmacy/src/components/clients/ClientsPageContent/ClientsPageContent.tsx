@@ -6,7 +6,7 @@ import { Repeat2, Store, Users, UsersRound } from 'lucide-react';
 
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
 import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
@@ -41,6 +41,7 @@ import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
 import { OwnerClientSearch } from '@/components/clients/OwnerClientSearch/OwnerClientSearch';
 import { useLastKnownStatistics } from '@/components/clients/useLastKnownStatistics';
+import { OwnedPharmacySearch } from '@/components/pharmacies/OwnedPharmacySearch/OwnedPharmacySearch';
 
 import css from './ClientsPageContent.module.css';
 
@@ -56,7 +57,9 @@ function getClientsQueryParams(
     page,
     perPage: rowsPerPage,
 
-    ...(ownerScope ? { scope: 'owner' as const } : {}),
+    ...(ownerScope
+      ? { scope: 'owner' as const, pharmacyId: filters.pharmacyId || undefined }
+      : {}),
 
     firstOrderFrom: filters.firstOrderDate.from || undefined,
     firstOrderTo: filters.firstOrderDate.to || undefined,
@@ -86,7 +89,7 @@ type ClientsPageContentProps = Readonly<{
 
 //===================================================================
 
-function ClientsPageContent({
+function ClientsPageContentState({
   embedded = false,
   initialFilters = DEFAULT_CLIENTS_FILTERS,
   basePath = PHARMACY_ROUTES.CLIENTS,
@@ -129,6 +132,7 @@ function ClientsPageContent({
               to: initialFilters.firstOrderDate.to,
             },
 
+            pharmacyId: initialFilters.pharmacyId,
             status: initialFilters.status,
             clientId: ownerScope ? initialFilters.clientId : '',
             successfulOrders: initialFilters.successfulOrders,
@@ -263,10 +267,16 @@ function ClientsPageContent({
   };
 
   const resetFilters = () => {
-    const nextPath = buildClientsPath(DEFAULT_CLIENTS_FILTERS, basePath, {
-      page: 1,
-      perPage: rowsPerPage,
-    });
+    const nextPath = buildClientsPath(
+      { ...DEFAULT_CLIENTS_FILTERS, pharmacyId: filters.pharmacyId },
+
+      basePath,
+
+      {
+        page: 1,
+        perPage: rowsPerPage,
+      }
+    );
 
     if (nextPath !== canonicalInitialPath) {
       router.push(nextPath, { scroll: false });
@@ -343,6 +353,18 @@ function ClientsPageContent({
           />
         ) : null}
 
+        {!embedded ? (
+          <OwnedPharmacySearch
+            id="clients-pharmacy-search"
+            label="Select pharmacy"
+            value={filters.pharmacyId}
+            explainStatistics
+            statisticsContext="clients"
+            onChange={(pharmacyId) =>
+              handleFiltersChange({ ...filters, pharmacyId, clientId: '' })
+            }
+          />
+        ) : null}
         <div className={css.statisticsBody}>
           {clientStatisticsStatus === 'error' ? (
             <ProfileResourceState
@@ -384,6 +406,7 @@ function ClientsPageContent({
         <div className={css.ownerSearchGrid}>
           <OwnerClientSearch
             embedded={embedded}
+            pharmacyId={ownerScope ? filters.pharmacyId : undefined}
             value={filters.clientId}
             onChange={(clientId) =>
               handleFiltersChange({ ...filters, clientId })
@@ -424,17 +447,14 @@ function ClientsPageContent({
         </div>
 
         {clientsStatus === 'error' ? (
-          <div role="alert">
-            <p className={css.errorText}>{clientsError}</p>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => setRetryVersion((version) => version + 1)}
-            >
-              Retry clients
-            </Button>
-          </div>
+          <ProfileResourceState
+            variant="error"
+            title="Clients could not be loaded"
+            description={clientsError}
+            retryLabel="Try again"
+            sideActionOnDesktop
+            onRetry={() => setRetryVersion((version) => version + 1)}
+          />
         ) : (
           <ClientsTable
             clients={clients}
@@ -477,12 +497,28 @@ function ClientsPageContent({
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}
-          resetHref={basePath}
+          resetHref={buildClientsPath(
+            { ...DEFAULT_CLIENTS_FILTERS, pharmacyId: filters.pharmacyId },
+            basePath
+          )}
         />
       ) : null}
     </RootElement>
   );
 }
+
+//===================================================================
+
+function ClientsPageContent(props: ClientsPageContentProps) {
+  return (
+    <ClientsPageContentState
+      key={props.initialFilters?.pharmacyId || 'all'}
+      {...props}
+    />
+  );
+}
+
+//===================================================================
 
 export default ClientsPageContent;
 export { ClientsPageContent };

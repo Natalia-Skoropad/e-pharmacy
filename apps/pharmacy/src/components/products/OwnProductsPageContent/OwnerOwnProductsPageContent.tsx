@@ -532,7 +532,7 @@ function OwnerOwnProductsPageContent({
             variant="error"
             title="Own products are temporarily unavailable"
             description={loadError}
-            retryLabel="Retry products"
+            retryLabel="Try again"
             sideActionOnDesktop
             onRetry={refresh}
           />

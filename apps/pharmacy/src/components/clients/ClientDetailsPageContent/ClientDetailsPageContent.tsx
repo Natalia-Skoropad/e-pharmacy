@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import {
   Building2,
+  ChartNoAxesCombined,
   MessageSquareText,
   Boxes,
   ShoppingBag,
@@ -70,6 +71,7 @@ import {
   type ClientProductFilters,
 } from './ClientDetailFilters';
 
+import { ClientSalesChart } from './ClientSalesChart';
 import { ClientInformationTab } from './ClientInformationTab';
 import { ClientOrderStatistics } from './ClientOrderStatistics';
 import { ClientProductsTab } from './ClientProductsTab';
@@ -99,6 +101,11 @@ type ClientDetailsError = Readonly<{
 
 const CLIENT_TABS: Array<TabItem<ClientDetailTab>> = [
   { value: 'details', label: 'Details', icon: <UserRound size={17} /> },
+  {
+    value: 'statistics',
+    label: 'Statistics',
+    icon: <ChartNoAxesCombined size={17} />,
+  },
   { value: 'orders', label: 'Orders', icon: <ShoppingBag size={17} /> },
   { value: 'pharmacies', label: 'Pharmacies', icon: <Building2 size={17} /> },
   {
@@ -472,6 +479,30 @@ function ClientDetailsPageContentState({
                 />
               ) : (
                 <ClientInformationTab client={client} />
+              )}
+            </div>
+          ) : null}
+
+          {activeTab === 'statistics' ? (
+            <div className={css.sectionStack}>
+              <ProfileSectionHeader
+                title="Statistics"
+                description="Review successful client sales for all your pharmacies or one selected pharmacy."
+                icon={<ChartNoAxesCombined size={21} />}
+              />
+              {clientStatus === 'error' ? (
+                <ProfileResourceState
+                  variant="error"
+                  title={error?.title ?? 'Client unavailable'}
+                  description={
+                    error?.message ?? 'Could not load client details.'
+                  }
+                  retryLabel="Try again"
+                  sideActionOnDesktop
+                  onRetry={() => setClientRetryVersion((n) => n + 1)}
+                />
+              ) : (
+                <ClientSalesChart clientId={clientId} />
               )}
             </div>
           ) : null}

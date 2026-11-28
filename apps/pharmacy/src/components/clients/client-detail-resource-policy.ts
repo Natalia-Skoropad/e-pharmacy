@@ -1,5 +1,6 @@
 export type ClientDetailTab =
   | 'details'
+  | 'statistics'
   | 'orders'
   | 'products'
   | 'comments'

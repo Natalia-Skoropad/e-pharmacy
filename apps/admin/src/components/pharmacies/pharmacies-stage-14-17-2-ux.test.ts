@@ -110,6 +110,15 @@ test('14.17.2: order columns share their canonical info tooltip and put currency
 //===================================================================
 
 test('collapsed Admin navigation counters are centered above the icons', () => {
+  const requestBadges = read(
+    '../layout/ProductRequestNavigationBadges/ProductRequestNavigationBadges.tsx'
+  );
+
+  assert.match(
+    requestBadges,
+    /from ['"]\.\.\/PharmacyNavigationBadges\/PharmacyNavigationBadges\.module\.css['"]/
+  );
+
   for (const [file, selector] of [
     [
       '../layout/PharmacyNavigationBadges/PharmacyNavigationBadges.module.css',
@@ -122,8 +131,8 @@ test('collapsed Admin navigation counters are centered above the icons', () => {
     )?.[1];
 
     assert.ok(rule);
-    assert.match(rule, /inset-inline: 0/);
-    assert.match(rule, /margin-inline: auto/);
+    assert.match(rule, /left: 50%/);
+    assert.match(rule, /transform: translateX\(-50%\)/);
     assert.doesNotMatch(rule, /right:/);
   }
 });

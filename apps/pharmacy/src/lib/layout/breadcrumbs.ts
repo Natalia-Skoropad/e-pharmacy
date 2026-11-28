@@ -349,6 +349,7 @@ export function getPharmacyBreadcrumbsByPathname(
 
     const clientTabLabels: Record<string, string> = {
       details: 'Client information',
+      statistics: 'Statistics',
       orders: 'Orders',
       pharmacies: 'Pharmacies',
       products: 'Purchased products',
@@ -363,7 +364,8 @@ export function getPharmacyBreadcrumbsByPathname(
         clientTabLabels[tab] &&
         (route.segments.length === 2 ||
           tab === 'pharmacies' ||
-          tab === 'details')
+          tab === 'details' ||
+          tab === 'statistics')
       ) {
         return [
           { label: 'Clients', href: PHARMACY_ROUTES.CLIENTS },

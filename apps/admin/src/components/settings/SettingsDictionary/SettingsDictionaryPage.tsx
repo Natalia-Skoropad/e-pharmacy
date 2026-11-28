@@ -25,6 +25,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal, InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 
 import { canAdmin } from '@/lib/permissions/can-admin';
@@ -674,42 +675,41 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         </div>
 
         {listError ? (
-          <div className={css.inlineError} role="alert">
-            <span>{listError}</span>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={reload}
-            >
-              Retry
-            </Button>
-          </div>
+          <ProfileResourceState
+            variant="error"
+            title={`${config.title} could not be loaded`}
+            description={listError}
+            retryLabel="Try again"
+            sideActionOnDesktop
+            onRetry={reload}
+          />
+        ) : (
+          <DataTable
+            className={css.dictionaryTable}
+            columns={columns}
+            items={items}
+            getItemKey={(item) => item.id}
+            isLoading={isLoading && !data}
+            minWidth={config.color ? 900 : 840}
+            ariaLabel={`${config.title} table`}
+            labels={{
+              loading: `Loading ${config.pluralLabel}...`,
+              empty: isFiltered ? config.filteredEmptyLabel : config.emptyLabel,
+            }}
+          />
+        )}
+
+        {!listError ? (
+          <PaginationView
+            currentPage={data?.page ?? page}
+            totalPages={data?.totalPages ?? 0}
+            disabled={isLoading}
+            ariaLabel={`${config.title} pagination`}
+            onPageChange={(nextPage) => {
+              navigate({ page: nextPage });
+            }}
+          />
         ) : null}
-
-        <DataTable
-          className={css.dictionaryTable}
-          columns={columns}
-          items={items}
-          getItemKey={(item) => item.id}
-          isLoading={isLoading && !data}
-          minWidth={config.color ? 900 : 840}
-          ariaLabel={`${config.title} table`}
-          labels={{
-            loading: `Loading ${config.pluralLabel}...`,
-            empty: isFiltered ? config.filteredEmptyLabel : config.emptyLabel,
-          }}
-        />
-
-        <PaginationView
-          currentPage={data?.page ?? page}
-          totalPages={data?.totalPages ?? 0}
-          disabled={isLoading}
-          ariaLabel={`${config.title} pagination`}
-          onPageChange={(nextPage) => {
-            navigate({ page: nextPage });
-          }}
-        />
       </section>
 
       {isFiltersOpen ? (

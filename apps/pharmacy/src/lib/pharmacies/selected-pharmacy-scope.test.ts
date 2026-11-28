@@ -57,9 +57,27 @@ test('detail tabs use the exact pharmacy from their canonical URL', () => {
 //===================================================================
 
 test('legacy operational routes retain explicit pharmacy selection in the query', () => {
-  for (const page of ['dashboard', 'product-requests']) {
-    assert.equal(isLegacyOperationalPharmacyPath(`/pharmacy/${page}`), true);
+  for (const path of [
+    '/pharmacy/dashboard',
+    `/pharmacy/dashboard/pharmacy-id-${A}`,
+    '/pharmacy/product-requests',
+  ]) {
+    assert.equal(isLegacyOperationalPharmacyPath(path), false);
+    assert.equal(isOperationalPharmacyPath(path), false);
   }
+
+  assert.deepEqual(
+    readExplicitPharmacySelection('/pharmacy/dashboard', `pharmacyId=${B}`),
+    { id: null, invalid: false }
+  );
+
+  assert.deepEqual(
+    readExplicitPharmacySelection(
+      `/pharmacy/dashboard/pharmacy-id-${A}`,
+      `pharmacyId=${B}`
+    ),
+    { id: null, invalid: false }
+  );
 
   // All products is an owner-wide Admin catalog, not a selected-pharmacy view.
   assert.equal(
@@ -412,4 +430,24 @@ test('canonical owner order tabs never require pharmacy selection', () => {
   ]) {
     assert.equal(isOwnerOrderDetailPath(path), false, path);
   }
+});
+
+//===================================================================
+
+test('client Statistics pharmacy and period filters are independent of current pharmacy selection', () => {
+  const path =
+    '/pharmacy/clients/6a311d5386d9f5e0be7d19ba/statistics/pharmacy-id-6ac75e170642845c5d27fd6c/year-2025/month-01';
+
+  assert.equal(isOwnerClientDetailPath(path), true);
+  assert.equal(isLegacyOperationalPharmacyPath(path), false);
+
+  assert.equal(
+    isOwnerClientDetailPath(path.replace('month-01', 'month-99')),
+    false
+  );
+
+  assert.equal(
+    isOwnerClientDetailPath(path.replace('/statistics/', '/details/')),
+    false
+  );
 });

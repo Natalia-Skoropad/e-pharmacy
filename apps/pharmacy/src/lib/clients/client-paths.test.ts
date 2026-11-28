@@ -124,17 +124,17 @@ test('duplicate and invalid client filters canonicalize deterministically', () =
 
 //===================================================================
 
-test('legacy pharmacy URL segment canonicalizes away in the owner-wide client registry', () => {
+test('legacy pharmacy URL segment canonicalizes to explicit pharmacy-id in the owner-wide client registry', () => {
   const id = '507f1f77bcf86cd799439011';
 
   assert.equal(
     buildClientsPath({ ...DEFAULT_CLIENTS_FILTERS, pharmacyId: id }),
-    '/pharmacy/clients'
+    `/pharmacy/clients/pharmacy-id-${id}`
   );
 
   assert.equal(
     buildClientsPath(parseClientsSegments({ filters: [`pharmacy-${id}`] })),
-    '/pharmacy/clients'
+    `/pharmacy/clients/pharmacy-id-${id}`
   );
 });
 
@@ -206,4 +206,21 @@ test('both client statuses combine with every successful orders option in the ow
       );
     }
   }
+});
+
+//===================================================================
+
+test('client pharmacy scope survives other filters and paging', () => {
+  const id = '507f1f77bcf86cd799439011';
+
+  const filters = parseClientsSegments({
+    filters: [`pharmacy-id-${id}`, 'status-active', 'per-page-50', 'page-2'],
+  });
+
+  assert.equal(filters.pharmacyId, id);
+
+  assert.equal(
+    buildClientsPath(filters, undefined, { page: 2, perPage: 50 }),
+    `/pharmacy/clients/pharmacy-id-${id}/status-active/per-page-50/page-2`
+  );
 });

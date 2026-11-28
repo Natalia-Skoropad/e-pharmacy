@@ -67,6 +67,8 @@ export function PharmacyCabinetBoundaryRuntime({
         isOwnerClientDetailPath(pathname) ||
         isOwnerProductsListPath(pathname) ||
         isOwnerProductDetailPath(pathname))) ||
+    pathname === PHARMACY_ROUTES.DASHBOARD ||
+    pathname?.startsWith(`${PHARMACY_ROUTES.DASHBOARD}/`) ||
     pathname === PHARMACY_ROUTES.PRODUCT_REQUESTS ||
     pathname?.startsWith(`${PHARMACY_ROUTES.PRODUCT_REQUESTS}/`) ||
     pathname === PHARMACY_ROUTES.ALL_PRODUCTS ||

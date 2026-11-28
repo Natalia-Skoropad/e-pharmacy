@@ -76,7 +76,6 @@
   min-width: 0;
 }
 
-.errorText,
 .statisticsState {
   color: var(--color-text-secondary);
   line-height: var(--lh-base);

@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { RoleProtectedRoute } from '@e-pharmacy/auth/next';
 import { useAuth } from '@e-pharmacy/auth/react';
@@ -15,6 +16,8 @@ import {
   resolveLoginDestination,
   resolveTrustedClientAuthExternalRedirect,
 } from '@/lib/auth';
+
+import { ClientProfileLoading } from '@/components/profile/ProfilePageContent/ClientProfileLoading';
 
 import { PharmacyAppConfigurationState } from '../PharmacyAppConfigurationState';
 
@@ -60,6 +63,7 @@ function AuthUnavailableState() {
 
 function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
   const { user } = useAuth();
+  const pathname = usePathname();
 
   const pharmacyConfiguration =
     user?.role === 'pharmacy' && user.status !== 'blocked'
@@ -83,7 +87,13 @@ function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
       loginPath={ROUTES.LOGIN}
       forbiddenPath={forbiddenPath}
       resolveExternalRedirect={resolveTrustedClientAuthExternalRedirect}
-      loadingFallback={<LoadingSpinner label="Checking your session..." />}
+      loadingFallback={
+        pathname === ROUTES.PROFILE ? (
+          <ClientProfileLoading />
+        ) : (
+          <LoadingSpinner label="Checking your session..." />
+        )
+      }
       authUnavailableFallback={<AuthUnavailableState />}
       redirectingFallback={<LoadingSpinner label="Redirecting to login..." />}
       forbiddenFallback={

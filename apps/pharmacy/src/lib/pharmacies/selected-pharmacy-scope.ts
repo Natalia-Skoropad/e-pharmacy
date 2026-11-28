@@ -58,8 +58,7 @@ export function isExplicitOrderCreatePath(pathname: string): boolean {
 const DETAIL_OPERATION =
   /^\/pharmacy\/pharmacies\/([0-9a-f]{24})\/(orders|clients|products)(?:\/|$)/i;
 
-const LEGACY_OPERATION =
-  /^\/pharmacy\/(dashboard|orders|clients|products)(?:\/|$)/;
+const LEGACY_OPERATION = /^\/pharmacy\/(orders|clients|products)(?:\/|$)/;
 
 //===================================================================
 
@@ -117,7 +116,7 @@ export function isOwnerOrdersListPath(pathname: string): boolean {
 /** Only known client detail tabs are account-wide; invalid paths remain closed. */
 export function isOwnerClientDetailPath(pathname: string): boolean {
   if (
-    /^\/pharmacy\/clients\/[0-9a-f]{24}(?:\/(?:pharmacies|orders|products|comments))?\/?$/i.test(
+    /^\/pharmacy\/clients\/[0-9a-f]{24}(?:\/(?:pharmacies|statistics|orders|products|comments))?\/?$/i.test(
       pathname
     )
   ) {
@@ -127,15 +126,19 @@ export function isOwnerClientDetailPath(pathname: string): boolean {
   // Client sales chart filters belong to the client card even when no
   // pharmacy is selected in the cabinet.
   const clientSales =
-    /^\/pharmacy\/clients\/([0-9a-f]{24})\/details\/(.+)$/i.exec(pathname);
+    /^\/pharmacy\/clients\/([0-9a-f]{24})\/(details|statistics)\/(.+)$/i.exec(
+      pathname
+    );
   if (clientSales) {
     try {
-      const base = `/pharmacy/clients/${clientSales[1]}/details`;
+      const base = `/pharmacy/clients/${clientSales[1]}/${clientSales[2]}`;
+      const options = { allowPharmacy: clientSales[2] === 'statistics' };
 
       return (
         buildSalesChartPath(
           base,
-          parseSalesChartSegments(clientSales[2]!.split('/'))
+          parseSalesChartSegments(clientSales[3]!.split('/'), options),
+          options
         ) === pathname
       );
     } catch {
@@ -394,7 +397,11 @@ export function readExplicitPharmacySelection(
 
   // Order cards are authorized by order ID, not the cabinet's selected pharmacy.
   // Ignore legacy pharmacyId queries until the provider canonicalizes the URL.
-  if (isOwnerOrderDetailPath(pathname)) return { id: null, invalid: false };
+  if (
+    isOwnerOrderDetailPath(pathname) ||
+    /^\/pharmacy\/dashboard(?:\/|$)/.test(pathname)
+  )
+    return { id: null, invalid: false };
 
   const query = new URLSearchParams(search);
   const all = query.getAll('pharmacyId');

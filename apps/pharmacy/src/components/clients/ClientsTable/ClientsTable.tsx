@@ -58,6 +58,7 @@ function ClientsTable({
         key: 'firstOrderAt',
         title: <TableHeaderTitle parts={['Client', 'added']} />,
         render: (client) => <FirstOrderDate value={client.firstOrderAt} />,
+        width: '60px',
       },
       {
         key: 'photo',
@@ -74,6 +75,7 @@ function ClientsTable({
       {
         key: 'clientId',
         title: <TableHeaderTitle parts={['Client', 'ID']} />,
+        width: '80px',
 
         render: (client) => (
           <TextActionButton
@@ -157,6 +159,7 @@ function ClientsTable({
 
         render: (client) => client.successfulOrdersCount,
       },
+
       ...(showProductQuantity
         ? [
             {

@@ -149,7 +149,11 @@ export function parseClientsSegments(
 
   for (const segment of params.filters ?? []) {
     if (segment.startsWith('pharmacy-')) {
-      const pharmacyId = segment.slice('pharmacy-'.length);
+      const pharmacyId = segment.slice(
+        segment.startsWith('pharmacy-id-')
+          ? 'pharmacy-id-'.length
+          : 'pharmacy-'.length
+      );
 
       if (isValidObjectId(pharmacyId))
         filters.pharmacyId = pharmacyId.toLowerCase();
@@ -274,6 +278,13 @@ export function buildClientsPath(
 ): string {
   const segments: string[] = [];
   const dateRangeIsValid = isDateRangeValid(filters.firstOrderDate);
+
+  if (
+    basePath === PHARMACY_ROUTES.CLIENTS &&
+    isValidObjectId(filters.pharmacyId)
+  ) {
+    segments.push(`pharmacy-id-${filters.pharmacyId.toLowerCase()}`);
+  }
 
   // Only the opaque entity ID is persisted; never include names, contact
   // details or free-text search terms in a sharable URL.

@@ -28,8 +28,8 @@ test('pharmacy and client sales period URLs round-trip in canonical year/month o
   );
 
   assert.equal(
-    buildSalesChartPath(`/pharmacy/clients/${pharmacyId}/details`, parsed),
-    `/pharmacy/clients/${pharmacyId}/details/year-2026/month-06`
+    buildSalesChartPath(`/pharmacy/clients/${pharmacyId}/statistics`, parsed),
+    `/pharmacy/clients/${pharmacyId}/statistics/year-2026/month-06`
   );
 });
 
@@ -106,5 +106,27 @@ test('invalid, unexpected or duplicate filters are rejected', () => {
 
   assert.throws(() =>
     parseSalesChartSegments(['pharmacy-id-not-an-id'], { allowPharmacy: true })
+  );
+});
+
+//===================================================================
+
+test('client statistics preserves pharmacy and period filters and resets to Statistics', () => {
+  const base = `/pharmacy/clients/${productId}/statistics`;
+  const options = { allowPharmacy: true };
+
+  const parsed = parseSalesChartSegments(
+    [`pharmacy-id-${pharmacyId}`, 'year-2025', 'month-01'],
+    options
+  );
+
+  assert.equal(
+    buildSalesChartPath(base, parsed, options),
+    `${base}/pharmacy-id-${pharmacyId}/year-2025/month-01`
+  );
+
+  assert.equal(
+    buildSalesChartPath(base, parseSalesChartSegments([], options), options),
+    base
   );
 });

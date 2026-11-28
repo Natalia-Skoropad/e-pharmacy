@@ -30,7 +30,11 @@ test('owner Clients page is global while embedded tab remains selected-pharmacy-
   assert.match(page, /const ownerScope = !embedded/);
   assert.doesNotMatch(page, /showPharmacy/);
   assert.match(page, /<OwnerClientSearch/);
-  assert.match(page, /\{ scope: 'owner' as const \}/);
+
+  assert.match(
+    page,
+    /scope: 'owner' as const, pharmacyId: filters\.pharmacyId/
+  );
 
   assert.match(
     api,
@@ -46,7 +50,7 @@ test('owner Clients page is global while embedded tab remains selected-pharmacy-
 
 //===================================================================
 
-test('owner Clients uses one search and preserves the original columns without Pharmacy', () => {
+test('owner Clients uses pharmacy scope and preserves the original columns without Pharmacy', () => {
   const page = read(
     'components/clients/ClientsPageContent/ClientsPageContent.tsx'
   );
@@ -57,7 +61,14 @@ test('owner Clients uses one search and preserves the original columns without P
 
   const table = read('components/clients/ClientsTable/ClientsTable.tsx');
 
-  assert.doesNotMatch(page, /<OwnedPharmacySearch/);
+  assert.match(page, /<OwnedPharmacySearch/);
+  assert.match(page, /statisticsContext="clients"/);
+
+  assert.match(
+    page,
+    /pharmacyId=\{ownerScope \? filters\.pharmacyId : undefined\}/
+  );
+
   assert.doesNotMatch(drawer, /<OwnedPharmacySearch/);
 
   for (const name of [

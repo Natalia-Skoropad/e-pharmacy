@@ -458,7 +458,8 @@ export function AuditDetailsModal({
             variant="error"
             title="Audit details could not be loaded"
             description={error}
-            retryLabel="Retry"
+            sideActionOnDesktop
+            retryLabel="Try again"
             onRetry={onRetry}
           />
         ) : details ? (

@@ -64,7 +64,10 @@ export default async function ClientDetailPaginatedTab({
 
   if (
     !isValidObjectId(clientId) ||
-    (tab !== 'orders' && tab !== 'products' && tab !== 'details')
+    (tab !== 'orders' &&
+      tab !== 'products' &&
+      tab !== 'details' &&
+      tab !== 'statistics')
   ) {
     notFound();
   }
@@ -72,16 +75,16 @@ export default async function ClientDetailPaginatedTab({
   let canonical: string;
 
   try {
-    if (tab === 'details') {
-      const filtersState = parseSalesChartSegments(filters);
+    if (tab === 'details' || tab === 'statistics') {
+      const filtersState = parseSalesChartSegments(filters, {
+        allowPharmacy: tab === 'statistics',
+      });
 
       canonical = buildSalesChartPath(
-        `${getPharmacyClientPath(clientId)}/details`,
-        filtersState
+        `${getPharmacyClientPath(clientId)}/statistics`,
+        filtersState,
+        { allowPharmacy: true }
       );
-
-      if (canonical === `${getPharmacyClientPath(clientId)}/details`)
-        canonical = getPharmacyClientPath(clientId);
     } else if (tab === 'products') {
       const state = parseClientPurchasedProductsSegments(filters);
 

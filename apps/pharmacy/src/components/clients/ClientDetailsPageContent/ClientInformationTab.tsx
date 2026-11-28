@@ -11,8 +11,6 @@ import { getClientDisplayName } from '@/lib/clients/client-display-name';
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import { ClientSalesChart } from './ClientSalesChart';
-
 import css from './ClientDetailsPageContent.module.css';
 
 //===================================================================
@@ -121,8 +119,6 @@ export function ClientInformationTab({
           ) : null}
         </section>
       </div>
-
-      <ClientSalesChart clientId={client.id} />
     </div>
   );
 }

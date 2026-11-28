@@ -202,6 +202,7 @@ export function OwnProductClientsTab({
             title="Product client statistics could not be loaded"
             description="Client statistics are temporarily unavailable."
             onRetry={() => setRetry((value) => value + 1)}
+            sideActionOnDesktop
             retryLabel="Try again"
           />
         ) : statsCurrent ? (
@@ -268,6 +269,7 @@ export function OwnProductClientsTab({
               variant="error"
               title="Product clients could not be loaded"
               description="Please try loading the clients again."
+              sideActionOnDesktop
               retryLabel="Try again"
               onRetry={() => setRetry((value) => value + 1)}
             />

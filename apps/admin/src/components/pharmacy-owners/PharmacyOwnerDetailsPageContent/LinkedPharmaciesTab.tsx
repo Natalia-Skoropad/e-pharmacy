@@ -345,7 +345,8 @@ export function LinkedPharmaciesTab({
               variant="error"
               title="Linked pharmacies could not be loaded"
               description={listError}
-              retryLabel="Retry pharmacies"
+              sideActionOnDesktop
+              retryLabel="Try again"
               onRetry={() => setReloadVersion((version) => version + 1)}
             />
           ) : (

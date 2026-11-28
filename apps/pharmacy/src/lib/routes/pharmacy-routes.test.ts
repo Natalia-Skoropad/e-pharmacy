@@ -54,6 +54,20 @@ test('matches canonical route families without re-parsing section names in layou
     segments: [],
   });
 
+  assert.deepEqual(
+    matchPharmacyRoute(`/pharmacy/dashboard/pharmacy-id-${ENTITY_IDS.order}`),
+    {
+      family: 'dashboard',
+      basePath: PHARMACY_ROUTES.DASHBOARD,
+      segments: [`pharmacy-id-${ENTITY_IDS.order}`],
+    }
+  );
+
+  assert.equal(
+    matchPharmacyRoute('/pharmacy/dashboard/pharmacy-id-invalid').family,
+    'unknown'
+  );
+
   assert.deepEqual(matchPharmacyRoute('/pharmacy/orders/status-new'), {
     family: 'orders',
     basePath: PHARMACY_ROUTES.ORDERS,

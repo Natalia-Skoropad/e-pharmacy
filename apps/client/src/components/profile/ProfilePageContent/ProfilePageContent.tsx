@@ -38,6 +38,9 @@ import {
   USER_STATUS_PRESENTATION,
 } from '@e-pharmacy/config/presentation';
 
+import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
+import { useAuth } from '@e-pharmacy/auth/react';
+
 import {
   Button,
   FiltersButton,
@@ -79,11 +82,16 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { useAuth } from '@e-pharmacy/auth/react';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+
+import {
+  OrderRejectionSourceBadge,
+  StatusBadge,
+} from '@e-pharmacy/ui/statistics';
+
 import { formatAmount } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
@@ -124,13 +132,6 @@ import type {
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
 
-import {
-  OrderRejectionSourceBadge,
-  StatusBadge,
-} from '@e-pharmacy/ui/statistics';
-
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-
 import { getClientPasswordChangeErrorMessage } from '@/lib/auth';
 import { PROFILE_TITLE } from '@/lib/seo/metadata-copy';
 import { getUserFacingErrorMessage } from '@/lib/errors/get-user-facing-error-message';
@@ -161,6 +162,7 @@ import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 
 import { isCurrentFavoriteRequest } from './favorite-request-lifecycle';
+import { ClientProfileLoading } from './ClientProfileLoading';
 
 import css from './ProfilePageContent.module.css';
 
@@ -467,7 +469,9 @@ function AuthenticatedProfilePageContent({
   const [isFavoritePharmaciesLoading, setIsFavoritePharmaciesLoading] =
     useState(false);
 
-  const [isOrdersLoading, setIsOrdersLoading] = useState(false);
+  const [isOrdersLoading, setIsOrdersLoading] = useState(true);
+  const [ordersLoadError, setOrdersLoadError] = useState(false);
+  const [ordersRetry, setOrdersRetry] = useState(0);
   const [hasLoadedOrderOptions, setHasLoadedOrderOptions] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
@@ -865,6 +869,7 @@ function AuthenticatedProfilePageContent({
     async function loadOrders() {
       try {
         setIsOrdersLoading(true);
+        setOrdersLoadError(false);
 
         const response = await getOrders(ordersQueryParams, {
           signal: controller.signal,
@@ -881,6 +886,7 @@ function AuthenticatedProfilePageContent({
         }
       } catch {
         if (!controller.signal.aborted) {
+          setOrdersLoadError(true);
           setOrders([]);
           setOrdersTotal(0);
           setOrdersTotalPages(0);
@@ -897,7 +903,7 @@ function AuthenticatedProfilePageContent({
     return () => {
       controller.abort();
     };
-  }, [canUseAuthFeatures, ordersQueryParams]);
+  }, [canUseAuthFeatures, ordersQueryParams, ordersRetry]);
 
   useEffect(() => {
     if (!canUseAuthFeatures) return;
@@ -1375,9 +1381,11 @@ function AuthenticatedProfilePageContent({
                         placeholder="Find order number"
                         options={[
                           { value: '', label: 'All orders' },
+
                           ...orderNumberOptions.map((number) => ({
                             value: number,
                             label: number,
+
                             leading: (
                               <span
                                 className={css.orderNumberIcon}
@@ -1428,9 +1436,11 @@ function AuthenticatedProfilePageContent({
                         placeholder="Pharmacy name, phone, email, or address"
                         options={[
                           { value: '', label: 'All pharmacies' },
+
                           ...pharmacyOptions.map((pharmacy) => ({
                             value: pharmacy.id,
                             label: `${pharmacy.name}${pharmacy.address ? ` · ${pharmacy.address}` : ''}`,
+
                             leading: (
                               <TableImagePreview
                                 src={pharmacy.imageUrl}
@@ -1439,6 +1449,7 @@ function AuthenticatedProfilePageContent({
                                 size={30}
                               />
                             ),
+
                             searchText: [
                               pharmacy.phone,
                               pharmacy.email,
@@ -1493,25 +1504,38 @@ function AuthenticatedProfilePageContent({
                       </div>
                     </div>
 
-                    <DataTable
-                      columns={orderColumns}
-                      items={canUseAuthFeatures ? orders : []}
-                      getItemKey={(order) => String(order.id)}
-                      isLoading={isOrdersLoading}
-                      minWidth={800}
-                      labels={{
-                        loading: 'Loading orders...',
-                        empty: hasActiveOrdersFilters
-                          ? 'No orders found for the selected search and filters. Adjust them or reset the filters.'
-                          : 'Orders will appear here after checkout.',
-                      }}
-                    />
+                    {ordersLoadError && !isOrdersLoading ? (
+                      <ProfileResourceState
+                        variant="error"
+                        title="Orders could not be loaded"
+                        description="Your orders are temporarily unavailable. Please try again."
+                        retryLabel="Try again"
+                        sideActionOnDesktop
+                        onRetry={() => setOrdersRetry((value) => value + 1)}
+                      />
+                    ) : (
+                      <DataTable
+                        columns={orderColumns}
+                        items={canUseAuthFeatures ? orders : []}
+                        getItemKey={(order) => String(order.id)}
+                        isLoading={isOrdersLoading}
+                        minWidth={800}
+                        labels={{
+                          loading: 'Loading orders...',
+
+                          empty: hasActiveOrdersFilters
+                            ? 'No orders found for the selected search and filters. Adjust them or reset the filters.'
+                            : 'Orders will appear here after checkout.',
+                        }}
+                      />
+                    )}
 
                     <PaginationView
                       currentPage={ordersCurrentPage}
                       totalPages={ordersTotalPages}
                       onPageChange={(page) => {
                         setOrdersCurrentPage(page);
+
                         router.replace(
                           buildClientOrdersUrl({
                             ...ordersFilters,
@@ -1637,6 +1661,7 @@ function AuthenticatedProfilePageContent({
                       variant="error"
                       title="Favorite products could not be loaded"
                       description={favoriteProductsError}
+                      sideActionOnDesktop
                       retryLabel="Try again"
                       onRetry={() => loadFavoriteProducts(1)}
                     />
@@ -1664,6 +1689,7 @@ function AuthenticatedProfilePageContent({
                                 const nextProducts = prev.filter(
                                   (item) => item.id !== productId
                                 );
+
                                 setFavoriteProductsCount((count) =>
                                   Math.max((count ?? 1) - 1, 0)
                                 );
@@ -1737,6 +1763,7 @@ function AuthenticatedProfilePageContent({
                       variant="error"
                       title="Favorite pharmacies could not be loaded"
                       description={favoritePharmaciesError}
+                      sideActionOnDesktop
                       retryLabel="Try again"
                       onRetry={() => loadFavoritePharmacies(1)}
                     />
@@ -1764,6 +1791,7 @@ function AuthenticatedProfilePageContent({
                                 const nextPharmacies = prev.filter(
                                   (item) => item.id !== pharmacyId
                                 );
+
                                 setFavoritePharmaciesCount((count) =>
                                   Math.max((count ?? 1) - 1, 0)
                                 );
@@ -1824,7 +1852,9 @@ function AuthenticatedProfilePageContent({
 //===================================================================
 
 function ProfilePageContent() {
-  const { user } = useAuth();
+  const { user, isBootstrapping } = useAuth();
+
+  if (isBootstrapping) return <ClientProfileLoading />;
 
   if (!user) {
     return <ProfileUnavailable />;

@@ -18,6 +18,7 @@ import {
 } from './client-registry.service';
 
 import { getClientPharmaciesService } from './client-pharmacies.service';
+import { getClientSalesStatisticsService } from './client-analytics.service';
 
 //===================================================================
 
@@ -167,6 +168,7 @@ test(
         paymentMethod: 'cash',
         delivery: { method: 'pickup' },
         status: 'successful',
+        successfulAt: new Date('2026-07-10T12:00:00Z'),
         statusHistory: [],
         activityHistory: [],
         managerComments: [],
@@ -300,6 +302,53 @@ test(
       });
 
       assert.equal(filtered.total, 2);
+      assert.equal(filtered.statistics.total, 2);
+
+      assert.equal(
+        filtered.items.find((row) => row.id === sharedClient.toString())
+          ?.successfulOrdersAmount,
+        400
+      );
+
+      const salesQuery = {
+        dateFrom: '2026-07-01',
+        dateTo: '2026-07-31',
+        groupBy: 'month' as const,
+      };
+
+      const ownerSales = await getClientSalesStatisticsService(
+        ownerId.toString(),
+        sharedClient.toString(),
+        salesQuery
+      );
+
+      const scopedSales = await getClientSalesStatisticsService(
+        ownerId.toString(),
+        sharedClient.toString(),
+        { ...salesQuery, pharmacyId: b.toString() }
+      );
+
+      assert.ok(ownerSales.categories.length > 0);
+      assert.deepEqual(scopedSales.categories, ownerSales.categories);
+      assert.equal(ownerSales.points[0]?.values.medicine?.amount, 700);
+      assert.equal(scopedSales.points[0]?.values.medicine?.amount, 400);
+
+      await assert.rejects(
+        getClientSalesStatisticsService(
+          ownerId.toString(),
+          sharedClient.toString(),
+          { ...salesQuery, pharmacyId: foreign.toString() }
+        ),
+        (error: unknown) => (error as HttpError).status === 403
+      );
+
+      const walkInOtherSales = await getClientSalesStatisticsService(
+        ownerId.toString(),
+        defaultA.toString(),
+        { ...salesQuery, pharmacyId: b.toString() }
+      );
+
+      assert.equal(walkInOtherSales.categories.length, 0);
       assert.ok(filtered.items.every((row) => row.pharmacyId === b.toString()));
 
       await assert.rejects(

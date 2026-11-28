@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { FilePlus2, RefreshCw } from 'lucide-react';
+import { FilePlus2 } from 'lucide-react';
 
-import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 
@@ -13,7 +13,7 @@ import {
   ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
 
-import { StatsLoadingSkeleton, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
 import { RowsPerPageSelect } from '@e-pharmacy/ui/forms';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
@@ -432,44 +432,37 @@ export function AdminProductRequestsList({
         </div>
 
         {listError ? (
-          <div role="alert">
-            <StatusBanner
-              tone="danger"
-              title="Product requests are temporarily unavailable"
-              message="Product requests could not be loaded. Please try again in a moment."
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              iconLeft={<RefreshCw size={16} aria-hidden="true" />}
-              onClick={() => setListRetry((v) => v + 1)}
-            >
-              Retry product requests
-            </Button>
-          </div>
-        ) : null}
-        <ProductRequestsTable
-          requests={data ? [...data.items] : []}
-          hideOwner={Boolean(scopeOwnerId)}
-          isLoading={loading}
-          emptyMessage={
-            listError
-              ? 'Product requests are temporarily unavailable.'
-              : activeCount
+          <ProfileResourceState
+            variant="error"
+            title="Product requests could not be loaded"
+            description="Product requests are temporarily unavailable. Please try again."
+            retryLabel="Try again"
+            sideActionOnDesktop
+            onRetry={() => setListRetry((v) => v + 1)}
+          />
+        ) : (
+          <ProductRequestsTable
+            requests={data ? [...data.items] : []}
+            hideOwner={Boolean(scopeOwnerId)}
+            isLoading={loading}
+            emptyMessage={
+              activeCount
                 ? 'No requests found for the selected filters.'
                 : 'No product requests yet.'
-          }
-        />
+            }
+          />
+        )}
 
-        <PaginationView
-          currentPage={pagination.page}
-          totalPages={Math.max(1, data?.totalPages ?? 1)}
-          ariaLabel="Product requests pagination"
-          onPageChange={(page) =>
-            navigate(filters, { ...pagination, page }, false, scopeOwnerId)
-          }
-        />
+        {!listError ? (
+          <PaginationView
+            currentPage={pagination.page}
+            totalPages={Math.max(1, data?.totalPages ?? 1)}
+            ariaLabel="Product requests pagination"
+            onPageChange={(page) =>
+              navigate(filters, { ...pagination, page }, false, scopeOwnerId)
+            }
+          />
+        ) : null}
       </section>
 
       {isFiltersOpen ? (

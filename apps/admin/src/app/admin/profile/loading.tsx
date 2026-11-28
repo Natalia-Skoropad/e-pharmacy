@@ -1,7 +1,7 @@
-import { ProfilePageLoader } from '@e-pharmacy/ui/profile';
+import { ProfilePageSkeleton } from '@e-pharmacy/ui/profile';
 
 //===================================================================
 
 export default function AdminProfileLoading() {
-  return <ProfilePageLoader label="Loading admin profile..." />;
+  return <ProfilePageSkeleton label="Loading admin profile" />;
 }

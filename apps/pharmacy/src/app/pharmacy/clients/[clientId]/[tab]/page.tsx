@@ -22,7 +22,12 @@ export const metadata: Metadata = { title: 'Client details' };
 
 //===================================================================
 
-const SUPPORTED_TABS = ['orders', 'products', 'comments'] as const;
+const SUPPORTED_TABS = [
+  'statistics',
+  'orders',
+  'products',
+  'comments',
+] as const;
 
 //===================================================================
 

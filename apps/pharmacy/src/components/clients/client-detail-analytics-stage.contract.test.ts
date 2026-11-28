@@ -74,6 +74,7 @@ test('client tabs have section icons and are split into independent components',
 
   for (const tab of [
     'details',
+    'statistics',
     'orders',
     'pharmacies',
     'products',
@@ -106,4 +107,21 @@ test('owner client subtab breadcrumbs include the clickable client detail', () =
     breadcrumbs,
     /href: `\$\{PHARMACY_ROUTES\.CLIENTS\}\/\$\{clientId\}`/
   );
+});
+
+//===================================================================
+
+test('client sales lives on Statistics and carries the selected pharmacy', () => {
+  const details = read(
+    'components/clients/ClientDetailsPageContent/ClientInformationTab.tsx'
+  );
+
+  const chart = read(
+    'components/clients/ClientDetailsPageContent/ClientSalesChart.tsx'
+  );
+
+  assert.doesNotMatch(details, /ClientSalesChart/);
+  assert.match(chart, /<OwnedPharmacySearch/);
+  assert.match(chart, /pharmacyId: period\.pharmacyId/);
+  assert.match(chart, /clientBase\}\/statistics/);
 });

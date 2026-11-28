@@ -223,3 +223,25 @@ test('All products and owner product requests bypass selected-pharmacy summary d
 
   assert.equal(requireElement(operationalError).type, ErrorPage);
 });
+
+//===================================================================
+
+// Dashboard owner-scoped reads are independent of the selected pharmacy summary.
+test('dashboard and filtered dashboard render without a selected pharmacy summary', () => {
+  for (const pathname of [
+    '/pharmacy/dashboard',
+    '/pharmacy/dashboard/pharmacy-id-507f1f77bcf86cd799439011',
+  ]) {
+    assert.equal(
+      PharmacyCabinetBoundaryRuntime({
+        profile: null,
+        isLoading: true,
+        error: null,
+        pathname,
+        onRetry: () => undefined,
+        children: 'dashboard-content',
+      }),
+      'dashboard-content'
+    );
+  }
+});

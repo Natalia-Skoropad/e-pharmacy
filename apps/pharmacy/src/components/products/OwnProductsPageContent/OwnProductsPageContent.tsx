@@ -536,7 +536,7 @@ function OwnProductsPageContent({
             variant="error"
             title="Own products are temporarily unavailable"
             description={loadError}
-            retryLabel="Retry own products"
+            retryLabel="Try again"
             sideActionOnDesktop
             onRetry={() => setRefreshVersion((version) => version + 1)}
           />

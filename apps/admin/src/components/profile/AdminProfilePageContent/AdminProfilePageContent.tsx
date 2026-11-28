@@ -24,7 +24,7 @@ import {
   ActiveSessionsPanel,
   ChangePasswordForm,
   ProfileIdentityCard,
-  ProfilePageLoader,
+  ProfilePageSkeleton,
   ProfilePictureEditor,
   ProfileSectionHeader,
   ProfileTabPanel,
@@ -157,11 +157,7 @@ export function AdminProfilePageContent() {
   }, [activeTab, sessionsReloadKey, user]);
 
   if (!user) {
-    return (
-      <main className={css.page} aria-label="Loading admin profile">
-        <ProfilePageLoader label="Loading admin profile..." />
-      </main>
-    );
+    return <ProfilePageSkeleton label="Loading admin profile" />;
   }
 
   const pictureUrl =

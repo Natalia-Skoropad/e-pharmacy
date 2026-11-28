@@ -57,3 +57,18 @@ test('client analytics routes validate IDs and the sales period, using authentic
   assert.match(controllers, /getClientOrderStatisticsService\(/);
   assert.match(controllers, /getClientSalesStatisticsService\(/);
 });
+
+//===================================================================
+
+test('client sales enforces selected pharmacy ownership and default-client scope', () => {
+  const source = read('services/clients/client-analytics.service.ts');
+
+  assert.match(source, /selectedPharmacyId && !ownedIds\.some/);
+  assert.match(source, /HTTP_STATUS\.FORBIDDEN/);
+  assert.match(source, /pharmacyIds: pharmacyIds\.filter/);
+
+  assert.match(
+    source,
+    /getClientAnalyticsScope\(userId, clientId, query\.pharmacyId\)/
+  );
+});

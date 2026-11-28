@@ -55,7 +55,7 @@ function OwnProductsTable({
     () => [
       {
         key: 'addedAt',
-        width: '100px',
+        width: '60px',
         title: <TableHeaderTitle parts={['Added', 'date']} />,
 
         render: (product) =>
@@ -76,7 +76,7 @@ function OwnProductsTable({
       },
       {
         key: 'productId',
-        width: '150px',
+        width: '100px',
         title: <TableHeaderTitle parts={['Product', 'ID']} />,
 
         render: (product) => (
@@ -101,7 +101,7 @@ function OwnProductsTable({
       },
       {
         key: 'name',
-        width: '100px',
+        width: '140px',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
 
         render: (product) => (
@@ -177,7 +177,7 @@ function OwnProductsTable({
         ? [
             {
               key: 'action',
-              width: '130px',
+              width: '110px',
               title: 'Action',
 
               render: (product) => (
