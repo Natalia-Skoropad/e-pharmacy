@@ -60,16 +60,16 @@ test('audit details render rich text, working hours and comment text', () => {
     /<RenderAuditValue field=\{field\} value=\{value\}/
   );
 
-  assert.match(sharedValue, /'fullDescription', 'pharmacyComment'/);
+  assert.match(sharedValue, /'fullDescription',\s*'pharmacyComment'/);
 
   assert.match(
     productChanges,
-    /<Value field=\{row\.field\} value=\{row\.before\}/
+    /<Value\s+field=\{row\.field\}\s+value=\{row\.before\}/
   );
 
   assert.match(
     productChanges,
-    /<Value field=\{row\.field\} value=\{row\.after\}/
+    /<Value\s+field=\{row\.field\}\s+value=\{row\.after\}/
   );
 
   assert.match(details, /getAdminPharmacyComments\(pharmacyId/);

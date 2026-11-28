@@ -127,7 +127,7 @@ test('owner detail adds Products and scoped Product requests directly after Phar
   assert.match(detail, /permission=\{ADMIN_PERMISSIONS.productRequests.view\}/);
   assert.match(registry, /scopeOwnerId \? \{ ownerId: scopeOwnerId \}/);
   assert.match(registry, /hideOwner=\{Boolean\(scopeOwnerId\)\}/);
-  assert.match(registry, /!scopeOwnerId \? <PharmacyOwnerSearch/);
+  assert.match(registry, /!scopeOwnerId\s*\?\s*\(?\s*<PharmacyOwnerSearch/);
   assert.doesNotMatch(registry, /Create request/);
 });
 

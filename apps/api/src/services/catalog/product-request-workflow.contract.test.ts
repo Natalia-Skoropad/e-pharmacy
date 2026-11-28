@@ -6,7 +6,7 @@ import test from 'node:test';
 //===================================================================
 
 test('active product request articles have a storage-level uniqueness backstop', async () => {
-  const [model, service] = await Promise.all([
+  const [model, service, repair] = await Promise.all([
     readFile(
       resolve(process.cwd(), 'src/models/catalog/productRequest.model.ts'),
       'utf8'
@@ -19,6 +19,14 @@ test('active product request articles have a storage-level uniqueness backstop',
       ),
       'utf8'
     ),
+
+    readFile(
+      resolve(
+        process.cwd(),
+        'src/scripts/migrations/catalog/ensure-product-request-draft-index.ts'
+      ),
+      'utf8'
+    ),
   ]);
 
   assert.match(
@@ -26,6 +34,16 @@ test('active product request articles have a storage-level uniqueness backstop',
     /index\([\s\S]*?\{ article: 1 \}[\s\S]*?unique: true[\s\S]*?partialFilterExpression[\s\S]*?'new'[\s\S]*?'on_moderation'[\s\S]*?'approved'/
   );
 
+  assert.match(
+    repair,
+    /ACTIVE_STATUSES = \['new', 'on_moderation', 'approved'\]/
+  );
+
+  assert.match(repair, /article: \{ \$gt: '' \}/);
+  assert.match(repair, /E_PHARMACY_TEST_MONGODB_URI/);
+  assert.match(repair, /if \(legacyCount \|\| duplicates\)/);
+  assert.match(repair, /if \(!apply \|\| ready\) return;/);
+  assert.doesNotMatch(repair, /\.(?:updateMany|deleteMany|syncIndexes)\(/);
   assert.match(service, /isDuplicateProductRequestArticleError/);
   assert.match(service, /PRODUCT_REQUEST_ERROR_CODES\.ARTICLE_CONFLICT/);
 });
@@ -143,7 +161,7 @@ test('supporting documents use owner-scoped binary storage and transactional att
 
   assert.match(
     fileModel,
-    /index\(\{ expiresAt: 1 \}, \{ expireAfterSeconds: 0 \}\)/
+    /index\(\s*\{ expiresAt: 1 \},\s*\{ expireAfterSeconds: 0 \}\s*\)/
   );
 
   assert.match(fileService, /decodeAndVerifyDocumentUpload/);

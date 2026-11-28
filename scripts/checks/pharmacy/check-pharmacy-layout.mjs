@@ -117,10 +117,27 @@ const sidebar = await readFile(
   'utf8'
 );
 
+const navigationCounters = await readFile(
+  path.join(root, 'apps/pharmacy/src/hooks/usePharmacyNavigationCounters.ts'),
+  'utf8'
+);
+
 assert.match(
   sidebar,
+  /useOrderNavigationCounts\(\)/,
+  'PharmacySidebar must use the shared order navigation counter hook'
+);
+
+assert.match(
+  navigationCounters,
   /from ['"]@\/lib\/api\/browser\/orders\.api['"]/,
-  'PharmacySidebar must depend on the narrow orders browser adapter'
+  'Order navigation counters must depend on the narrow orders browser adapter'
+);
+
+assert.doesNotMatch(
+  navigationCounters,
+  /\bfetch\s*\(|from\s+['"](?:@e-pharmacy\/next-api\/server|@\/lib\/api\/server|[^'"]*apps\/api)/,
+  'Shared navigation counters must not bypass the browser BFF adapter'
 );
 
 const [header, mobileMenu, shell, breadcrumbEvent, navigation] =

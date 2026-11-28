@@ -182,9 +182,11 @@ test('S10.9 exact pharmacy audit scope cannot match another pharmacy or an owner
     /scopeFilter: Record<string, unknown> = exactPharmacyFilter/
   );
 
+  assert.match(history, /buildExactAuditScopeFilter\(exactScope\)/);
+
   assert.match(
-    history,
-    /buildPharmacyAuditScopeFilter\(exactScope\.pharmacyId\)/
+    filters,
+    /return 'pharmacyId' in scope\s*\? buildPharmacyAuditScopeFilter\(scope\.pharmacyId\)/
   );
 
   assert.match(history, /getAuditActorIdsByType\(query\.actorType\)/);
@@ -221,7 +223,6 @@ test('S10.9 preserves legacy audit projection, filtering and paging metadata', (
   assert.match(filters, /T00:00:00\.000Z/);
   assert.match(filters, /T23:59:59\.999Z/);
   assert.match(filters, /section: \{ \$exists: false \}/);
-
   assert.match(history, /AdminAuditLog\.countDocuments\(filter\)/);
   assert.match(history, /\.sort\(\{ createdAt: -1, _id: -1 \}\)/);
 

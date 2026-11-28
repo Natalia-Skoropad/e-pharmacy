@@ -81,44 +81,43 @@ test(
   { skip: shouldSkip },
 
   async (context) => {
+    context.after(() => mongoose.disconnect());
     await mongoose.connect(getTestMongoUri());
     await Promise.all([Product.init(), ProductRequest.init()]);
 
     const medicineCategoryId = await getTestProductCategoryId();
-
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
     const ownerA = new Types.ObjectId();
     const ownerB = new Types.ObjectId();
     const adminUserId = new Types.ObjectId();
     const pharmacyA = new Types.ObjectId();
     const pharmacyB = new Types.ObjectId();
-
-    await seedIntegrationPharmacyActors([ownerA, ownerB]);
-
-    await Promise.all([
-      Pharmacy.create({
-        _id: pharmacyA,
-        ownerId: ownerA,
-        managerUserIds: [],
-        documents: [],
-        name: `Workflow Pharmacy A ${suffix.slice(-6)}`,
-        status: 'active',
-      }),
-
-      Pharmacy.create({
-        _id: pharmacyB,
-        ownerId: ownerB,
-        managerUserIds: [],
-        documents: [],
-        name: `Workflow Pharmacy B ${suffix.slice(-6)}`,
-        status: 'active',
-      }),
-    ]);
-
     const requestIds: Types.ObjectId[] = [];
     const productIds: Types.ObjectId[] = [];
 
     try {
+      await seedIntegrationPharmacyActors([ownerA, ownerB]);
+
+      await Promise.all([
+        Pharmacy.create({
+          _id: pharmacyA,
+          ownerId: ownerA,
+          managerUserIds: [],
+          documents: [],
+          name: `Workflow Pharmacy A ${suffix.slice(-6)}`,
+          status: 'active',
+        }),
+
+        Pharmacy.create({
+          _id: pharmacyB,
+          ownerId: ownerB,
+          managerUserIds: [],
+          documents: [],
+          name: `Workflow Pharmacy B ${suffix.slice(-6)}`,
+          status: 'active',
+        }),
+      ]);
+
       await context.test(
         'admin registry scopes and paginates requests and deduplicates legacy owners',
         async () => {
@@ -734,7 +733,8 @@ test(
       );
 
       await context.test(
-        'article availability excludes only requests owned by the current pharmacy',
+        'article availability excludes only requests owned by the authenticated owner',
+
         async () => {
           const ownArticle = `REQ-OWN-${suffix.slice(-10)}`;
 
@@ -1248,8 +1248,6 @@ test(
           productRequestId: { $in: requestIds },
         }),
       ]);
-
-      await mongoose.disconnect();
     }
   }
 );

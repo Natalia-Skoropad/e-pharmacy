@@ -20,7 +20,6 @@ test('desktop and mobile logout share one pharmacy application lifecycle owner',
   assert.match(header, /usePharmacyLogoutController\(logout\)/);
   assert.match(header, /isLogoutPending=\{isLogoutPending\}/);
   assert.match(header, /onLogout=\{logoutFromPharmacy\}/);
-
   assert.doesNotMatch(mobileMenu, /getSharedLoginUrl/);
   assert.doesNotMatch(mobileMenu, /setIsLogoutLoading/);
   assert.match(mobileMenu, /onLogout\(onClose\)/);
@@ -73,10 +72,14 @@ test('sidebar hides counters after a current-generation request failure', async 
     './PharmacySidebar/PharmacySidebar.tsx'
   );
 
-  assert.match(sidebar, /createUnavailableOrderCounterState/);
+  const hook = await readLayoutSource(
+    '../../hooks/usePharmacyNavigationCounters.ts'
+  );
+
+  assert.match(hook, /createUnavailableOrderCounterState/);
 
   // Ignore unrelated catch blocks and guard only the order-counter request.
-  const orderCounterFailure = sidebar.match(
+  const orderCounterFailure = hook.match(
     /catch \{([\s\S]*?)\n      \} finally/
   );
 
@@ -92,5 +95,6 @@ test('sidebar hides counters after a current-generation request failure', async 
     /value: createUnavailableOrderCounterState\(\)/
   );
 
-  assert.match(sidebar, /const orderCounts = getVisibleOrderCounts/);
+  assert.match(hook, /return getVisibleOrderCounts\(/);
+  assert.match(sidebar, /const orderCounts = useOrderNavigationCounts\(\)/);
 });

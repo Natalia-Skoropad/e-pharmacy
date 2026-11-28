@@ -154,11 +154,7 @@ test('product requests align status copy with metadata and expose rejection reas
     readFile(PRODUCT_REQUEST_HISTORY, 'utf8'),
   ]);
 
-  assert.match(
-    overview,
-    /PRODUCT_REQUEST_STATUS_PRESENTATION\[request\.status\]/
-  );
-
+  assert.match(overview, /<ProductRequestStatusBadges request=\{request\} \/>/);
   assert.match(overview, /Last update date/);
   assert.match(overview, /formatShortDate\(request\.updatedAt\)/);
 

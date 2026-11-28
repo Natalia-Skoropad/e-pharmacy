@@ -82,7 +82,7 @@ test('new client-card comments are owner-scoped; legacy pharmacy notes remain re
 
   assert.match(
     model,
-    /\['client', 'product'\]\.includes\(this\.entityType\) && !this\.pharmacyId/
+    /\['client', 'product', 'product_request'\]\.includes\(\s*this\.entityType\s*\)\s*&&\s*!this\.pharmacyId/
   );
 });
 

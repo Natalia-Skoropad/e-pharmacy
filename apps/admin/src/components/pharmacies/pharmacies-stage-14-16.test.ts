@@ -36,7 +36,10 @@ test('14.16: Activity is mounted only on the pharmacy tab with exact pharmacy-sc
     /getAdminPharmacyActivityDetail\(scopePharmacyId, selectedAuditId/
   );
 
-  assert.match(activity, /scopePharmacyId \|\| !page/);
+  assert.match(
+    activity,
+    /scopePharmacyId\s*\|\|\s*scopeRequestId\s*\|\|\s*!page/
+  );
 
   assert.match(
     api,

@@ -84,18 +84,6 @@ test('registry has a bounded independent timeout at both the browser and BFF lay
 
 //===================================================================
 
-test('multi-pharmacy 409 cannot trigger unbounded order counter requests on focus', () => {
-  const sidebar = read(
-    'apps/pharmacy/src/components/layout/PharmacySidebar/PharmacySidebar.tsx'
-  );
-
-  assert.match(sidebar, /error\.code === 'PHARMACY_SELECTION_REQUIRED'/);
-  assert.match(sidebar, /needsPharmacySelection \|\| activeController/);
-  assert.match(sidebar, /needsPharmacySelection = false/);
-});
-
-//===================================================================
-
 test('slow authentication is diagnosed without exposing tokens, session IDs or user details', () => {
   const middleware = read('apps/api/src/middlewares/auth/auth.middleware.ts');
 

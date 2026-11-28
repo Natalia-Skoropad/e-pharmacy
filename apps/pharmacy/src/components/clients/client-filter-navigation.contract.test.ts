@@ -29,7 +29,10 @@ test('two-segment owner Clients filter routes cannot be swallowed by client deta
     /if \(`\/pharmacy\/clients\/\$\{clientId\}\/\$\{tab\}` !== canonical\)\s*redirect\(canonical\)/
   );
 
-  assert.match(tab, /SUPPORTED_TABS = \['orders', 'products', 'comments'\]/);
+  assert.match(
+    tab,
+    /SUPPORTED_TABS = \[\s*'statistics',\s*'orders',\s*'products',\s*'comments',?\s*\]/
+  );
 });
 
 //===================================================================
@@ -69,7 +72,11 @@ test('owner Clients filter navigation creates history entries and preserves phar
   assert.match(change, /router.push\(nextPath, \{ scroll: false \}\)/);
   assert.doesNotMatch(change, /router.replace/);
 
-  assert.match(reset, /buildClientsPath\(DEFAULT_CLIENTS_FILTERS, basePath/);
+  assert.match(
+    reset,
+    /buildClientsPath\(\s*\{\s*\.\.\.DEFAULT_CLIENTS_FILTERS,\s*pharmacyId: filters\.pharmacyId\s*\},\s*basePath/
+  );
+
   assert.match(reset, /router.push\(nextPath, \{ scroll: false \}\)/);
   assert.match(page, /perPage: rowsPerPage/);
   assert.doesNotMatch(page, /usePathname|pendingRoutePathRef/);

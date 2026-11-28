@@ -73,7 +73,16 @@ test('Stage 14.7 exact scope covers legacy owner-scoped moderation and pharmacy-
     /scopeFilter: Record<string, unknown> = exactPharmacyFilter/
   );
 
-  assert.match(auditRead, /findOne\(\{[\s\S]*?buildPharmacyAuditScopeFilter/);
+  assert.match(
+    auditRead,
+    /findOne\(\{[\s\S]*?\.\.\.\(exactScope \? buildExactAuditScopeFilter\(exactScope\) : \{\}\)/
+  );
+
+  assert.match(
+    auditScope,
+    /return 'pharmacyId' in scope\s*\? buildPharmacyAuditScopeFilter\(scope\.pharmacyId\)/
+  );
+
   assert.match(model, /pharmacyId:[\s\S]*?type: String/);
   assert.match(model, /index\(\s*\{ pharmacyId: 1, createdAt: -1/);
 

@@ -67,6 +67,33 @@ test('audit modal separates section and page and has accessible change values', 
   assert.match(sectionLink, /<TextActionButton/);
   assert.match(styles, /\.actorIdentityNameLink \{/);
   assert.doesNotMatch(styles, /\.sectionLink:hover \.sectionLinkLabel/);
+
+  const [value, longText] = await Promise.all([
+    source('./AuditChangeValue.tsx'),
+    source('./AuditLongText.tsx'),
+  ]);
+
+  assert.match(
+    value,
+    /'description',\s*'shortDescription',\s*'text',[\s\S]*?\]\.includes\(field\)/
+  );
+
+  assert.match(value, /<AuditLongText key=\{value\} value=\{value\} \/>/);
+  assert.match(modal, /<AuditLongText value=\{reason\} \/>/);
+  assert.match(longText, /<MarkdownContent value=\{value\} \/>/);
+  assert.match(longText, /className=\{css\.auditExpandButton\}/);
+  assert.match(longText, /iconLeft=\{\s*expanded \? <ChevronUp/);
+  assert.match(longText, /fullWidth/);
+
+  assert.match(
+    styles,
+    /\.auditLongText \.auditTextContent :is\(h1, h2, h3, h4, h5, h6\)/
+  );
+
+  assert.match(
+    styles,
+    /\.auditLongText > \.auditExpandButton\s*\{[^}]*width:\s*100%/
+  );
 });
 
 //===================================================================
@@ -75,6 +102,7 @@ test('audit photo previews use an explicit historical before URL and shimmer whi
   const modal = await source('./AuditDetailsModal.tsx');
   const value = await source('./AuditChangeValue.tsx');
 
+  assert.match(value, /field === 'photoFingerprint' \? \(\s*photoUrl \?/);
   assert.match(value, /<ResponsivePhoto/);
   assert.match(value, /preset="table"/);
   assert.match(modal, /photoUrl=\{item\.beforePhotoUrl\}/);

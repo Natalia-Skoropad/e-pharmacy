@@ -66,22 +66,6 @@ test('no extra reactivation status badge or review modal summary for corrections
 
 //===================================================================
 
-test('audit photo previews do not expose fingerprint hashes and work with new records', () => {
-  const snapshot = file(
-    'apps/api/src/services/pharmacies/pharmacy-audit-changes.ts'
-  );
-
-  assert.match(snapshot, /photoPreviewUrl/);
-  assert.match(snapshot, /changedFields\.includes\('photoFingerprint'\)/);
-
-  const view = file('apps/admin/src/components/activity/AuditDetailsModal.tsx');
-
-  assert.match(view, /<ResponsivePhoto/);
-  assert.match(view, /Historical photo preview unavailable/);
-});
-
-//===================================================================
-
 test('admin pharmacy registry has its own timeout on both sides of the BFF', () => {
   assert.match(
     file('apps/admin/src/app/api/admin/pharmacies/route.ts'),

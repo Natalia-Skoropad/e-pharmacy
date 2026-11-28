@@ -100,7 +100,7 @@ test('products catch-all accepts filtered stock movement and related orders', as
 
   assert.match(
     fallback,
-    /buildStockMovementPath\(productId, parseStockMovementSegments\(filters\)\)/
+    /buildStockMovementPath\(\s*productId,\s*parseStockMovementSegments\(filters\)\s*\)/
   );
 
   assert.match(fallback, /buildRelatedProductOrdersPath\(/);
@@ -118,7 +118,7 @@ test('stock movement counts remain visible and zero while current data loads', a
 
   assert.match(
     tab,
-    /shown=\{\s*stockReadLoading \? 0 : paginatedStockMovementRows.length\s*\}/
+    /shown=\{\s*stockReadLoading\s*\?\s*0\s*:\s*paginatedStockMovementRows\.length\s*\}/
   );
 
   assert.match(

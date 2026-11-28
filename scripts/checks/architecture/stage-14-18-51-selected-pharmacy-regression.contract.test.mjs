@@ -58,7 +58,10 @@ test('selected title, combobox and SEO derive from the actual public listing, no
     'apps/client/src/app/(public)/(pharmacies)/pharmacies/page.tsx',
     'apps/client/src/app/(public)/(pharmacies)/pharmacies/[...segments]/page.tsx',
   ]) {
-    assert.match(read(route), /getSelectedPharmacySeoName\(filters\)/);
+    const metadata = read(route);
+
+    assert.match(metadata, /await getSelectedPharmacySeoDetails\(filters\)/);
+    assert.match(metadata, /const pharmacyName = selectedPharmacy\?\.name/);
   }
 });
 

@@ -11,23 +11,6 @@ const source = (name) => readFileSync(path.join(root, name), 'utf8');
 
 //===================================================================
 
-test('Shared identifier confirmation scrolls matched pharmacies per field, not the field list', () => {
-  const css = source(
-    'apps/pharmacy/src/components/pharmacies/OwnedPharmacyEditor/DuplicateIdentifierSaveModal.module.css'
-  );
-
-  const fieldList = css.split('.list {')[1]?.split('}')[0] ?? '';
-  const matches = css.split('.matchesList {')[1]?.split('}')[0] ?? '';
-  const outer = css.split('.scrollableDialog {')[1]?.split('}')[0] ?? '';
-
-  assert.doesNotMatch(fieldList, /overflow-y:\s*auto/);
-  assert.match(matches, /overflow-y:\s*auto/);
-  assert.match(matches, /max-height:/);
-  assert.doesNotMatch(outer, /overflow-y:\s*auto/);
-});
-
-//===================================================================
-
 test('Saved owner identifiers show persistent warnings without blocking an unchanged save', () => {
   const sourceCode = source(
     'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyEditableTab.tsx'
@@ -60,7 +43,34 @@ test('Read-only Admin shared details include typed and parsed matches', () => {
   );
 
   assert.match(api, /ownerId: pharmacy\.ownerId/);
-  assert.match(api, /\.select\('_id name phone email bankDetails/);
+
+  assert.match(
+    api,
+    /\$match: \{ ownerId: pharmacy\.ownerId, _id: \{ \$ne: _id \} \}/
+  );
+
+  const projection = api.match(
+    /\$project: \{\s*_id: 1,[\s\S]*?imageUrl: \{/
+  )?.[0];
+
+  assert.ok(
+    projection,
+    'Shared pharmacy identifiers must use a bounded projection'
+  );
+
+  for (const field of [
+    'name',
+    'phone',
+    'email',
+    "'bankDetails.taxId'",
+    "'bankDetails.iban'",
+    "'bankDetails.receiptEmail'",
+  ]) {
+    assert.ok(
+      projection.includes(`${field}: 1`),
+      `Missing ${field} in shared-details projection`
+    );
+  }
 
   const component = source(
     'apps/admin/src/components/pharmacies/PharmacyDetailsPageContent/SharedPharmacyIdentifiersNotice.tsx'

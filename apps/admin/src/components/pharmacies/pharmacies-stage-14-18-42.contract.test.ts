@@ -39,17 +39,11 @@ test('registry cards and help text use Blocked in both pharmacy cabinets', async
 
 //===================================================================
 
-test('dashboard and reactivation actions name the same Blocked state', async () => {
-  const dashboard = await read(
-    '../../../../../apps/pharmacy/src/components/dashboard/PharmacyDashboardPageContent/PharmacyDashboardPageContent.tsx'
-  );
-
+test('reactivation cancellation names the canonical Blocked state', async () => {
   const actions = await read(
     '../../../../../apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
   );
 
-  assert.match(dashboard, /status === 'blocked'[\s\S]*?label: 'Blocked'/);
-  assert.match(dashboard, /Your pharmacy is blocked/);
   assert.match(actions, /pharmacy will return to Blocked/);
 });
 

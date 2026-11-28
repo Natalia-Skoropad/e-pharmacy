@@ -41,6 +41,11 @@ test('Duplicate identifier confirmation scrolls the full dialog and shows at mos
   assert.match(modal, /dialogClassName=\{css\.scrollableDialog\}/);
   assert.match(modal, /className=\{css\.matchesList\}/);
 
+  const fieldList = styles.match(/\.list\s*\{([^}]+)\}/)?.[1];
+
+  assert.ok(fieldList);
+  assert.doesNotMatch(fieldList, /overflow-y:\s*auto/);
+
   // A field shows two complete 54px cards separated by an 8px gap.
   assert.match(
     styles,

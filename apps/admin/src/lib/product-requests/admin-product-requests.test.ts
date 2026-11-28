@@ -245,7 +245,7 @@ test('seed images use the existing same-origin Admin rewrite and media paths sta
 
 //===============================================================
 
-test('registry renders exactly two searches with distinct scope-key namespaces', async () => {
+test('registry renders owner search only when unscoped and keeps distinct search keys', async () => {
   const source = await readFile(
     new URL(
       '../../components/product-requests/AdminProductRequestsList.tsx',
@@ -254,9 +254,9 @@ test('registry renders exactly two searches with distinct scope-key namespaces',
     'utf8'
   );
 
-  const grid = source
-    .split('<div className={css.searchGrid}>')[1]
-    ?.split('</section>')[0];
+  const grid = source.match(
+    /<section\b[^>]*aria-label="Search and filter product requests"[^>]*>([\s\S]*?)<\/section>/
+  )?.[1];
 
   assert.ok(grid);
   assert.equal([...grid.matchAll(/<PharmacyOwnerSearch\b/g)].length, 1);
@@ -267,12 +267,12 @@ test('registry renders exactly two searches with distinct scope-key namespaces',
   // A distinct namespace per sibling is required even when status/date/category change.
   assert.match(
     grid,
-    /<PharmacyOwnerSearch key=\{`owner-search:\$\{JSON\.stringify\(ownerScope\)\}`\}/
+    /\{!scopeOwnerId\s*\?\s*\(\s*<PharmacyOwnerSearch\s+key=\{`owner-search:\$\{JSON\.stringify\(ownerScope\)\}`\}[\s\S]*?\/>\s*\)\s*:\s*null\}/
   );
 
   assert.match(
     grid,
-    /<ProductRequestSearch key=\{`request-search:\$\{JSON\.stringify\(requestScope\)\}`\}/
+    /<ProductRequestSearch\s+key=\{`request-search:\$\{JSON\.stringify\(requestScope\)\}`\}/
   );
 });
 
@@ -310,7 +310,7 @@ test('product request counters share one permission-gated provider across Admin 
 
   assert.match(
     provider,
-    /getAdminProductRequestStatistics\(\{ signal: controller\.signal \}\)/
+    /getAdminProductRequestStatistics\(\{\s*signal: controller\.signal,?\s*\}\)/
   );
 
   assert.match(provider, /new: stats\.new, onModeration: stats\.on_moderation/);
@@ -524,12 +524,12 @@ test('private Admin comments and audit endpoints are scoped to a product request
 
   assert.match(
     routes,
-    /post\('\/product-requests\/:requestId\/comments', requireAdminPermission\(ADMIN_PERMISSIONS\.productRequests\.edit\)/
+    /post\(\s*'\/product-requests\/:requestId\/comments',\s*requireAdminPermission\(ADMIN_PERMISSIONS\.productRequests\.edit\)/
   );
 
   assert.match(
     routes,
-    /get\('\/product-requests\/:requestId\/activity', requireAdminPermission\(ADMIN_PERMISSIONS\.productRequests\.view\)/
+    /get\(\s*'\/product-requests\/:requestId\/activity',\s*requireAdminPermission\(ADMIN_PERMISSIONS\.productRequests\.view\)/
   );
 
   assert.match(
@@ -547,7 +547,7 @@ test('private Admin comments and audit endpoints are scoped to a product request
 
   assert.match(
     audit,
-    /scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES\.PRODUCT_REQUEST, scopeEntityId: id/
+    /scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES\.PRODUCT_REQUEST,\s*scopeEntityId: id/
   );
 
   assert.equal(

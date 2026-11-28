@@ -40,9 +40,21 @@ test('all pharmacies and individual pharmacy share one searchable registry', asy
 
   assert.match(page, /<OwnedPharmacySearch/);
   assert.match(page, /label="Select pharmacy"/);
+  assert.match(page, /value=\{filters\.pharmacyId\}/);
   assert.match(page, /explainStatistics/);
-  assert.match(pharmacySearch, /All pharmacies/);
-  assert.match(pharmacySearch, /Statistics and products/);
+  assert.match(page, /changeFilters\(\{ \.\.\.filters, pharmacyId \}\)/);
+  assert.match(pharmacySearch, /statisticsContext = 'products'/);
+  assert.match(pharmacySearch, /value:\s*'',\s*label:\s*'All pharmacies'/);
+
+  assert.match(
+    pharmacySearch,
+    /All pharmacies combines the stock, reservations and products of every pharmacy you own/i
+  );
+
+  assert.match(
+    pharmacySearch,
+    /Select a specific pharmacy to see statistics and inventory for that pharmacy only/i
+  );
 });
 
 //===================================================================

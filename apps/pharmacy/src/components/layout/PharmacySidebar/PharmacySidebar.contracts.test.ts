@@ -15,6 +15,12 @@ test('order counters refresh from owner-wide or URL-scoped Orders selection and 
   assert.match(source, /subscribeToOrderCounterRefresh/);
   assert.match(source, /addEventListener\('focus'/);
   assert.match(source, /scope: 'owner' as const/);
+
+  assert.match(
+    source,
+    /const onFocus = \(\) => \{\s*if \(!activeController\) void loadOrderCounts\(\);/
+  );
+
   assert.match(source, /orderScopePharmacyId/);
   assert.match(source, /parseOrdersSegments/);
 

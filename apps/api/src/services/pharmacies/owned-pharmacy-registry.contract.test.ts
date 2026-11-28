@@ -86,9 +86,21 @@ test('registry scopes aggregate before facet and reuses per-pharmacy KPI project
 
   assert.match(service, /\.\.\.membershipStages\(userId\),\s*\{ \$group: /);
 
+  // Dashboard requests owner-only options; other consumers retain membership scope.
+  // Both branches must scope by the authenticated actor before applying search.
+  const optionsService = service.slice(
+    service.indexOf('export async function listOwnedPharmacyOptionsService('),
+    service.indexOf('export async function getOwnedPharmacyDetailService(')
+  );
+
   assert.match(
-    service,
-    /\.\.\.membershipStages\(userId\),\s*\.\.\.\(query\.search/
+    optionsService,
+    /const userId = await assertRegistryUser\(actorUserId\);/
+  );
+
+  assert.match(
+    optionsService,
+    /Pharmacy\.aggregate<RegistryOption>\(\[\s*\.\.\.\(query\.scope === 'owner'\s*\?\s*\[\{\s*\$match:\s*\{\s*ownerId:\s*userId\s*\}\s*\}\]\s*:\s*membershipStages\(userId\)\),\s*\.\.\.\(query\.search/
   );
 
   assert.match(service, /buildPagedPharmacyItemsPipeline\(/);

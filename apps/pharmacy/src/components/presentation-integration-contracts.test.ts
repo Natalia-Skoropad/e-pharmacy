@@ -11,28 +11,32 @@ async function readComponent(relativePath: string): Promise<string> {
 //===================================================================
 
 test('keeps pharmacy status badges on typed domain maps', async () => {
-  const [orders, clients, products, requests, profile] = await Promise.all([
-    readComponent('./orders/OrdersTable/OrdersTable.tsx'),
-    readComponent('./clients/ClientsTable/ClientsTable.tsx'),
-    readComponent('./products/OwnProductsTable/OwnProductsTable.tsx'),
+  const [orders, clients, products, requests, requestBadges, profile] =
+    await Promise.all([
+      readComponent('./orders/OrdersTable/OrdersTable.tsx'),
+      readComponent('./clients/ClientsTable/ClientsTable.tsx'),
+      readComponent('./products/OwnProductsTable/OwnProductsTable.tsx'),
 
-    readComponent(
-      './product-requests/ProductRequestsTable/ProductRequestsTable.tsx'
-    ),
+      readComponent(
+        './product-requests/ProductRequestsTable/ProductRequestsTable.tsx'
+      ),
 
-    readComponent(
-      './profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
-    ),
-  ]);
+      readComponent('./product-requests/ProductRequestStatusBadges.tsx'),
+
+      readComponent(
+        './profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
+      ),
+    ]);
 
   assert.match(orders, /ORDER_STATUS_PRESENTATION\[order\.status\]/);
   assert.match(orders, /DELIVERY_METHOD_LABELS\[order\.deliveryMethod\]/);
   assert.match(orders, /PAYMENT_METHOD_LABELS\[order\.paymentMethod\]/);
   assert.match(clients, /USER_STATUS_PRESENTATION\[client\.status\]/);
   assert.match(products, /PRODUCT_STATUS_PRESENTATION\[product\.status\]/);
+  assert.match(requests, /<ProductRequestStatusBadges request=\{request\} \/>/);
 
   assert.match(
-    requests,
+    requestBadges,
     /PRODUCT_REQUEST_STATUS_PRESENTATION\[request\.status\]/
   );
 
@@ -40,7 +44,7 @@ test('keeps pharmacy status badges on typed domain maps', async () => {
   assert.doesNotMatch(profile, /PHARMACY_STATUS_PRESENTATION/);
 
   assert.doesNotMatch(
-    [orders, clients, products, requests, profile].join('\n'),
+    [orders, clients, products, requests, requestBadges, profile].join('\n'),
     /getStatusPresentation/
   );
 });

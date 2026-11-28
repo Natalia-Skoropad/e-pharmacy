@@ -11,6 +11,7 @@ import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 import { Order } from '../../models/orders/order.model';
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
 import { StockMovement } from '../../models/inventory/stockMovement.model';
 
 import type { HttpError } from '../../types/http/errors';
@@ -119,14 +120,15 @@ function defaultClientPhone(id: Types.ObjectId): string {
 //===================================================================
 
 test(
-  '14.18.15: one owner, two pharmacies — orders, clients, offers, requests and sales stay selected-pharmacy-scoped',
+  '14.18.15: one owner, two pharmacies — orders, clients, offers and sales stay pharmacy-scoped; requests stay owner-scoped',
   { skip: !TEST_MONGODB_URI },
 
-  async () => {
+  async (context) => {
+    context.after(() => mongoose.disconnect());
+
     await mongoose.connect(TEST_MONGODB_URI!);
 
     const categoryId = await getTestProductCategoryId();
-
     const ownerId = new Types.ObjectId();
     const foreignOwnerId = new Types.ObjectId();
     const pharmacyA = new Types.ObjectId();
@@ -143,7 +145,6 @@ test(
     const suffix = ownerId.toHexString().toUpperCase();
     const owner = ownerId.toHexString();
     const actor = { id: owner, role: 'pharmacy' as const };
-
     const orderQuery = ordersQuerySchema.parse({ page: 1, perPage: 20 });
     const clientsQuery = clientsQuerySchema.parse({ page: 1, perPage: 20 });
 
@@ -161,7 +162,6 @@ test(
       groupBy: 'month',
     });
 
-    const requestIds: Types.ObjectId[] = [];
     const createdOfferIds: Types.ObjectId[] = [];
 
     try {
@@ -284,18 +284,6 @@ test(
         409
       );
 
-      await expectStatus(
-        () =>
-          createProductRequestService(owner, {
-            status: 'new',
-            name: 'Missing selected pharmacy',
-            article: `REQ-NOSEL-${suffix.slice(-10)}`,
-            categoryMode: 'catalog',
-            categoryId: categoryId.toHexString(),
-          }),
-        409
-      );
-
       // Even a valid selected A membership cannot reserve an offer owned by B.
       await expectStatus(
         () =>
@@ -334,8 +322,6 @@ test(
           }),
         409
       );
-
-      await expectStatus(() => getProductRequestStatisticsService(owner), 409);
 
       await expectStatus(
         () => getOrderSalesStatisticsService(owner, salesQuery, 'pharmacy'),
@@ -532,11 +518,9 @@ test(
         categoryId: categoryId.toHexString(),
       });
 
-      const requestA = await withSelectedPharmacy(pharmacyA.toHexString(), () =>
-        createProductRequestService(
-          owner,
-          requestForm(`REQ-A-${suffix.slice(-10)}`)
-        )
+      const requestA = await createProductRequestService(
+        owner,
+        requestForm(`REQ-A-${suffix.slice(-10)}`)
       );
 
       const requestB = await withSelectedPharmacy(pharmacyB.toHexString(), () =>
@@ -546,31 +530,87 @@ test(
         )
       );
 
-      requestIds.push(
-        new Types.ObjectId(requestA.request.id),
-        new Types.ObjectId(requestB.request.id)
+      const foreignRequest = await createProductRequestService(
+        foreignOwnerId.toHexString(),
+        requestForm(`REQ-FOREIGN-${suffix.slice(-10)}`)
       );
 
-      await withSelectedPharmacy(pharmacyA.toHexString(), async () => {
+      const ownRequestIds = [requestA.request.id, requestB.request.id].sort();
+
+      const assertOwnerRequests = async () => {
         const requests = await getProductRequestsService(owner, requestsQuery);
 
-        assert.equal(requests.total, 1);
-        assert.equal(requests.items[0]?.id, requestA.request.id);
+        assert.equal(requests.total, 2);
 
-        const counts = await getProductRequestStatisticsService(owner);
+        assert.deepEqual(
+          requests.items.map((item) => item.id).sort(),
+          ownRequestIds
+        );
 
-        assert.equal(counts.new, 1);
+        assert.equal((await getProductRequestStatisticsService(owner)).new, 2);
+      };
+
+      await assertOwnerRequests();
+      await withSelectedPharmacy(pharmacyA.toHexString(), assertOwnerRequests);
+      await withSelectedPharmacy(pharmacyB.toHexString(), assertOwnerRequests);
+
+      // An unrelated selection cannot expand or replace the authenticated owner scope.
+      await withSelectedPharmacy(
+        foreignPharmacy.toHexString(),
+        assertOwnerRequests
+      );
+
+      const persisted = await ProductRequest.find({
+        _id: { $in: ownRequestIds },
+      }).lean();
+
+      assert.equal(persisted.length, 2);
+
+      for (const request of persisted) {
+        assert.equal(String(request.ownerId), owner);
+        assert.equal(request.pharmacyId, undefined);
+      }
+
+      await withSelectedPharmacy(pharmacyA.toHexString(), async () => {
+        const detail = await getProductRequestByIdService(
+          owner,
+          requestB.request.id
+        );
+
+        assert.equal(detail.request.id, requestB.request.id);
+
+        const availability = await getProductRequestArticleAvailabilityService(
+          owner,
+          {
+            article: `REQ-B-${suffix.slice(-10)}`,
+            excludeRequestId: requestB.request.id,
+          }
+        );
+
+        assert.equal(availability.available, true);
+
+        const updated = await updateProductRequestService(
+          owner,
+          requestB.request.id,
+
+          {
+            ...requestForm(`REQ-B-${suffix.slice(-10)}`),
+            name: 'Owner wide updated request',
+          }
+        );
+
+        assert.equal(updated.request.name, 'Owner wide updated request');
 
         await expectStatus(
-          () => getProductRequestByIdService(owner, requestB.request.id),
+          () => getProductRequestByIdService(owner, foreignRequest.request.id),
           404
         );
 
         await expectStatus(
           () =>
             getProductRequestArticleAvailabilityService(owner, {
-              article: `REQ-A-${suffix.slice(-10)}`,
-              excludeRequestId: requestB.request.id,
+              article: `REQ-FOREIGN-${suffix.slice(-10)}`,
+              excludeRequestId: foreignRequest.request.id,
             }),
           404
         );
@@ -579,14 +619,14 @@ test(
           () =>
             updateProductRequestService(
               owner,
-              requestB.request.id,
-              requestForm(`REQ-B-${suffix.slice(-10)}`)
+              foreignRequest.request.id,
+              requestForm(`REQ-FOREIGN-${suffix.slice(-10)}`)
             ),
           404
         );
 
         await expectStatus(
-          () => deleteProductRequestService(owner, requestB.request.id),
+          () => deleteProductRequestService(owner, foreignRequest.request.id),
           404
         );
 
@@ -612,15 +652,6 @@ test(
       });
 
       await withSelectedPharmacy(pharmacyB.toHexString(), async () => {
-        const requests = await getProductRequestsService(owner, requestsQuery);
-
-        assert.equal(requests.total, 1);
-        assert.equal(requests.items[0]?.id, requestB.request.id);
-
-        const counts = await getProductRequestStatisticsService(owner);
-
-        assert.equal(counts.new, 1);
-
         await expectStatus(
           () =>
             removeProductFromMyPharmacyService(
@@ -649,15 +680,14 @@ test(
         403
       );
 
-      await expectStatus(
-        () =>
-          withSelectedPharmacy(foreignPharmacy.toHexString(), () =>
-            createProductRequestService(
-              owner,
-              requestForm(`REQ-FOREIGN-${suffix.slice(-10)}`)
-            )
-          ),
-        403
+      await withSelectedPharmacy(pharmacyB.toHexString(), () =>
+        deleteProductRequestService(owner, requestA.request.id)
+      );
+
+      assert.equal((await getProductRequestStatisticsService(owner)).new, 1);
+
+      assert.ok(
+        await ProductRequest.exists({ _id: foreignRequest.request.id })
       );
 
       // Reject a third-party pharmacy even when the header is a valid ObjectId.
@@ -674,7 +704,12 @@ test(
       });
 
       await Order.deleteMany({ pharmacyId: { $in: pharmacyIds } });
-      await ProductRequest.deleteMany({ _id: { $in: requestIds } });
+
+      await ProductRequest.deleteMany({
+        ownerId: { $in: [ownerId, foreignOwnerId] },
+      });
+
+      await AdminAuditLog.deleteMany({ actorUserId: { $in: userIds } });
       await ProductOffer.deleteMany({ pharmacyId: { $in: pharmacyIds } });
 
       await Product.deleteMany({
@@ -683,7 +718,6 @@ test(
 
       await Pharmacy.deleteMany({ _id: { $in: pharmacyIds } });
       await User.deleteMany({ _id: { $in: userIds } });
-      await mongoose.disconnect();
     }
   }
 );

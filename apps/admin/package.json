@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "node ../../scripts/dev/run-with-bff-secret.mjs next dev --port 3001",
-    "build": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && next build",
+    "build": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })\" && next build",
     "start": "next start --port 3001",
     "lint": "eslint .",
-    "type-check": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && next typegen && tsc --noEmit",
+    "type-check": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })\" && next typegen && tsc --noEmit",
     "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.test.ts --allow-empty",
     "test:react": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.react.test.tsx --allow-empty"
   },

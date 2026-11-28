@@ -5,6 +5,8 @@ import mongoose, { Types } from 'mongoose';
 
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
+import { StockMovement } from '../../models/inventory/stockMovement.model';
 import { Order } from '../../models/orders/order.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { Product } from '../../models/catalog/product.model';
@@ -79,7 +81,8 @@ test(
   'operational pharmacy mutations require active or on_moderation status while reads and tenant isolation remain intact',
   { skip: shouldSkip },
 
-  async () => {
+  async (context) => {
+    context.after(() => mongoose.disconnect());
     await mongoose.connect(getTestMongoUri());
 
     const medicineCategoryId = await getTestProductCategoryId();
@@ -96,82 +99,81 @@ test(
     const offerId = new Types.ObjectId();
     const clientId = new Types.ObjectId();
 
-    await seedIntegrationPharmacyActors([ownerA, ownerB]);
-
-    await Promise.all([
-      Pharmacy.create({
-        _id: pharmacyA,
-        ownerId: ownerA,
-        managerUserIds: [managerA],
-        documents: [],
-        name: `Operational Pharmacy A ${suffix.slice(-6)}`,
-        status: 'active',
-      }),
-
-      Pharmacy.create({
-        _id: pharmacyB,
-        ownerId: ownerB,
-        managerUserIds: [],
-        documents: [],
-        name: `Operational Pharmacy B ${suffix.slice(-6)}`,
-        status: 'active',
-      }),
-
-      Product.create({
-        _id: productId,
-        name: `Operational Product ${suffix.slice(-6)}`,
-        article: `OPS-${suffix.slice(-10)}`,
-        categoryId: medicineCategoryId,
-        status: 'active',
-        inStock: true,
-      }),
-
-      User.create({
-        _id: managerA,
-        name: 'Operational Manager',
-        email: `operational-manager-${suffix.toLowerCase()}@example.com`,
-        password: 'test-password-hash',
-        role: 'pharmacy',
-        status: 'active',
-        phone: `+38093${getPhoneSuffix(suffix)}`,
-      }),
-
-      User.create({
-        _id: clientId,
-        name: 'Operational Test Client',
-        email: `operational-client-${suffix.toLowerCase()}@example.com`,
-        password: 'test-password-hash',
-        role: 'client',
-        status: 'active',
-        phone: `+38050${getPhoneSuffix(suffix)}`,
-        isDefaultPharmacyClient: true,
-        defaultClientPharmacyId: pharmacyA,
-      }),
-    ]);
-
-    await ProductOffer.create({
-      _id: offerId,
-      productId,
-      pharmacyId: pharmacyA,
-      price: 100,
-      totalQuantity: 5,
-      availableQuantity: 5,
-      reservedQuantity: 0,
-    });
-
-    const ownerActor = { id: ownerA.toString(), role: 'pharmacy' as const };
-
-    const managerActor = {
-      id: managerA.toString(),
-      role: 'pharmacy' as const,
-    };
-
-    const foreignActor = { id: ownerB.toString(), role: 'pharmacy' as const };
-
-    const requestUpdateArticle = `OPS-REQ-U-${suffix.slice(-8)}`;
-    const requestDeleteArticle = `OPS-REQ-D-${suffix.slice(-8)}`;
-
     try {
+      await seedIntegrationPharmacyActors([ownerA, ownerB]);
+
+      await Promise.all([
+        Pharmacy.create({
+          _id: pharmacyA,
+          ownerId: ownerA,
+          managerUserIds: [managerA],
+          documents: [],
+          name: `Operational Pharmacy A ${suffix.slice(-6)}`,
+          status: 'active',
+        }),
+
+        Pharmacy.create({
+          _id: pharmacyB,
+          ownerId: ownerB,
+          managerUserIds: [],
+          documents: [],
+          name: `Operational Pharmacy B ${suffix.slice(-6)}`,
+          status: 'active',
+        }),
+
+        Product.create({
+          _id: productId,
+          name: `Operational Product ${suffix.slice(-6)}`,
+          article: `OPS-${suffix.slice(-10)}`,
+          categoryId: medicineCategoryId,
+          status: 'active',
+          inStock: true,
+        }),
+
+        User.create({
+          _id: managerA,
+          name: 'Operational Manager',
+          email: `operational-manager-${suffix.toLowerCase()}@example.com`,
+          password: 'test-password-hash',
+          role: 'pharmacy',
+          status: 'active',
+          phone: `+38093${getPhoneSuffix(suffix)}`,
+        }),
+
+        User.create({
+          _id: clientId,
+          name: 'Operational Test Client',
+          email: `operational-client-${suffix.toLowerCase()}@example.com`,
+          password: 'test-password-hash',
+          role: 'client',
+          status: 'active',
+          phone: `+38050${getPhoneSuffix(suffix)}`,
+          isDefaultPharmacyClient: true,
+          defaultClientPharmacyId: pharmacyA,
+        }),
+      ]);
+
+      await ProductOffer.create({
+        _id: offerId,
+        productId,
+        pharmacyId: pharmacyA,
+        price: 100,
+        totalQuantity: 5,
+        availableQuantity: 5,
+        reservedQuantity: 0,
+      });
+
+      const ownerActor = { id: ownerA.toString(), role: 'pharmacy' as const };
+
+      const managerActor = {
+        id: managerA.toString(),
+        role: 'pharmacy' as const,
+      };
+
+      const foreignActor = { id: ownerB.toString(), role: 'pharmacy' as const };
+      const requestUpdateArticle = `OPS-REQ-U-${suffix.slice(-8)}`;
+      const requestDeleteArticle = `OPS-REQ-D-${suffix.slice(-8)}`;
+
       // Active is operational: creation flows remain allowed.
       const createdOrder = await createManagerOrderService(ownerActor, {
         clientRequestId: '1c07caf4-21e5-4657-8964-94082706e0e7',
@@ -219,11 +221,13 @@ test(
         }
       );
 
+      // Product requests use the authenticated account, not a pharmacy manager grant.
+      // A client account must never create a request.
       await expectHttpStatus(
         () =>
-          createProductRequestService(managerA.toString(), {
+          createProductRequestService(clientId.toString(), {
             status: 'new',
-            name: 'Manager unauthorized request',
+            name: 'Client unauthorized request',
             article: `OPS-UNAUTH-${suffix.slice(-8)}`,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId.toString(),
@@ -352,24 +356,28 @@ test(
         403
       );
 
-      // Existing product-request drafts cannot be edited, submitted or deleted.
-      await expectHttpStatus(
-        () =>
-          updateProductRequestService(
-            ownerA.toString(),
-            updateRequest.request.id,
+      // A blocked pharmacy does not block its active owner's own requests.
+      const updatedRequest = await updateProductRequestService(
+        ownerA.toString(),
+        updateRequest.request.id,
 
-            {
-              status: 'new',
-              name: 'Blocked update attempt',
-              article: requestUpdateArticle,
-              categoryMode: 'catalog',
-              categoryId: medicineCategoryId.toString(),
-            }
-          ),
-        403
+        {
+          status: 'new',
+          name: 'Updated while pharmacy blocked',
+          article: requestUpdateArticle,
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId.toString(),
+        }
       );
 
+      assert.equal(updatedRequest.request.status, 'new');
+
+      assert.equal(
+        updatedRequest.request.name,
+        'Updated while pharmacy blocked'
+      );
+
+      // Membership does not grant access to another account's owner-wide requests.
       await expectHttpStatus(
         () =>
           updateProductRequestService(
@@ -378,13 +386,13 @@ test(
 
             {
               status: 'new',
-              name: 'Blocked submit attempt',
+              name: 'Unauthorized update attempt',
               article: requestUpdateArticle,
               categoryMode: 'catalog',
               categoryId: medicineCategoryId.toString(),
             }
           ),
-        403
+        404
       );
 
       await expectHttpStatus(
@@ -393,8 +401,34 @@ test(
             managerA.toString(),
             deleteRequest.request.id
           ),
+        404
+      );
+
+      // The account status, unlike the pharmacy status, must still gate access.
+      await User.updateOne({ _id: ownerA }, { $set: { status: 'blocked' } });
+
+      await expectHttpStatus(
+        () =>
+          createProductRequestService(ownerA.toString(), {
+            status: 'new',
+            name: 'Blocked account request',
+            article: `OPS-BLOCKED-${suffix.slice(-8)}`,
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId.toString(),
+          }),
         403
       );
+
+      await expectHttpStatus(
+        () =>
+          deleteProductRequestService(
+            ownerA.toString(),
+            deleteRequest.request.id
+          ),
+        403
+      );
+
+      await User.updateOne({ _id: ownerA }, { $set: { status: 'active' } });
 
       const blockedOffer = await ProductOffer.findById(offerId)
         .select('availableQuantity reservedQuantity totalQuantity')
@@ -427,8 +461,12 @@ test(
         .select('status name')
         .lean<{ status: string; name: string } | null>();
 
-      assert.equal(persistedUpdateRequest?.status, 'draft');
-      assert.equal(persistedUpdateRequest?.name, 'Operational request update');
+      assert.equal(persistedUpdateRequest?.status, 'new');
+
+      assert.equal(
+        persistedUpdateRequest?.name,
+        'Updated while pharmacy blocked'
+      );
 
       // on_moderation remains operational for the same existing-resource paths.
       await Pharmacy.updateOne(
@@ -472,20 +510,20 @@ test(
         moderationComment.comment.id
       );
 
-      const submittedRequest = await updateProductRequestService(
+      const savedRequest = await updateProductRequestService(
         ownerA.toString(),
         updateRequest.request.id,
 
         {
           status: 'new',
-          name: 'Submitted while on moderation',
+          name: 'Saved while on moderation',
           article: requestUpdateArticle,
           categoryMode: 'catalog',
           categoryId: medicineCategoryId.toString(),
         }
       );
 
-      assert.equal(submittedRequest.request.status, 'new');
+      assert.equal(savedRequest.request.status, 'new');
 
       await expectHttpStatus(
         () =>
@@ -493,7 +531,7 @@ test(
             managerA.toString(),
             deleteRequest.request.id
           ),
-        403
+        404
       );
 
       await deleteProductRequestService(
@@ -513,16 +551,19 @@ test(
         Order.deleteMany({ pharmacyId: { $in: [pharmacyA, pharmacyB] } }),
 
         ProductRequest.deleteMany({
-          pharmacyId: { $in: [pharmacyA, pharmacyB] },
+          ownerId: { $in: [ownerA, ownerB, managerA] },
         }),
 
+        AdminAuditLog.deleteMany({
+          actorUserId: { $in: [ownerA, ownerB, clientId, managerA] },
+        }),
+
+        StockMovement.deleteMany({ productOfferId: offerId }),
         ProductOffer.deleteOne({ _id: offerId }),
         Product.deleteOne({ _id: productId }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
         User.deleteMany({ _id: { $in: [ownerA, ownerB, clientId, managerA] } }),
       ]);
-
-      await mongoose.disconnect();
     }
   }
 );
